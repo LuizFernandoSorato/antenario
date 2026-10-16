@@ -438,3 +438,142 @@ input[aria-invalid='true'] {
 .card + .card {
   margin-top: 1rem;
 }
+
+/* --- Folha de corte e impressão ---------------------------------------- */
+
+.params {
+  align-items: start;
+}
+
+.cut-margin {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 1rem;
+  margin: 0.5rem 0 1rem;
+}
+
+.cut-margin label {
+  flex: 1 1 18rem;
+}
+
+button {
+  font: inherit;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--bg);
+  cursor: pointer;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+summary:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.measures .num {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.measures .check {
+  text-align: center;
+  font-size: 1.25rem;
+}
+
+.cuts td small {
+  display: block;
+}
+
+.print-only {
+  display: none;
+}
+
+/* Preto no branco, só o que serve na bancada. As cores dos diagramas viram cinzas escuros. */
+@media print {
+  :root {
+    --bg: #fff;
+    --fg: #000;
+    --muted: #333;
+    --card: #fff;
+    --border: #999;
+    --accent: #000;
+    --info-bg: #fff;
+    --info-fg: #000;
+    --warning-bg: #fff;
+    --warning-fg: #000;
+    --danger-bg: #fff;
+    --danger-fg: #000;
+    --dg-conductor: #000;
+    --dg-dim: #000;
+    --dg-ext: #666;
+    --dg-insulator-fill: #fff;
+    --dg-insulator-stroke: #000;
+    --dg-coax: #333;
+    --dg-braid: #666;
+    --dg-ferrite: #333;
+    --dg-mast: #666;
+    --dg-danger: #000;
+    color-scheme: light;
+  }
+
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  .no-print,
+  header {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block;
+  }
+
+  body {
+    font-size: 11pt;
+  }
+
+  main {
+    max-width: none;
+    padding: 0;
+  }
+
+  .card {
+    border: none;
+    padding: 0;
+  }
+
+  .alert {
+    border: 1px solid #000;
+    break-inside: avoid;
+  }
+
+  .diagram,
+  .measures,
+  .cut-sheet,
+  .assumptions {
+    break-inside: avoid;
+  }
+
+  h2,
+  h3,
+  h4 {
+    break-after: avoid;
+  }
+
+  tr {
+    break-inside: avoid;
+  }
+
+  .measures .check {
+    font-size: 1.5rem;
+  }
+}
