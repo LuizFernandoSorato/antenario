@@ -25,6 +25,7 @@ const scenarios: Record<string, Record<string, number>[]> = {
   'cubic-quad': [{}, { directorCount: 0 }, { directorCount: 4, spacingLambda: 0.15 }, { frequencyMHz: 28.5 }],
   discone: [{}, { frequencyMHz: 470 }, { designImpedance: 75, rodCount: 16 }, { frequencyMHz: 2000 }],
   'magnetic-loop': [{}, { frequencyMHz: 14.2, loopDiameter: 0.6 }, { frequencyMHz: 3.6, loopDiameter: 2, tubeDiameter: 0.0254 }],
+  'coax-collinear': [{}, { sections: 2 }, { sections: 8, velocityFactor: 0.82 }, { frequencyMHz: 145 }],
   helical: [{}, { turns: 4 }, { turns: 20, circumferenceRatio: 1.2 }, { frequencyMHz: 1575 }],
 };
 

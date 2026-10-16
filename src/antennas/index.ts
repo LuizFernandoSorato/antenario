@@ -2,6 +2,11 @@
  * Registro de todas as antenas disponíveis na ferramenta.
  */
 
+import * as coaxCollinear from './coax-collinear/calc';
+import { cutList as coaxCollinearCutList } from './coax-collinear/cutlist';
+import { diagrams as coaxCollinearDiagrams } from './coax-collinear/diagram';
+import coaxCollinearGuide from './coax-collinear/guide.md?raw';
+import { meta as coaxCollinearMeta } from './coax-collinear/meta';
 import * as cubicQuad from './cubic-quad/calc';
 import { cutList as cubicQuadCutList } from './cubic-quad/cutlist';
 import { diagrams as cubicQuadDiagrams } from './cubic-quad/diagram';
@@ -91,6 +96,7 @@ export const antennas: readonly AntennaModule[] = [
   register(cubicQuadMeta, cubicQuad.defaultParams, cubicQuad.calc, cubicQuadDiagrams, cubicQuadCutList, cubicQuadGuide),
   register(disconeMeta, discone.defaultParams, discone.calc, disconeDiagrams, disconeCutList, disconeGuide),
   register(magneticLoopMeta, magneticLoop.defaultParams, magneticLoop.calc, magneticLoopDiagrams, magneticLoopCutList, magneticLoopGuide),
+  register(coaxCollinearMeta, coaxCollinear.defaultParams, coaxCollinear.calc, coaxCollinearDiagrams, coaxCollinearCutList, coaxCollinearGuide),
 ];
 
 export type { Diagram } from './diagram-kit';
