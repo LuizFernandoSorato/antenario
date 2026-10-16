@@ -147,7 +147,35 @@ Cada guia segue o mesmo modelo:
 - **Fase 2** (feita): casamento de impedância (rede L, 1/4 de onda, stubs, baluns) e cabos coaxiais.
 - **Fase 3** (feita): diagramas SVG completos, PWA offline e "folha de corte" imprimível.
 - **Fase 4** (feita, com pendências): Yagi, quadra cúbica, helicoidal, discone, colinear coaxial, QFH, loop magnética
-  e Carta de Smith interativa.
+  e Carta de Smith interativa. Também entraram a turnstile, a calculadora de exposição a RF e o hairpin.
+
+### Pendências (atualizado em 2026-10-16)
+
+Para retomar: `git log --oneline` mostra o que foi feito; o último commit de antena foi a turnstile.
+
+**Falta fonte (não implementar de memória):**
+- Gamma match: sem equações com fonte. Precisa do capítulo de casamento do ARRL Antenna Book (Tolles, W7ITB).
+- Resolução 700/2018 da Anatel: conferir os limites de exposição vigentes e a edição da ICNIRP adotada
+  (`src/data/rf-exposure-limits.ts` usa a ICNIRP 2020, Tabela 5).
+
+**`TODO(fonte)` nas antenas existentes:**
+- Yagi: divergência entre a tabela e a curva do NBS TN 688 no projeto de 0,4λ.
+- Quadra cúbica: ganho é estimativa aditiva sem fonte.
+- Discone: regra do gap e ganho.
+- Colinear de coaxial: tabela de ganho vem de fonte de radioamador; impedância da seção de baixo não consta.
+- Loop magnética: regra do loop de acoplamento (diâmetro ≈ 1/5) sem fonte.
+- QFH: medidas são a saída da calculadora de Coppens a 137,5 MHz, escaladas; faltam as equações (Kilgus) e a definição dos "separadores".
+- Turnstile: tamanho do refletor, impedância com refletor e ganho absoluto sem fonte.
+- Hairpin: sem efeito de cantos e barra de curto; faixa de uso (25 a 35 Ω) vem de relatos de radioamadores.
+
+**Antenas sugeridas para adicionar (ordem recomendada):**
+1. ADS-B (1090 MHz), reaproveitando ground plane/colinear.
+2. V-dipolo para satélites meteorológicos (137 MHz).
+3. Dipolo em V invertido (inverted-V).
+4. Moxon (fórmulas de L. B. Cebik, W4RNL; conferir a fonte).
+5. Dipolo multibanda (fan dipole), EFHW com unun 49:1 (exige dados de ferrite com fonte) e log-periódica.
+
+Antes de cada uma, pesquisar a fonte e avisar o usuário dos `TODO(fonte)`.
 
 ---
 
