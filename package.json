@@ -1,0 +1,19 @@
+{
+  "name": "antenario",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Ferramenta para projetar, calcular e construir antenas e sistemas de RF",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
+  }
+}
