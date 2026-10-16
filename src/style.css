@@ -577,3 +577,55 @@ summary:focus-visible {
     font-size: 1.5rem;
   }
 }
+
+/* Carta de Smith */
+.smith-wrap {
+  max-width: 460px;
+  margin: 1rem auto;
+}
+
+svg.smith {
+  width: 100%;
+  height: auto;
+  cursor: crosshair;
+  touch-action: manipulation;
+}
+
+.smith .sm-rim,
+.smith .sm-axis {
+  fill: none;
+  stroke: var(--dg-coax);
+  stroke-width: 0.012;
+}
+
+.smith .sm-grid {
+  fill: none;
+  stroke: var(--dg-ext);
+  stroke-width: 0.006;
+}
+
+.smith .sm-label {
+  fill: var(--dg-ext);
+  font-size: 0.06px;
+}
+
+.smith .sm-swr {
+  fill: none;
+  stroke: var(--dg-dim);
+  stroke-width: 0.01;
+  stroke-dasharray: 0.03 0.02;
+}
+
+.smith .sm-trail {
+  stroke: var(--dg-conductor);
+  stroke-width: 0.006;
+  stroke-dasharray: 0.02 0.02;
+}
+
+.smith .sm-load {
+  fill: var(--dg-dim);
+}
+
+.smith .sm-rot {
+  fill: var(--dg-conductor);
+}

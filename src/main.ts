@@ -1,6 +1,7 @@
 import './style.css';
 import { antennas } from './antennas';
 import { mountAntennaPage } from './ui/antenna-page';
+import { mountSmithPage } from './ui/smith-page';
 import { mountToolPage } from './ui/tool-page';
 import { tools } from './ui/tools';
 
@@ -20,6 +21,7 @@ app.innerHTML = `
           </optgroup>
           <optgroup label="Cabos e casamento">
             ${tools.map((t) => `<option value="${t.id}">${t.name}</option>`).join('')}
+            <option value="smith">Carta de Smith</option>
           </optgroup>
         </select>
       </label>
@@ -32,6 +34,11 @@ const select = app.querySelector<HTMLSelectElement>('#page-select')!;
 const page = app.querySelector<HTMLElement>('#page')!;
 
 function show(id: string): void {
+  if (id === 'smith') {
+    select.value = id;
+    mountSmithPage(page);
+    return;
+  }
   const tool = tools.find((t) => t.id === id);
   if (tool) {
     select.value = tool.id;
