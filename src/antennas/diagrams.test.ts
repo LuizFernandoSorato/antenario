@@ -23,6 +23,7 @@ const scenarios: Record<string, Record<string, number>[]> = {
   'j-pole': [{}, { frequencyMHz: 435 }, { frequencyMHz: 52 }],
   yagi: [{}, { designLength: 0.4 }, { designLength: 1.2, frequencyMHz: 435 }, { designLength: 3.2 }, { designLength: 4.2, boomDiameter: 0 }],
   'cubic-quad': [{}, { directorCount: 0 }, { directorCount: 4, spacingLambda: 0.15 }, { frequencyMHz: 28.5 }],
+  discone: [{}, { frequencyMHz: 470 }, { designImpedance: 75, rodCount: 16 }, { frequencyMHz: 2000 }],
   helical: [{}, { turns: 4 }, { turns: 20, circumferenceRatio: 1.2 }, { frequencyMHz: 1575 }],
 };
 

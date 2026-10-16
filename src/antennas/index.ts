@@ -7,6 +7,11 @@ import { cutList as cubicQuadCutList } from './cubic-quad/cutlist';
 import { diagrams as cubicQuadDiagrams } from './cubic-quad/diagram';
 import cubicQuadGuide from './cubic-quad/guide.md?raw';
 import { meta as cubicQuadMeta } from './cubic-quad/meta';
+import * as discone from './discone/calc';
+import { cutList as disconeCutList } from './discone/cutlist';
+import { diagrams as disconeDiagrams } from './discone/diagram';
+import disconeGuide from './discone/guide.md?raw';
+import { meta as disconeMeta } from './discone/meta';
 import * as dipole from './dipole/calc';
 import { cutList as dipoleCutList } from './dipole/cutlist';
 import { diagrams as dipoleDiagrams } from './dipole/diagram';
@@ -79,6 +84,7 @@ export const antennas: readonly AntennaModule[] = [
   register(helicalMeta, helical.defaultParams, helical.calc, helicalDiagrams, helicalCutList, helicalGuide),
   register(yagiMeta, yagi.defaultParams, yagi.calc, yagiDiagrams, yagiCutList, yagiGuide),
   register(cubicQuadMeta, cubicQuad.defaultParams, cubicQuad.calc, cubicQuadDiagrams, cubicQuadCutList, cubicQuadGuide),
+  register(disconeMeta, discone.defaultParams, discone.calc, disconeDiagrams, disconeCutList, disconeGuide),
 ];
 
 export type { Diagram } from './diagram-kit';
