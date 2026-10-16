@@ -3,7 +3,8 @@
  * e resultado com cotas, premissas, valores esperados e avisos.
  */
 
-import type { AntennaModule } from '../antennas';
+import { marked } from 'marked';
+import type { AntennaModule, Diagram } from '../antennas';
 import type { CalcResult, Estimate } from '../antennas/types';
 import {
   formatLength,
@@ -30,11 +31,39 @@ function formatEstimate(e: Estimate): string {
     <p class="source">Fonte: ${escapeHtml(e.source)}</p>`;
 }
 
-function renderResult(result: CalcResult, fMHz: number): string {
+function renderDiagrams(diagrams: readonly Diagram[]): string {
+  return `
+    <h3>Diagramas</h3>
+    <div class="diagrams">
+      ${diagrams
+        .map(
+          (d) => `<figure class="diagram">
+            <figcaption><strong>${escapeHtml(d.title)}</strong></figcaption>
+            ${d.svg}
+            <p class="note">${escapeHtml(d.caption)}</p>
+          </figure>`,
+        )
+        .join('')}
+    </div>`;
+}
+
+/** Guia em Markdown → HTML. O título (# ...) é omitido: a página já mostra o nome da antena. */
+function renderGuide(markdown: string): string {
+  const body = markdown.replace(/^# .*\n+/, '');
+  const html = marked.parse(body, { async: false });
+  return `
+    <details class="guide" open>
+      <summary>Guia de construção</summary>
+      ${html}
+    </details>`;
+}
+
+function renderResult(result: CalcResult, fMHz: number, diagrams: readonly Diagram[]): string {
   const res = lengthResolutionForFrequency(fMHz);
   const { impedance, gain, bandwidth } = result.expected;
   return `
     ${renderWarnings(result.warnings)}
+    ${renderDiagrams(diagrams)}
 
     <h3>Medidas</h3>
     <table class="measures">
@@ -93,7 +122,8 @@ export function mountAntennaPage(container: HTMLElement, antenna: AntennaModule)
           .join('')}
       </form>
       <div class="result" aria-live="polite"></div>
-    </section>`;
+    </section>
+    <section class="card">${renderGuide(antenna.guide)}</section>`;
 
   const form = container.querySelector<HTMLFormElement>('form')!;
   const output = container.querySelector<HTMLDivElement>('.result')!;
@@ -112,7 +142,7 @@ export function mountAntennaPage(container: HTMLElement, antenna: AntennaModule)
     }
     try {
       const result = antenna.calc(params);
-      output.innerHTML = renderResult(result, params['frequencyMHz']!);
+      output.innerHTML = renderResult(result, params['frequencyMHz']!, antenna.diagrams(params));
     } catch (err) {
       output.innerHTML = renderError(err);
     }

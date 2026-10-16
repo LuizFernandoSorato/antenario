@@ -241,3 +241,200 @@ input[aria-invalid='true'] {
   color: var(--muted);
   font-style: italic;
 }
+
+/* --- Diagramas ------------------------------------------------------------ */
+
+:root {
+  --dg-conductor: #b4602a;
+  --dg-dim: #2f6fb3;
+  --dg-ext: #9aa3ad;
+  --dg-insulator-fill: #f1ead8;
+  --dg-insulator-stroke: #8a7a55;
+  --dg-coax: #3a3f45;
+  --dg-braid: #8c96a0;
+  --dg-ferrite: #4a4f55;
+  --dg-mast: #7d858e;
+  --dg-danger: #c0392b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --dg-conductor: #e39a5f;
+    --dg-dim: #8fb4e3;
+    --dg-ext: #5b6470;
+    --dg-insulator-fill: #3a3527;
+    --dg-insulator-stroke: #b8a77c;
+    --dg-coax: #c9ced4;
+    --dg-braid: #8c96a0;
+    --dg-ferrite: #aab2bb;
+    --dg-mast: #7d858e;
+    --dg-danger: #f4b4ab;
+  }
+}
+
+.diagrams {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.diagram {
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem;
+  background: var(--bg);
+}
+
+.diagram svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 75vh;
+  margin: 0.5rem auto;
+}
+
+.dg {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  fill: none;
+}
+
+.dg-conductor {
+  stroke: var(--dg-conductor);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.dg-dim {
+  stroke: var(--dg-dim);
+  stroke-width: 1.25;
+}
+
+.dg-arrow {
+  fill: var(--dg-dim);
+}
+
+.dg-ext {
+  stroke: var(--dg-ext);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.dg-dim-text {
+  fill: var(--dg-dim);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.dg-label {
+  fill: var(--fg);
+  font-size: 13px;
+}
+
+.dg-note {
+  fill: var(--muted);
+  font-size: 12px;
+}
+
+.dg-danger {
+  fill: var(--dg-danger);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.dg-insulator,
+.dg-connector {
+  fill: var(--dg-insulator-fill);
+  stroke: var(--dg-insulator-stroke);
+  stroke-width: 1.5;
+}
+
+.dg-terminal {
+  fill: var(--dg-insulator-stroke);
+}
+
+.dg-clamp {
+  fill: var(--dg-mast);
+}
+
+.dg-rope {
+  stroke: var(--dg-ext);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+}
+
+.dg-coax {
+  stroke: var(--dg-coax);
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+
+.dg-braid {
+  stroke: var(--dg-braid);
+  stroke-width: 3;
+}
+
+.dg-center {
+  stroke: var(--dg-conductor);
+  stroke-width: 2;
+}
+
+.dg-ferrite {
+  fill: var(--dg-ferrite);
+}
+
+.dg-seal {
+  fill: var(--dg-ext);
+  opacity: 0.6;
+}
+
+.dg-mast {
+  stroke: var(--dg-mast);
+  stroke-width: 2;
+}
+
+/* --- Guia de construção --------------------------------------------------- */
+
+.guide summary {
+  cursor: pointer;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.guide h2 {
+  font-size: 1.1rem;
+  margin: 1.5rem 0 0.5rem;
+}
+
+.guide table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  display: block;
+  overflow-x: auto;
+}
+
+.guide th,
+.guide td {
+  text-align: left;
+  padding: 0.375rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.guide blockquote {
+  margin: 0.75rem 0;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--warning-fg);
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+}
+
+.guide code {
+  font-size: 0.875em;
+  background: var(--bg);
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+}
+
+.card + .card {
+  margin-top: 1rem;
+}
