@@ -88,3 +88,156 @@ dd {
 .note {
   font-size: 0.875rem;
 }
+
+/* --- Página de antena --------------------------------------------------- */
+
+:root {
+  --info-bg: #e8f0fa;
+  --info-fg: #1f3a5f;
+  --warning-bg: #fff4d6;
+  --warning-fg: #6b4a00;
+  --danger-bg: #fde4e1;
+  --danger-fg: #8a1c10;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --info-bg: #1c2a3b;
+    --info-fg: #b9d2f1;
+    --warning-bg: #3a2f10;
+    --warning-fg: #f2d68a;
+    --danger-bg: #3d1a16;
+    --danger-fg: #f4b4ab;
+  }
+}
+
+select {
+  font: inherit;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--fg);
+}
+
+nav {
+  margin-top: 0.75rem;
+}
+
+h2 {
+  margin-top: 0;
+}
+
+h3 {
+  margin: 1.5rem 0 0.5rem;
+}
+
+h4 {
+  margin: 0 0 0.25rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+small {
+  display: block;
+  font-weight: 400;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tags span {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.125rem 0.625rem;
+  font-size: 0.8125rem;
+}
+
+.params {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+input[aria-invalid='true'] {
+  border-color: var(--danger-fg);
+}
+
+.alert {
+  border-radius: 6px;
+  padding: 0.625rem 0.75rem;
+  margin: 0.5rem 0;
+  font-size: 0.9375rem;
+}
+
+.alert-info {
+  background: var(--info-bg);
+  color: var(--info-fg);
+}
+
+.alert-warning {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+}
+
+.alert-danger {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+.measures {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.measures th,
+.measures td {
+  text-align: left;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.measures .label {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.measures .value {
+  text-align: right;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.assumptions {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.estimates {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.75rem;
+}
+
+.estimates > div {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.estimates p {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+}
+
+.source {
+  color: var(--muted);
+  font-style: italic;
+}
