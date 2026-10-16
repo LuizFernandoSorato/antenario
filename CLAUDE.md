@@ -49,17 +49,21 @@ src/
     wave.ts        # λ, fator de velocidade, fator de encurtamento
     reflection.ts  # Γ, ROE/SWR, perda de retorno, perda por descasamento
     complex.ts     # aritmética de impedâncias complexas
+    smith.ts       # geometria da Carta de Smith
+    exposure.ts    # exposição a RF em campo distante (estimativa)
   antennas/
     <antenna-id>/
       calc.ts      # entrada → medidas (função pura)
       diagram.ts   # medidas → SVG
+      cutlist.ts   # folha de corte (peças e quantidades)
       guide.md     # materiais + passo a passo + ajuste + dicas de TX
       meta.ts      # nome, faixa típica, impedância, polarização, ganho, uso RX/TX
       calc.test.ts
-  matching/        # rede L, 1/4 de onda, stubs, baluns, gamma, hairpin
+  matching/        # rede L, 1/4 de onda, stub, balun de coaxial, hairpin (gamma: sem fonte ainda)
   lines/           # cabos coaxiais: perdas, potência máxima, fator de velocidade
-  data/            # tabelas (cabos, bandas) COM fonte citada
-  ui/              # componentes e páginas
+  data/            # tabelas (cabos, limites de exposição, bandas) COM fonte citada
+  ui/              # componentes e páginas (ui/tools: calculadoras de cabo, casamento e RF)
+tools/             # plugins de build (service worker)
 tests/
 ```
 
@@ -139,10 +143,10 @@ Cada guia segue o mesmo modelo:
 
 ## Roadmap
 
-- **Fase 1**: scaffolding, `core/` testado, dipolo, ground plane 1/4 e J-pole.
-- **Fase 2**: casamento de impedância (rede L, 1/4 de onda, stubs, baluns) e cabos coaxiais.
-- **Fase 3**: diagramas SVG completos, PWA offline e "folha de corte" imprimível.
-- **Fase 4**: Yagi, quadra cúbica, helicoidal, discone, colinear coaxial, QFH, loop magnética
+- **Fase 1** (feita): scaffolding, `core/` testado, dipolo, ground plane 1/4 e J-pole.
+- **Fase 2** (feita): casamento de impedância (rede L, 1/4 de onda, stubs, baluns) e cabos coaxiais.
+- **Fase 3** (feita): diagramas SVG completos, PWA offline e "folha de corte" imprimível.
+- **Fase 4** (feita, com pendências): Yagi, quadra cúbica, helicoidal, discone, colinear coaxial, QFH, loop magnética
   e Carta de Smith interativa.
 
 ---
