@@ -1,90 +1,109 @@
 /**
- * Diagrama do J-pole: comprimentos verticais em escala; espaçamento entre os
- * condutores exagerado para caber as ligações. O ponto de alimentação é
- * desenhado só como indicação (a posição real se acha medindo; ver guia).
+ * Diagrama do J-pole: elemento longo (radiador + seção de casamento), elemento curto
+ * e curto na base. Vertical em escala; o espaçamento é exagerado quando seria fino demais.
  */
 
-import { lengthResolutionForFrequency } from '../../core/units';
-import {
-  type Diagram,
-  chokeBeads,
-  dimLabel,
-  dimension,
-  highVoltage,
-  line,
-  measure,
-  path,
-  rect,
-  svgDoc,
-  text,
-  textLines,
-} from '../diagram-kit';
-import type { CalcResult } from '../types';
-import type { JPoleParams } from './calc';
+import { formatLength, lengthResolutionForFrequency } from '../../core/units';
+import { circle, dimH, dimV, line, svgDoc, text } from '../svg';
+import { type JPoleParams, calc } from './calc';
 
-/** Altura do elemento longo (cota A) no desenho, em px. */
-const LONG_PX = 540;
+const W = 640;
+const H = 560;
+const TOP = 50;
+/** Espaço abaixo da base para a cota D e a nota. */
+const BELOW_BASE = 96;
+/** Espaçamento mínimo visível no desenho (px). */
+const MIN_SPACING_PX = 30;
+/** Altura ilustrativa da marca do ponto de alimentação, como fração do elemento curto. Só ilustra: a posição real não é calculada. */
+const TAP_ILLUSTRATION_FRACTION = 0.12;
 
-function overview(result: CalcResult, params: JPoleParams): Diagram {
-  const id = 'jpole-overview';
-  const res = lengthResolutionForFrequency(params.frequencyMHz);
-  const scale = LONG_PX / measure(result, 'A');
-  const stubPx = measure(result, 'C') * scale;
-  const xL = 200;
-  const xS = 250;
-  const yTop = 50;
-  const yBase = yTop + LONG_PX;
-  const yStub = yBase - stubPx;
-  // Posição apenas ilustrativa do tap (não é uma medida calculada).
-  const yTap = yBase - stubPx * 0.15;
+export interface JPoleLayout {
+  width: number;
+  height: number;
+  scale: number;
+  longPx: number;
+  shortPx: number;
+  radiatorPx: number;
+  spacingPx: number;
+  spacingExaggerated: boolean;
+  xLong: number;
+  xShort: number;
+  topY: number;
+  baseY: number;
+}
 
-  const body = [
-    // Condutores e curto na base.
-    line(xL, yBase, xL, yTop, 'dg-conductor'),
-    line(xS, yBase, xS, yStub, 'dg-conductor'),
-    line(xL, yBase, xS, yBase, 'dg-conductor'),
-    // Tensão alta nas pontas.
-    highVoltage(xL, yTop - 18, 'alta tensão (TX)', 'middle'),
-    highVoltage(xS + 6, yStub + 18),
-    // Ponto de alimentação: abraçadeiras, coaxial e choke.
-    rect(xL - 8, yTap - 4, 16, 8, 'dg-clamp', 2),
-    rect(xS - 8, yTap - 4, 16, 8, 'dg-clamp', 2),
-    path(`M175 680 L175 ${yTap + 30} Q175 ${yTap + 16} 185 ${yTap + 14}`, 'dg-coax'),
-    path(`M185 ${yTap + 14} L${xL - 8} ${yTap}`, 'dg-center'),
-    path(`M185 ${yTap + 14} Q225 ${yTap + 24} ${xS - 8} ${yTap + 2}`, 'dg-braid'),
-    chokeBeads(175, yBase + 12),
-    text(160, yBase + 36, 'choke', 'dg-note', 'end'),
-    `<line x1="266" y1="${yTap - 24}" x2="266" y2="${yTap + 20}" class="dg-dim" ` +
-      `marker-start="url(#${id}-arrow)" marker-end="url(#${id}-arrow)"/>`,
-    textLines(310, yTap - 20, ['vivo → elemento longo', 'malha → elemento curto'], 'dg-note'),
-    textLines(310, yTap + 14, ['ponto de alimentação:', 'deslize até achar', 'a ROE mínima'], 'dg-note'),
-    textLines(xS + 8, yBase + 58, ['fixe no mastro pela base', '(região do curto, baixa tensão)'], 'dg-note'),
-    // Cotas.
-    dimension(id, xL, yTop, xL, yBase, 50, dimLabel(result, 'A', res), { anchor: 'end' }),
-    dimension(id, xL, yTop, xL, yStub, -90, dimLabel(result, 'B', res), { anchor: 'start' }),
-    dimension(id, xS, yStub, xS, yBase, -40, dimLabel(result, 'C', res), { anchor: 'start' }),
-    // Rótulo de D à direita da cota, longe do coaxial que sobe pela esquerda.
-    dimension(id, xL, yBase, xS, yBase, 26, dimLabel(result, 'D', res), { anchor: 'start', labelDx: 34 }),
-  ].join('');
-
+export function layout(params: JPoleParams): JPoleLayout {
+  const m = Object.fromEntries(calc(params).measurements.map((x) => [x.label, x.meters])) as Record<string, number>;
+  const scale = (H - TOP - BELOW_BASE) / m['A']!;
+  const realSpacingPx = m['D']! * scale;
+  const spacingPx = Math.max(realSpacingPx, MIN_SPACING_PX);
+  const xLong = (W - spacingPx) / 2;
   return {
-    id,
-    title: 'Vista geral',
-    caption:
-      'Comprimentos verticais em escala; o espaçamento D está exagerado para caber as ligações. ' +
-      'A posição do ponto de alimentação é só ilustrativa: ele é encontrado medindo (veja o guia). ' +
-      '⚡ = pontos de tensão alta de RF ao transmitir.',
-    svg: svgDoc(
-      id,
-      470,
-      690,
-      'J-pole: vista geral',
-      'Elemento longo e elemento curto unidos pela base, ponto de alimentação com abraçadeiras e coaxial com choke.',
-      body,
-    ),
+    width: W,
+    height: H,
+    scale,
+    longPx: m['A']! * scale,
+    shortPx: m['C']! * scale,
+    radiatorPx: m['B']! * scale,
+    spacingPx,
+    spacingExaggerated: realSpacingPx < MIN_SPACING_PX,
+    xLong,
+    xShort: xLong + spacingPx,
+    topY: TOP,
+    baseY: TOP + m['A']! * scale,
   };
 }
 
-export function diagrams(result: CalcResult, params: JPoleParams): Diagram[] {
-  return [overview(result, params)];
+export function diagram(params: JPoleParams): string {
+  const result = calc(params);
+  const res = lengthResolutionForFrequency(params.frequencyMHz);
+  const m = Object.fromEntries(result.measurements.map((x) => [x.label, x.meters])) as Record<string, number>;
+  const fmt = (label: string) => `${label} = ${formatLength(m[label]!, res)}`;
+  const l = layout(params);
+  const { xLong, xShort, baseY } = l;
+  const topLong = baseY - l.longPx;
+  const topShort = baseY - l.shortPx;
+  const yTap = baseY - l.shortPx * TAP_ILLUSTRATION_FRACTION;
+  const xDimRight = xShort + 44;
+  const xDimA = xLong - 150;
+
+  const parts = [
+    line(xLong, topLong, xLong, baseY, 'dg-element'),
+    line(xShort, topShort, xShort, baseY, 'dg-element'),
+    line(xLong, baseY, xShort, baseY, 'dg-element'),
+    text(xLong - 10, baseY + 18, 'curto (base)', 'end', 'dg-note'),
+    // Ponto de alimentação (ilustrativo) e coaxial vindo da esquerda.
+    circle(xLong, yTap, 4, 'dg-feed'),
+    circle(xShort, yTap, 4, 'dg-feed'),
+    line(xLong - 90, yTap, xLong, yTap, 'dg-coax'),
+    text(xLong - 45, yTap - 8, 'coaxial', 'middle', 'dg-note'),
+    // Cotas: A à esquerda (altura total); B e C empilhadas à direita.
+    line(xLong, topLong, xDimA + 6, topLong, 'dg-ext'),
+    line(xLong, baseY, xDimA + 6, baseY, 'dg-ext'),
+    dimV(xDimA, topLong, baseY, fmt('A'), 'left'),
+    line(xShort, topLong, xDimRight + 6, topLong, 'dg-ext'),
+    line(xShort, topShort, xDimRight + 6, topShort, 'dg-ext'),
+    line(xShort, baseY, xDimRight + 6, baseY, 'dg-ext'),
+    dimV(xDimRight, topLong, topShort, fmt('B'), 'right'),
+    dimV(xDimRight, topShort, baseY, fmt('C'), 'right'),
+    // D: espaçamento, abaixo da base.
+    line(xLong, baseY, xLong, baseY + 58, 'dg-ext'),
+    line(xShort, baseY, xShort, baseY + 58, 'dg-ext'),
+    dimH(xLong, xShort, baseY + 58, `${fmt('D')}${l.spacingExaggerated ? ' (fora de escala)' : ''}`),
+    text(
+      W / 2,
+      H - 14,
+      'Ponto de alimentação: posição não calculada. Ajuste medindo a ROE (ver guia).',
+      'middle',
+      'dg-note',
+    ),
+  ];
+
+  return svgDoc(
+    W,
+    H,
+    'Diagrama do J-pole',
+    `J-pole com elemento longo de ${formatLength(m['A']!, res)}, radiador de ${formatLength(m['B']!, res)} e seção de casamento de ${formatLength(m['C']!, res)}, em curto na base.`,
+    parts.join('\n'),
+  );
 }
