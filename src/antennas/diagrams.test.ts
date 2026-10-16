@@ -22,6 +22,7 @@ const scenarios: Record<string, Record<string, number>[]> = {
   'ground-plane': [{}, { droopAngleDeg: 0 }, { droopAngleDeg: 80 }, { radialCount: 3 }, { radialCount: 8 }],
   'j-pole': [{}, { frequencyMHz: 435 }, { frequencyMHz: 52 }],
   yagi: [{}, { designLength: 0.4 }, { designLength: 1.2, frequencyMHz: 435 }, { designLength: 3.2 }, { designLength: 4.2, boomDiameter: 0 }],
+  'cubic-quad': [{}, { directorCount: 0 }, { directorCount: 4, spacingLambda: 0.15 }, { frequencyMHz: 28.5 }],
   helical: [{}, { turns: 4 }, { turns: 20, circumferenceRatio: 1.2 }, { frequencyMHz: 1575 }],
 };
 
