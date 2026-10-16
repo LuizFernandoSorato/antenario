@@ -19,7 +19,7 @@ app.innerHTML = `
           <optgroup label="Antenas">
             ${antennas.map((a) => `<option value="${a.meta.id}">${a.meta.name}</option>`).join('')}
           </optgroup>
-          <optgroup label="Cabos e casamento">
+          <optgroup label="Cabos, casamento e segurança">
             ${tools.map((t) => `<option value="${t.id}">${t.name}</option>`).join('')}
             <option value="smith">Carta de Smith</option>
           </optgroup>
