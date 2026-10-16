@@ -2,6 +2,11 @@
  * Registro de todas as antenas disponíveis na ferramenta.
  */
 
+import * as turnstile from './turnstile/calc';
+import { cutList as turnstileCutList } from './turnstile/cutlist';
+import { diagrams as turnstileDiagrams } from './turnstile/diagram';
+import turnstileGuide from './turnstile/guide.md?raw';
+import { meta as turnstileMeta } from './turnstile/meta';
 import * as qfh from './qfh/calc';
 import { cutList as qfhCutList } from './qfh/cutlist';
 import { diagrams as qfhDiagrams } from './qfh/diagram';
@@ -102,6 +107,7 @@ export const antennas: readonly AntennaModule[] = [
   register(disconeMeta, discone.defaultParams, discone.calc, disconeDiagrams, disconeCutList, disconeGuide),
   register(magneticLoopMeta, magneticLoop.defaultParams, magneticLoop.calc, magneticLoopDiagrams, magneticLoopCutList, magneticLoopGuide),
   register(coaxCollinearMeta, coaxCollinear.defaultParams, coaxCollinear.calc, coaxCollinearDiagrams, coaxCollinearCutList, coaxCollinearGuide),
+  register(turnstileMeta, turnstile.defaultParams, turnstile.calc, turnstileDiagrams, turnstileCutList, turnstileGuide),
   register(qfhMeta, qfh.defaultParams, qfh.calc, qfhDiagrams, qfhCutList, qfhGuide),
 ];
 

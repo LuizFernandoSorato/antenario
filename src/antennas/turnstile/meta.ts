@@ -1,0 +1,53 @@
+import type { AntennaMeta } from '../types';
+
+export const meta: AntennaMeta = {
+  id: 'turnstile',
+  name: 'Turnstile (dipolos cruzados)',
+  description:
+    'Dois dipolos de meia onda cruzados a 90°, alimentados com defasagem de 90° (um deles por um trecho de cabo de ' +
+    '1/4 de onda). Com um refletor a 1/4 de onda atrás, dá polarização circular apontando para cima (satélites). ' +
+    'Sem refletor, é omnidirecional na horizontal, com polarização linear horizontal.',
+  // Critério de uso prático desta ferramenta (não é limite físico): abaixo de 100 MHz os dipolos passam de 1,4 m;
+  // acima de 1 GHz as tolerâncias de corte ficam menores que 1 mm.
+  typicalRangeMHz: { min: 100, max: 1000 },
+  // Dois dipolos de ≈73 Ω em paralelo (um pela linha de 1/4 de onda de 73 Ω): ≈36,5 Ω. Ver calc().
+  nominalImpedanceOhms: 36.5,
+  polarization: 'Circular (com refletor, no eixo) ou linear horizontal (sem refletor, na horizontal)',
+  // Sem valor típico com fonte aqui; ver calc().expected.gain.
+  approxGainDbi: null,
+  usage: { rx: true, tx: true },
+  outdoor: true,
+  params: [
+    { key: 'frequencyMHz', label: 'Frequência de projeto', unit: 'MHz', defaultValue: 137.5, toSi: 1, min: 0 },
+    {
+      key: 'shorteningFactor',
+      label: 'Fator de encurtamento dos dipolos (K)',
+      unit: '',
+      defaultValue: 0.95,
+      toSi: 1,
+      min: 0,
+      max: 1,
+      help: 'Típico 0,95 (ver o dipolo). Condutores mais grossos pedem K menor.',
+    },
+    {
+      key: 'velocityFactor',
+      label: 'Fator de velocidade do coaxial de fase (VF)',
+      unit: '',
+      defaultValue: 0.66,
+      toSi: 1,
+      min: 0,
+      max: 1,
+      help: 'Confira no datasheet do SEU cabo. Polietileno sólido ≈ 0,66; espuma 0,78 a 0,85.',
+    },
+    {
+      key: 'reflector',
+      label: 'Com refletor (1 = sim, 0 = não)',
+      unit: '',
+      defaultValue: 1,
+      toSi: 1,
+      min: 0,
+      max: 1,
+      help: '1: refletor a 1/4 de onda atrás dos dipolos (circular para cima). 0: omnidirecional na horizontal.',
+    },
+  ],
+};
