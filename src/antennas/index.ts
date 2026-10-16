@@ -2,6 +2,11 @@
  * Registro de todas as antenas disponíveis na ferramenta.
  */
 
+import * as qfh from './qfh/calc';
+import { cutList as qfhCutList } from './qfh/cutlist';
+import { diagrams as qfhDiagrams } from './qfh/diagram';
+import qfhGuide from './qfh/guide.md?raw';
+import { meta as qfhMeta } from './qfh/meta';
 import * as coaxCollinear from './coax-collinear/calc';
 import { cutList as coaxCollinearCutList } from './coax-collinear/cutlist';
 import { diagrams as coaxCollinearDiagrams } from './coax-collinear/diagram';
@@ -97,6 +102,7 @@ export const antennas: readonly AntennaModule[] = [
   register(disconeMeta, discone.defaultParams, discone.calc, disconeDiagrams, disconeCutList, disconeGuide),
   register(magneticLoopMeta, magneticLoop.defaultParams, magneticLoop.calc, magneticLoopDiagrams, magneticLoopCutList, magneticLoopGuide),
   register(coaxCollinearMeta, coaxCollinear.defaultParams, coaxCollinear.calc, coaxCollinearDiagrams, coaxCollinearCutList, coaxCollinearGuide),
+  register(qfhMeta, qfh.defaultParams, qfh.calc, qfhDiagrams, qfhCutList, qfhGuide),
 ];
 
 export type { Diagram } from './diagram-kit';
