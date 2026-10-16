@@ -12,19 +12,7 @@ import {
   parseDecimal,
   trimZeros,
 } from '../core/units';
-
-const WARNING_TITLES = { info: 'Nota', warning: 'Atenção', danger: 'Perigo' } as const;
-
-function escapeHtml(text: string): string {
-  return text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
-}
-
-/** Casas decimais do valor padrão, para exibir o campo sem perder precisão. */
-function decimalsOf(value: number): number {
-  const s = String(value);
-  const dot = s.indexOf('.');
-  return dot < 0 ? 0 : s.length - dot - 1;
-}
+import { decimalsOf, escapeHtml, renderAssumptions, renderError, renderWarnings } from './render';
 
 function formatEstimate(e: Estimate): string {
   const parts: string[] = [];
@@ -46,12 +34,7 @@ function renderResult(result: CalcResult, fMHz: number): string {
   const res = lengthResolutionForFrequency(fMHz);
   const { impedance, gain, bandwidth } = result.expected;
   return `
-    ${result.warnings
-      .map(
-        (w) => `<div class="alert alert-${w.level}" role="note">
-          <strong>${WARNING_TITLES[w.level]}:</strong> ${escapeHtml(w.message)}</div>`,
-      )
-      .join('')}
+    ${renderWarnings(result.warnings)}
 
     <h3>Medidas</h3>
     <table class="measures">
@@ -69,15 +52,7 @@ function renderResult(result: CalcResult, fMHz: number): string {
       </tbody>
     </table>
 
-    <h3>Premissas do cálculo</h3>
-    <dl class="assumptions">
-      ${result.assumptions
-        .map(
-          (a) => `<dt>${escapeHtml(a.name)}</dt>
-            <dd>${escapeHtml(a.value)}${a.source ? `<small>${escapeHtml(a.source)}</small>` : ''}</dd>`,
-        )
-        .join('')}
-    </dl>
+    ${renderAssumptions(result.assumptions)}
     <p class="note">A antena real sempre precisa de ajuste. Corte comprido e encurte medindo a ROE.</p>
 
     <h3>Valores esperados</h3>
@@ -139,9 +114,7 @@ export function mountAntennaPage(container: HTMLElement, antenna: AntennaModule)
       const result = antenna.calc(params);
       output.innerHTML = renderResult(result, params['frequencyMHz']!);
     } catch (err) {
-      const message = err instanceof RangeError ? err.message : 'Erro inesperado no cálculo.';
-      output.innerHTML = `<div class="alert alert-warning">${escapeHtml(message)}</div>`;
-      if (!(err instanceof RangeError)) console.error(err);
+      output.innerHTML = renderError(err);
     }
   }
 
