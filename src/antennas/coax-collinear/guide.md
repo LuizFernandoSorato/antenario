@@ -72,7 +72,7 @@ para baixo, desce. O **choke** na entrada é obrigatório: sem ele o cabo até o
 - **Potência:** confira a potência máxima do cabo na frequência. Cabo fino aquece com muita potência; cada seção é só alguns centímetros de cabo, mas a corrente é alta.
 - **Legislação:** transmitir exige licença de radioamador da **Anatel**. Confira o plano de
   bandas e os limites de potência vigentes (Anatel e LABRE).
-- **Exposição a RF:** mantenha distância durante a transmissão. A calculadora de distância de segurança entra em uma fase futura.
+- **Exposição a RF:** mantenha distância durante a transmissão. Estime a distância na ferramenta "Exposição a RF".
 - **Segurança física da instalação:**
   - Mantenha o mastro longe da rede elétrica. Na queda, ele não pode alcançar fios.
   - Aterre o mastro e a malha do cabo.

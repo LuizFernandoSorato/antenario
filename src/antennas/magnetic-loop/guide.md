@@ -51,7 +51,7 @@ alicate, NanoVNA ou medidor de ROE e um bom medidor de capacitância.
 O **loop de acoplamento** transforma a resistência minúscula da espira (alguns décimos de ohm) em 50 Ω:
 ele funciona como transformador. Ajuste o diâmetro **C** e a distância ao tubo da espira até a ROE no
 centro da banda ficar baixa. A regra de diâmetro ≈ 1/5 da espira principal é uma boa partida.
-Gamma match e acoplamento direto entram em uma fase futura.
+Gamma match e acoplamento direto ainda não têm equações com fonte aqui (TODO).
 
 ## 6. Ajuste
 
@@ -77,7 +77,7 @@ Gamma match e acoplamento direto entram em uma fase futura.
 - **Alta corrente na espira:** esquenta contatos fracos. Use solda forte.
 - **Não toque** na espira nem no capacitor em transmissão. Instale fora do alcance de pessoas e animais.
 - **Exposição a RF:** o campo próximo da espira é intenso. Mantenha distância durante a transmissão.
-  A calculadora de distância de segurança entra em uma fase futura.
+  Estime a distância na ferramenta "Exposição a RF".
 - **Legislação:** transmitir exige licença de radioamador da **Anatel**. Confira o plano de
   bandas e os limites de potência vigentes (Anatel e LABRE).
 - **Segurança física da instalação:**

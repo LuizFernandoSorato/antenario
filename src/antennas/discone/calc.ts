@@ -117,7 +117,7 @@ export function calc(params: DisconeParams): CalcResult {
       level: 'danger',
       message:
         'Transmissão: o disco e a borda do cone têm tensão alta de RF. Instale fora do alcance de pessoas e longe de ' +
-        'rede elétrica. A calculadora de distância de segurança entra em uma fase futura.',
+        'rede elétrica. Estime a distância na ferramenta "Exposição a RF".',
     },
   );
 

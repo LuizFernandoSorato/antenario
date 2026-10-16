@@ -82,7 +82,7 @@ A impedância na borda da hélice, ≈ 140·C/λ, é bem acima dos 50 Ω do coax
 ## 8. Notas de transmissão e segurança
 
 - **Direcional e de ganho alto:** a potência se concentra no feixe. Calcule a EIRP e mantenha pessoas
-  fora da frente da antena. A calculadora de distância de segurança entra em uma fase futura.
+  fora da frente da antena. Estime a distância na ferramenta "Exposição a RF".
 - **Potência:** confira a potência máxima do cabo e do conector na frequência de uso.
 - **Legislação:** transmitir exige licença de radioamador da **Anatel**. Confira o plano de
   bandas e os limites de potência vigentes (Anatel e LABRE).

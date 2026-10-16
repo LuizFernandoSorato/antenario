@@ -141,8 +141,7 @@ export function calc(params: HelicalParams): CalcResult {
       level: 'danger',
       message:
         'Transmissão: o ganho concentra a potência no feixe (EIRP = potência × ganho). Mantenha pessoas ' +
-        'fora da frente da antena durante a transmissão. A calculadora de distância de segurança entra em ' +
-        'uma fase futura.',
+        'fora da frente da antena durante a transmissão. Estime a distância na ferramenta "Exposição a RF".',
     },
   );
 

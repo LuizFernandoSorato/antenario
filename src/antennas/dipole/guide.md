@@ -80,8 +80,7 @@ isso é aceitável sem rede de casamento.
   centenas de volts mesmo com potência moderada. Pontas fora do alcance de pessoas, e
   isoladores de boa qualidade.
 - **Potência:** confira a potência máxima do cabo e do balun na frequência de uso (datasheet).
-- **Exposição a RF:** mantenha distância segura da antena durante a transmissão. A calculadora
-  de distância de segurança entra em uma fase futura. Até lá, consulte os limites da Anatel.
+- **Exposição a RF:** mantenha distância segura da antena durante a transmissão. Estime a distância na ferramenta "Exposição a RF". Confira também os limites vigentes da Anatel.
 - **Legislação:** transmitir exige licença de radioamador emitida pela **Anatel**. Confira
   o plano de bandas e os limites de potência **vigentes** na Anatel e na LABRE antes de operar.
 - **Segurança física da instalação:**

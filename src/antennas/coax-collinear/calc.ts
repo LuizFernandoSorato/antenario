@@ -127,8 +127,7 @@ export function calc(params: CoaxCollinearParams): CalcResult {
       level: 'danger',
       message:
         'Transmissão: tensão alta de RF na ponta do chicote e potência concentrada na horizontal. Instale fora do alcance de ' +
-        'pessoas e longe de rede elétrica. Confira a potência máxima do cabo. A calculadora de distância de segurança entra em ' +
-        'uma fase futura.',
+        'pessoas e longe de rede elétrica. Confira a potência máxima do cabo. Estime a distância na ferramenta "Exposição a RF".',
     },
   );
 

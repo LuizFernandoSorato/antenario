@@ -123,7 +123,7 @@ export function calc(params: YagiParams): CalcResult {
       level: 'warning',
       message:
         'O NBS não dá a medida do elemento excitado: ele depende do casamento escolhido. O valor mostrado é ' +
-        'λ/2 × K como ponto de partida. Corte comprido e ajuste medindo a ROE. Gamma match e hairpin entram em uma fase futura.',
+        'λ/2 × K como ponto de partida. Corte comprido e ajuste medindo a ROE. Para o hairpin, use a ferramenta "Hairpin". Gamma match ainda não tem equações com fonte aqui (TODO).',
     },
     {
       level: 'info',
@@ -135,7 +135,7 @@ export function calc(params: YagiParams): CalcResult {
       level: 'danger',
       message:
         'Transmissão: tensão alta de RF nas pontas dos elementos e potência concentrada na frente (EIRP = ' +
-        'potência × ganho). Mantenha pessoas e rede elétrica longe. A calculadora de distância de segurança entra em uma fase futura.',
+        'potência × ganho). Mantenha pessoas e rede elétrica longe. Estime a distância na ferramenta "Exposição a RF".',
     },
   );
 

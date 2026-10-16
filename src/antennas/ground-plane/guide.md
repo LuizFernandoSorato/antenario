@@ -71,8 +71,7 @@ ficar alta mesmo na frequência certa, mude a inclinação dos radiais.
 
 - **Tensão alta na ponta do radiador:** instale fora do alcance de pessoas.
 - **Potência:** confira a potência máxima do cabo e do conector na frequência de uso.
-- **Exposição a RF:** mantenha distância durante a transmissão. A calculadora de distância
-  de segurança entra em uma fase futura.
+- **Exposição a RF:** mantenha distância durante a transmissão. Estime a distância na ferramenta "Exposição a RF".
 - **Legislação:** transmitir exige licença de radioamador da **Anatel**. Confira o plano de
   bandas e os limites de potência vigentes (Anatel e LABRE).
 - **Segurança física da instalação:**

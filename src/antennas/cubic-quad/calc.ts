@@ -117,7 +117,7 @@ export function calc(params: CubicQuadParams): CalcResult {
       level: 'danger',
       message:
         'Transmissão: os cantos das espiras têm tensão alta de RF e o ganho concentra a potência na frente (EIRP = potência × ' +
-        'ganho). Mantenha pessoas e rede elétrica longe. A calculadora de distância de segurança entra em uma fase futura.',
+        'ganho). Mantenha pessoas e rede elétrica longe. Estime a distância na ferramenta "Exposição a RF".',
     },
   );
 

@@ -55,7 +55,7 @@ Trena, serra, furadeira, estilete, ferro de solda, alicate e NanoVNA ou medidor 
 Com espaçamento de 0,15λ a 0,2λ a impedância da espira excitada fica perto de 50 Ω, o que permite ligar o
 coaxial direto, **com choke/balun de corrente** para a malha do cabo não irradiar. Com espaçamento pouco
 acima de 0,25λ a impedância sobe para perto de 75 Ω, e um transformador de 1/4 de onda pode servir (use a
-ferramenta "Transformador de 1/4 de onda"). Gamma match, hairpin e stubs entram em uma fase futura.
+ferramenta "Transformador de 1/4 de onda"). Para casar, veja as ferramentas de rede L e de stub. Gamma match ainda não tem equações com fonte aqui (TODO).
 
 ## 6. Ajuste
 
@@ -78,8 +78,7 @@ ferramenta "Transformador de 1/4 de onda"). Gamma match, hairpin e stubs entram 
 
 - **Tensão alta nos cantos** das espiras em transmissão: mantenha pessoas e fios longe.
 - **Potência concentrada na frente:** com ganho alto, a potência equivalente é várias vezes a do rádio.
-  Mantenha pessoas fora da frente da antena durante a transmissão. A calculadora de distância de
-  segurança entra em uma fase futura.
+  Mantenha pessoas fora da frente da antena durante a transmissão. Estime a distância na ferramenta "Exposição a RF".
 - **Potência:** confira a potência máxima do cabo e do balun.
 - **Legislação:** transmitir exige licença de radioamador da **Anatel**. Confira o plano de
   bandas e os limites de potência vigentes (Anatel e LABRE).

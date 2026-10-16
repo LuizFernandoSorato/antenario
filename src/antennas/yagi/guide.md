@@ -58,7 +58,7 @@ do casamento escolhido. Um dipolo simples dentro do Yagi fica bem abaixo de 50 �
 
 - **Dipolo dobrado de ≈ 200 Ω** com balun de 4:1 para 50 Ω. Para o balun de meia onda de coaxial,
   use a ferramenta "Balun de meia onda de coaxial (4:1)".
-- **Gamma match** ou **hairpin**: planejados para uma fase futura.
+- **Hairpin**: use a ferramenta "Hairpin (casamento de Yagi)" com a impedância medida do elemento. **Gamma match**: ainda sem equações com fonte aqui (TODO).
 - Instale um choke de corrente no coaxial, logo atrás do excitado, para a malha não irradiar.
 
 ## 6. Ajuste
@@ -83,8 +83,7 @@ do casamento escolhido. Um dipolo simples dentro do Yagi fica bem abaixo de 50 �
 
 - **Tensão alta nas pontas dos elementos** em transmissão: mantenha pessoas e fios longe.
 - **Potência concentrada na frente:** com ganho de 10 dBi, a potência equivalente é 10 vezes a do rádio.
-  Mantenha pessoas fora da frente da antena durante a transmissão. A calculadora de distância de
-  segurança entra em uma fase futura.
+  Mantenha pessoas fora da frente da antena durante a transmissão. Estime a distância na ferramenta "Exposição a RF".
 - **Potência:** confira a potência máxima do cabo, do balun e dos conectores.
 - **Legislação:** transmitir exige licença de radioamador da **Anatel**. Confira o plano de
   bandas e os limites de potência vigentes (Anatel e LABRE).
