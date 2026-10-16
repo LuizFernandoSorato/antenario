@@ -21,6 +21,7 @@ const scenarios: Record<string, Record<string, number>[]> = {
   dipole: [{}, { centerGap: 0.01 }, { frequencyMHz: 7.1 }],
   'ground-plane': [{}, { droopAngleDeg: 0 }, { droopAngleDeg: 80 }, { radialCount: 3 }, { radialCount: 8 }],
   'j-pole': [{}, { frequencyMHz: 435 }, { frequencyMHz: 52 }],
+  yagi: [{}, { designLength: 0.4 }, { designLength: 1.2, frequencyMHz: 435 }, { designLength: 3.2 }, { designLength: 4.2, boomDiameter: 0 }],
   helical: [{}, { turns: 4 }, { turns: 20, circumferenceRatio: 1.2 }, { frequencyMHz: 1575 }],
 };
 

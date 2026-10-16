@@ -22,6 +22,11 @@ import { cutList as jPoleCutList } from './j-pole/cutlist';
 import { diagrams as jPoleDiagrams } from './j-pole/diagram';
 import jPoleGuide from './j-pole/guide.md?raw';
 import { meta as jPoleMeta } from './j-pole/meta';
+import * as yagi from './yagi/calc';
+import { cutList as yagiCutList } from './yagi/cutlist';
+import { diagrams as yagiDiagrams } from './yagi/diagram';
+import yagiGuide from './yagi/guide.md?raw';
+import { meta as yagiMeta } from './yagi/meta';
 import type { Diagram } from './diagram-kit';
 import type { AntennaMeta, CalcResult, CutItem } from './types';
 
@@ -67,6 +72,7 @@ export const antennas: readonly AntennaModule[] = [
   register(groundPlaneMeta, groundPlane.defaultParams, groundPlane.calc, groundPlaneDiagrams, groundPlaneCutList, groundPlaneGuide),
   register(jPoleMeta, jPole.defaultParams, jPole.calc, jPoleDiagrams, jPoleCutList, jPoleGuide),
   register(helicalMeta, helical.defaultParams, helical.calc, helicalDiagrams, helicalCutList, helicalGuide),
+  register(yagiMeta, yagi.defaultParams, yagi.calc, yagiDiagrams, yagiCutList, yagiGuide),
 ];
 
 export type { Diagram } from './diagram-kit';
