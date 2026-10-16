@@ -1,0 +1,90 @@
+:root {
+  --bg: #f6f7f9;
+  --fg: #1b1f24;
+  --muted: #5b6470;
+  --card: #ffffff;
+  --border: #d9dde3;
+  --accent: #1f3a5f;
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171b;
+    --fg: #e6e8eb;
+    --muted: #9aa3ad;
+    --card: #1d2126;
+    --border: #2e343b;
+    --accent: #8fb4e3;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+header,
+main {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+h1 {
+  margin: 0;
+  color: var(--accent);
+}
+
+header p,
+.note {
+  color: var(--muted);
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+label {
+  display: grid;
+  gap: 0.25rem;
+  font-weight: 600;
+}
+
+input {
+  font: inherit;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+dt {
+  font-weight: 600;
+}
+
+dd {
+  margin: 0;
+}
+
+.note {
+  font-size: 0.875rem;
+}
