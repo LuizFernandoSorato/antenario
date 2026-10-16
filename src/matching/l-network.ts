@@ -165,7 +165,7 @@ export function designLNetwork(input: LNetworkInput): LNetworkSolution[] {
 /** Potência entregue à carga pela solução (para conferência): ½·|I_carga|²·R_L. */
 export function deliveredPower(zLoad: Complex, solution: LNetworkSolution, z0: number, powerW: number): number {
   const vin = Math.sqrt(2 * powerW * z0);
-  const { topology, seriesReactance: x, shuntSusceptance: b } = solution;
+  const { topology, seriesReactance: x } = solution;
   let iLoad: number;
   if (topology === 'shunt-at-load') {
     const iin = complex(vin / z0);
