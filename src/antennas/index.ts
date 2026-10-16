@@ -32,6 +32,11 @@ import { cutList as jPoleCutList } from './j-pole/cutlist';
 import { diagrams as jPoleDiagrams } from './j-pole/diagram';
 import jPoleGuide from './j-pole/guide.md?raw';
 import { meta as jPoleMeta } from './j-pole/meta';
+import * as magneticLoop from './magnetic-loop/calc';
+import { cutList as magneticLoopCutList } from './magnetic-loop/cutlist';
+import { diagrams as magneticLoopDiagrams } from './magnetic-loop/diagram';
+import magneticLoopGuide from './magnetic-loop/guide.md?raw';
+import { meta as magneticLoopMeta } from './magnetic-loop/meta';
 import * as yagi from './yagi/calc';
 import { cutList as yagiCutList } from './yagi/cutlist';
 import { diagrams as yagiDiagrams } from './yagi/diagram';
@@ -85,6 +90,7 @@ export const antennas: readonly AntennaModule[] = [
   register(yagiMeta, yagi.defaultParams, yagi.calc, yagiDiagrams, yagiCutList, yagiGuide),
   register(cubicQuadMeta, cubicQuad.defaultParams, cubicQuad.calc, cubicQuadDiagrams, cubicQuadCutList, cubicQuadGuide),
   register(disconeMeta, discone.defaultParams, discone.calc, disconeDiagrams, disconeCutList, disconeGuide),
+  register(magneticLoopMeta, magneticLoop.defaultParams, magneticLoop.calc, magneticLoopDiagrams, magneticLoopCutList, magneticLoopGuide),
 ];
 
 export type { Diagram } from './diagram-kit';
