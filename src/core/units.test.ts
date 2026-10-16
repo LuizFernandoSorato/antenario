@@ -15,6 +15,7 @@ import {
   mhzToHz,
   parseDecimal,
   powerRatioToDb,
+  trimZeros,
   voltageRatioToDb,
   wattsToDbm,
 } from './units';
@@ -63,6 +64,13 @@ describe('formatação pt-BR', () => {
     expect(formatNumber(1234.5, 1)).toBe('1.234,5');
     expect(formatNumber(1234.5, 1, false)).toBe('1234,5');
     expect(formatNumber(0.1 + 0.2, 2)).toBe('0,30');
+  });
+  it('remove zeros decimais à direita', () => {
+    expect(trimZeros('36,50')).toBe('36,5');
+    expect(trimZeros('73,00')).toBe('73');
+    expect(trimZeros('2,15')).toBe('2,15');
+    expect(trimZeros('100')).toBe('100');
+    expect(trimZeros('1.200,00')).toBe('1.200');
   });
   it('trata infinito', () => {
     expect(formatNumber(Infinity, 2)).toBe('∞');

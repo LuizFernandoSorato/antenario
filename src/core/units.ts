@@ -120,6 +120,11 @@ export function formatNumber(value: number, decimals: number, useGrouping = true
   }).format(value);
 }
 
+/** Remove zeros decimais à direita de um número já formatado: "36,50" → "36,5"; "73,00" → "73". */
+export function trimZeros(formatted: string): string {
+  return formatted.replace(/(,\d*?)0+$/, '$1').replace(/,$/, '');
+}
+
 /**
  * Lê um número digitado pelo usuário, aceitando vírgula ou ponto como
  * separador decimal ("145,5" ou "145.5"). Não aceita separador de milhar.
