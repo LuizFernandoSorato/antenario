@@ -49,3 +49,13 @@ select.addEventListener('change', () => {
 });
 
 show(location.hash.slice(1));
+
+// Offline: o service worker (gerado no build por tools/sw-plugin.ts) guarda o app em cache.
+// Só em produção: no `npm run dev` ele atrapalharia o recarregamento automático.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register(new URL('sw.js', document.baseURI)).catch((err: unknown) => {
+      console.warn('Não foi possível ativar o modo offline:', err);
+    });
+  });
+}

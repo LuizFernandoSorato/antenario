@@ -9,9 +9,12 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "e2e:offline": "node scripts/e2e-offline.mjs http://localhost:4173/",
+    "icons": "node scripts/make-icons.mjs"
   },
   "devDependencies": {
+    "@types/node": "^26.6.5",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
     "vitest": "^5.0.5"
