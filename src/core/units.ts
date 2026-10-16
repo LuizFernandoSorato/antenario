@@ -120,6 +120,34 @@ export function formatNumber(value: number, decimals: number, useGrouping = true
   }).format(value);
 }
 
+const SI_PREFIXES: readonly [number, string][] = [
+  [1e9, 'G'],
+  [1e6, 'M'],
+  [1e3, 'k'],
+  [1, ''],
+  [1e-3, 'm'],
+  [1e-6, 'µ'],
+  [1e-9, 'n'],
+  [1e-12, 'p'],
+];
+
+/**
+ * Formata com prefixo SI e 3 algarismos significativos: 3,897e-8 H → "39,0 nH".
+ * Usado para componentes (indutores, capacitores) e grandezas de ordem variável.
+ */
+export function formatEngineering(value: number, unit: string, significant = 3): string {
+  if (!Number.isFinite(value)) return formatNumber(value, 0);
+  if (value === 0) return `0 ${unit}`;
+  // Arredonda antes de escolher o prefixo: 999,96 nH vira 1,00 µH, não "1000 nH".
+  const rounded = Number(value.toPrecision(significant));
+  const absValue = Math.abs(rounded);
+  const [factor, prefix] = SI_PREFIXES.find(([f]) => absValue >= f) ?? SI_PREFIXES[SI_PREFIXES.length - 1]!;
+  const scaled = rounded / factor;
+  const intDigits = Math.floor(Math.log10(Math.abs(scaled))) + 1;
+  const decimals = Math.max(0, significant - intDigits);
+  return `${formatNumber(scaled, decimals, false)} ${prefix}${unit}`;
+}
+
 /** Remove zeros decimais à direita de um número já formatado: "36,50" → "36,5"; "73,00" → "73". */
 export function trimZeros(formatted: string): string {
   return formatted.replace(/(,\d*?)0+$/, '$1').replace(/,$/, '');

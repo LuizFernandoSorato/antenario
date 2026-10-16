@@ -5,6 +5,7 @@ import {
   dbToPowerRatio,
   dbToVoltageRatio,
   dbmToWatts,
+  formatEngineering,
   formatInches,
   formatLength,
   formatNumber,
@@ -64,6 +65,19 @@ describe('formatação pt-BR', () => {
     expect(formatNumber(1234.5, 1)).toBe('1.234,5');
     expect(formatNumber(1234.5, 1, false)).toBe('1234,5');
     expect(formatNumber(0.1 + 0.2, 2)).toBe('0,30');
+  });
+  it('prefixos SI com 3 algarismos significativos', () => {
+    expect(formatEngineering(3.897e-8, 'H')).toBe('39,0 nH');
+    expect(formatEngineering(9.23e-13, 'F')).toBe('0,923 pF');
+    expect(formatEngineering(1.5e-6, 'H')).toBe('1,50 µH');
+    expect(formatEngineering(220e-12, 'F')).toBe('220 pF');
+    expect(formatEngineering(0.0123, 'A')).toBe('12,3 mA');
+    expect(formatEngineering(1234, 'V')).toBe('1,23 kV');
+    expect(formatEngineering(5, 'W')).toBe('5,00 W');
+    expect(formatEngineering(-47e-9, 'F')).toBe('-47,0 nF');
+    expect(formatEngineering(0, 'F')).toBe('0 F');
+    // Arredondamento que mudaria de prefixo: 999,96 nH → "1,00 µH"
+    expect(formatEngineering(999.96e-9, 'H')).toBe('1,00 µH');
   });
   it('remove zeros decimais à direita', () => {
     expect(trimZeros('36,50')).toBe('36,5');
