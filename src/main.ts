@@ -8,7 +8,7 @@ const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('Elemento #app não encontrado.');
 
 app.innerHTML = `
-  <header>
+  <header class="no-print">
     <h1>Antenário</h1>
     <p>Projete, calcule e construa antenas.</p>
     <nav aria-label="Páginas">
