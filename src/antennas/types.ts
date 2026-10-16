@@ -30,8 +30,11 @@ export interface AntennaMeta {
   typicalRangeMHz: { min: number; max: number };
   nominalImpedanceOhms: number;
   polarization: string;
-  /** Ganho aproximado em dBi (detalhes e fonte vêm em `calc().expected`). */
-  approxGainDbi: number;
+  /**
+   * Ganho aproximado em dBi (detalhes e fonte vêm em `calc().expected`).
+   * `null` quando não há um valor típico com fonte confiável.
+   */
+  approxGainDbi: number | null;
   usage: { rx: boolean; tx: boolean };
   /** Antena externa: o guia leva o bloco de segurança física (aterramento, rede elétrica). */
   outdoor: boolean;
