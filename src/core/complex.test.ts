@@ -9,12 +9,15 @@ import {
   conj,
   degToRad,
   div,
+  exp,
   fromPolar,
   mul,
   parallel,
   radToDeg,
   reciprocal,
+  scale,
   sub,
+  tanh,
   toComplex,
   toString,
 } from './complex';
@@ -70,6 +73,34 @@ describe('aritmética complexa', () => {
 
   it('toString', () => {
     expect(toString(complex(50, -25))).toBe('50.00 − j25.00');
+  });
+});
+
+describe('funções transcendentes', () => {
+  it('e^(jπ) = −1 (identidade de Euler)', () => {
+    expect(approxEqual(exp(complex(0, Math.PI)), complex(-1, 0), 1e-15)).toBe(true);
+  });
+
+  it('tanh real coincide com Math.tanh', () => {
+    expect(tanh(complex(0.7)).re).toBeCloseTo(Math.tanh(0.7), 14);
+    expect(tanh(complex(0.7)).im).toBeCloseTo(0, 14);
+  });
+
+  it('tanh(jy) = j·tan(y)', () => {
+    const z = tanh(complex(0, 0.4));
+    expect(z.re).toBeCloseTo(0, 14);
+    expect(z.im).toBeCloseTo(Math.tan(0.4), 14);
+  });
+
+  it('tanh confere com a definição (e^2z − 1)/(e^2z + 1)', () => {
+    const z = complex(0.3, 1.1);
+    const e2z = exp(scale(z, 2));
+    const ref = div(sub(e2z, complex(1)), add(e2z, complex(1)));
+    expect(approxEqual(tanh(z), ref, 1e-14)).toBe(true);
+  });
+
+  it('tanh(jπ/2) é um polo', () => {
+    expect(() => tanh(complex(0, Math.PI / 2))).toThrow(RangeError);
   });
 });
 

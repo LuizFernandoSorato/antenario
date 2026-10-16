@@ -85,6 +85,24 @@ export function parallel(a: Complex, b: Complex): Complex {
   return div(mul(a, b), add(a, b));
 }
 
+/** Exponencial complexa e^z. */
+export function exp(z: Complex): Complex {
+  return fromPolar(Math.exp(z.re), z.im);
+}
+
+/**
+ * Tangente hiperbólica complexa:
+ * tanh(x + jy) = (sinh 2x + j·sin 2y) / (cosh 2x + cos 2y).
+ * Lança RangeError no polo (x = 0 e cos 2y = −1), onde o valor é infinito.
+ */
+export function tanh(z: Complex): Complex {
+  const den = Math.cosh(2 * z.re) + Math.cos(2 * z.im);
+  if (den === 0) {
+    throw new RangeError('tanh complexa infinita (polo).');
+  }
+  return complex(Math.sinh(2 * z.re) / den, Math.sin(2 * z.im) / den);
+}
+
 /** Compara dois complexos com tolerância absoluta. */
 export function approxEqual(a: Complex, b: Complex, tolerance = 1e-12): boolean {
   return Math.abs(a.re - b.re) <= tolerance && Math.abs(a.im - b.im) <= tolerance;
