@@ -12,6 +12,11 @@ import { cutList as groundPlaneCutList } from './ground-plane/cutlist';
 import { diagrams as groundPlaneDiagrams } from './ground-plane/diagram';
 import groundPlaneGuide from './ground-plane/guide.md?raw';
 import { meta as groundPlaneMeta } from './ground-plane/meta';
+import * as helical from './helical/calc';
+import { cutList as helicalCutList } from './helical/cutlist';
+import { diagrams as helicalDiagrams } from './helical/diagram';
+import helicalGuide from './helical/guide.md?raw';
+import { meta as helicalMeta } from './helical/meta';
 import * as jPole from './j-pole/calc';
 import { cutList as jPoleCutList } from './j-pole/cutlist';
 import { diagrams as jPoleDiagrams } from './j-pole/diagram';
@@ -61,6 +66,7 @@ export const antennas: readonly AntennaModule[] = [
   register(dipoleMeta, dipole.defaultParams, dipole.calc, dipoleDiagrams, dipoleCutList, dipoleGuide),
   register(groundPlaneMeta, groundPlane.defaultParams, groundPlane.calc, groundPlaneDiagrams, groundPlaneCutList, groundPlaneGuide),
   register(jPoleMeta, jPole.defaultParams, jPole.calc, jPoleDiagrams, jPoleCutList, jPoleGuide),
+  register(helicalMeta, helical.defaultParams, helical.calc, helicalDiagrams, helicalCutList, helicalGuide),
 ];
 
 export type { Diagram } from './diagram-kit';
