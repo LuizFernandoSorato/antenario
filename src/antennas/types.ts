@@ -86,6 +86,22 @@ export interface CalcResult {
   warnings: CalcWarning[];
 }
 
+/** Peça a cortar para a folha de corte. */
+export interface CutItem {
+  /** Cota do diagrama (A, B, C…) a que a peça corresponde. */
+  label: string;
+  name: string;
+  quantity: number;
+  /** Medida nominal calculada, em metros. */
+  meters: number;
+  /**
+   * Peça que será ajustada medindo a ROE: deve ser cortada com sobra e encurtada aos
+   * poucos (ver guia). Peças fixas (radiais, ligações) são cortadas na medida.
+   */
+  adjustable: boolean;
+  note?: string;
+}
+
 /** Aviso padrão quando a frequência está fora da faixa de uso prático da antena. */
 export function rangeWarning(meta: AntennaMeta, fMHz: number): CalcWarning | null {
   const { min, max } = meta.typicalRangeMHz;
