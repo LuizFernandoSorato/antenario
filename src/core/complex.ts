@@ -90,6 +90,16 @@ export function exp(z: Complex): Complex {
   return fromPolar(Math.exp(z.re), z.im);
 }
 
+/** Seno hiperbólico complexo: sinh(x + jy) = sinh x·cos y + j·cosh x·sin y. */
+export function sinh(z: Complex): Complex {
+  return complex(Math.sinh(z.re) * Math.cos(z.im), Math.cosh(z.re) * Math.sin(z.im));
+}
+
+/** Cosseno hiperbólico complexo: cosh(x + jy) = cosh x·cos y + j·sinh x·sin y. */
+export function cosh(z: Complex): Complex {
+  return complex(Math.cosh(z.re) * Math.cos(z.im), Math.sinh(z.re) * Math.sin(z.im));
+}
+
 /**
  * Tangente hiperbólica complexa:
  * tanh(x + jy) = (sinh 2x + j·sin 2y) / (cosh 2x + cos 2y).

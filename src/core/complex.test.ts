@@ -7,6 +7,7 @@ import {
   arg,
   complex,
   conj,
+  cosh,
   degToRad,
   div,
   exp,
@@ -16,6 +17,7 @@ import {
   radToDeg,
   reciprocal,
   scale,
+  sinh,
   sub,
   tanh,
   toComplex,
@@ -97,6 +99,14 @@ describe('funções transcendentes', () => {
     const e2z = exp(scale(z, 2));
     const ref = div(sub(e2z, complex(1)), add(e2z, complex(1)));
     expect(approxEqual(tanh(z), ref, 1e-14)).toBe(true);
+  });
+
+  it('sinh/cosh: cosh² − sinh² = 1 e tanh = sinh/cosh', () => {
+    const z = complex(0.3, 1.1);
+    const c = cosh(z);
+    const s = sinh(z);
+    expect(approxEqual(sub(mul(c, c), mul(s, s)), complex(1), 1e-14)).toBe(true);
+    expect(approxEqual(div(s, c), tanh(z), 1e-14)).toBe(true);
   });
 
   it('tanh(jπ/2) é um polo', () => {
