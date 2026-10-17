@@ -1,4 +1,4 @@
-# Yagi-Uda (NBS TN 688)
+# Yagi-Uda (NBS TN 688 e DL6WU)
 
 ## 1. Visão geral
 
@@ -12,9 +12,15 @@ campo na frente e o cancelam atrás.
 - **Polarização:** linear. Elementos na horizontal = polarização horizontal; na vertical = vertical.
   As duas estações precisam usar a mesma (senão se perdem cerca de 20 dB).
 - **Diagrama:** direcional, para o lado dos diretores. Mais comprido = mais ganho e feixe mais estreito.
-- **Ganho:** do NBS, 7,1 a 14,2 dB sobre um dipolo (9,2 a 16,4 dBi) para 0,4λ a 4,2λ de comprimento.
-- **Medidas:** vêm dos projetos otimizados do relatório NBS TN 688, corrigidos para o diâmetro dos
-  elementos (curvas da Fig. 9) e do boom (Fig. 10).
+- **Ganho:** no método NBS, 7,1 a 14,2 dB sobre um dipolo (9,2 a 16,4 dBi) para 0,4λ a 4,2λ de comprimento.
+  No método DL6WU, a estimativa é 9,2 + 3,39·ln(boom em λ) dBd, para boom de 2,2λ a 39λ.
+- **Dois métodos:** o **método 1 (NBS TN 688)** usa projetos otimizados e testados, mas só com 3, 5, 6, 12, 15
+  ou 17 elementos. O **método 2 (DL6WU)** aceita qualquer número de elementos (3 a 102) e foi feito para Yagis
+  longos (boom a partir de 2,2λ, ou seja, 11 elementos ou mais). Abaixo de 11 elementos ele ainda calcula, mas
+  sem estimar o ganho e com aviso. Para Yagis curtos, prefira o NBS.
+- **Medidas:** no NBS, os projetos da Tabela 1 corrigidos para o diâmetro dos elementos (Fig. 9) e do boom
+  (Fig. 10). No DL6WU, as equações do programa DL6WU.BAS (Hoch, DL6WU; G3SEK), com espaçamento crescente
+  entre os diretores até o 14º e constante (0,4λ) depois.
 
 ## 2. Materiais
 
@@ -44,6 +50,8 @@ Serra de arco ou cortador de tubos, lima, furadeira, trena, **paquímetro** (a t
    são alguns milímetros; em UHF, 1 mm ou menos. Use um gabarito para cortar todos com a mesma precisão.
 3. Marque no boom as posições, medidas a partir do refletor: refletor em 0, excitado em **E**,
    1º diretor em **E** + **S**, 2º em **E** + 2·**S**, e assim por diante.
+   No método DL6WU o espaçamento não é uniforme: use as posições **P1**, **P2**… da tabela de medidas, todas
+   medidas a partir do refletor.
 4. Fure o boom nas posições, **perpendicular** ao eixo, e monte os elementos **centrados** no boom
    (mesmo comprimento dos dois lados).
 5. Monte o elemento excitado, com o ponto de alimentação isolado do boom.
@@ -100,3 +108,7 @@ do casamento escolhido. Um dipolo simples dentro do Yagi fica bem abaixo de 50 �
   dezembro de 1976. https://doi.org/10.6028/NBS.TN.688 (Tabela 1; Figs. 9 e 10; exemplos da seção 4).
 - Anatel: regulamentação do Serviço de Radioamador (versão vigente).
 - LABRE: plano de bandas (versão vigente).
+- G. Hoch, DL6WU, "Extremely Long Yagi Antennas", *VHF Communications* 3/82, e G. Hoch e PA0MS, "Zelf Ontwerpen en
+  Bouwen van VHF en UHF Antennes", VERON. As equações usadas vêm do programa DL6WU.BAS de J. Haigwood KY4Z, B. Stein
+  W6NBI e I. White G3SEK (versão de 2006): http://www.ifwtech.co.uk/g3sek/diy-yagi/dl6wu-2006.bas. Os artigos
+  originais não foram consultados diretamente.

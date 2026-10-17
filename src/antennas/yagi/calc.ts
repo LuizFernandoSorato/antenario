@@ -9,6 +9,7 @@
 import { assertFrequencyMHz, assertPositive, formatNumber } from '../../core/units';
 import { assertFactor, wavelength } from '../../core/wave';
 import { type CalcResult, type CalcWarning, type Measurement, rangeWarning } from '../types';
+import { calcDl6wu } from './dl6wu-calc';
 import { meta } from './meta';
 import {
   NBS_CUT_TOLERANCE_LAMBDA,
@@ -24,9 +25,11 @@ import {
 
 export interface YagiParams {
   frequencyMHz: number;
+  /** Método de projeto: 1 = projetos do NBS TN 688; 2 = DL6WU (qualquer número de elementos). */
+  method: number;
   /**
-   * Número total de elementos (refletor + excitado + diretores). Só os projetos do NBS existem:
-   * 3, 5, 6, 12, 15 ou 17. O comprimento do boom sai do projeto escolhido.
+   * Número total de elementos (refletor + excitado + diretores). No método NBS só existem 3, 5, 6, 12,
+   * 15 ou 17; no DL6WU, qualquer número de 3 a 102. O comprimento do boom sai do projeto escolhido.
    */
   elementCount: number;
   /** Diâmetro dos elementos, em metros. */
@@ -39,6 +42,7 @@ export interface YagiParams {
 
 export const defaultParams: YagiParams = {
   frequencyMHz: 145,
+  method: 1,
   elementCount: 5,
   elementDiameter: 0.006,
   boomDiameter: 0.02,
@@ -53,8 +57,8 @@ export function findDesign(elementCount: number) {
   const design = NBS_DESIGNS.find((d) => d.directorCount + 2 === elementCount);
   if (!design) {
     throw new RangeError(
-      `O número de elementos deve ser um dos projetos do NBS (${AVAILABLE_ELEMENT_COUNTS.join(', ')}); recebido: ${elementCount}. ` +
-        'O método não cobre outras quantidades.',
+      `No método NBS o número de elementos deve ser um dos projetos do NBS (${AVAILABLE_ELEMENT_COUNTS.join(', ')}); recebido: ${elementCount}. ` +
+        'Para outras quantidades use o método 2 (DL6WU).',
     );
   }
   return design;
@@ -68,6 +72,10 @@ export function elementPositionsLambda(directorCount: number, spacing: number): 
 }
 
 export function calc(params: YagiParams): CalcResult {
+  if (params.method === 2) return calcDl6wu(params);
+  if (params.method !== 1) {
+    throw new RangeError(`O método deve ser 1 (NBS TN 688) ou 2 (DL6WU); recebido: ${params.method}.`);
+  }
   const { frequencyMHz: f, elementCount, elementDiameter: d, boomDiameter: boom, drivenFactor: k } = params;
   assertFrequencyMHz(f);
   assertPositive(d, 'O diâmetro dos elementos');

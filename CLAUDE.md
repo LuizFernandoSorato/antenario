@@ -164,7 +164,7 @@ Para retomar: `git log --oneline` mostra o que foi feito; o último commit de an
   IEEE paywall). Precisam do livro/PDF fornecido pelo usuário.
 
 **`TODO(fonte)` nas antenas existentes:**
-- Yagi: divergência entre a tabela e a curva do NBS TN 688 no projeto de 0,4λ.
+- Yagi: divergência entre a tabela e a curva do NBS TN 688 no projeto de 0,4λ. O método DL6WU (qualquer número de elementos) foi implementado a partir do DL6WU.BAS de G3SEK (2006); os artigos originais do DL6WU não foram consultados e não há comparação com dados medidos (faltam o excitado como gamma e a validação numérica).
 - Quadra cúbica: ganho é estimativa aditiva sem fonte.
 - Discone: regra do gap e ganho.
 - Colinear de coaxial: tabela de ganho vem de fonte de radioamador; impedância da seção de baixo não consta.

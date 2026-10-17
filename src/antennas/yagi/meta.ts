@@ -6,7 +6,7 @@ export const meta: AntennaMeta = {
   description:
     'Antena direcional com um refletor, um elemento excitado e vários diretores num boom. ' +
     'As medidas seguem os projetos otimizados do relatório NBS TN 688 (de 0,4λ a 4,2λ de ' +
-    'comprimento), com correção do diâmetro dos elementos e do boom. Boa para VHF/UHF: ' +
+    'comprimento) ou o método DL6WU, que aceita qualquer número de elementos, ambos com correção do diâmetro dos elementos e do boom. Boa para VHF/UHF: ' +
     'repetidoras, satélites de polarização linear, ADS-B e TV.',
   // Critério de uso prático desta ferramenta (não é limite físico): de 10 m até 23 cm.
   // Abaixo de 28 MHz o boom passa de dezenas de metros; acima de 1300 MHz a tolerância de corte
@@ -22,16 +22,28 @@ export const meta: AntennaMeta = {
   params: [
     { key: 'frequencyMHz', label: 'Frequência de projeto', unit: 'MHz', defaultValue: 145, toSi: 1, min: 0 },
     {
+      key: 'method',
+      label: 'Método (1 = NBS TN 688, 2 = DL6WU)',
+      unit: '',
+      defaultValue: 1,
+      toSi: 1,
+      min: 1,
+      max: 2,
+      help:
+        '1: projetos otimizados do NBS, só com 3, 5, 6, 12, 15 ou 17 elementos (bons para Yagis curtos). ' +
+        '2: DL6WU, qualquer número de elementos de 3 a 102, pensado para Yagis longos (boom de 2,2λ a 39λ, ou seja, a partir de 11 elementos).',
+    },
+    {
       key: 'elementCount',
       label: 'Número de elementos (refletor + excitado + diretores)',
       unit: '',
       defaultValue: 5,
       toSi: 1,
       min: 3,
-      max: 17,
+      max: 102,
       help:
-        'Só os projetos do NBS: 3, 5, 6, 12, 15 ou 17 elementos. O comprimento do boom é calculado (de 0,4λ a 4,2λ). ' +
-        'Atenção: o projeto de 15 elementos (4,2λ) é mais comprido que o de 17 (3,2λ) porque usa espaçamento maior.',
+        'Com o método 1 só valem 3, 5, 6, 12, 15 ou 17 (o projeto de 15, com 4,2λ, é mais comprido que o de 17, com 3,2λ, por usar espaçamento maior). ' +
+        'Com o método 2 vale qualquer inteiro de 3 a 102. O comprimento do boom é sempre calculado.',
     },
     { key: 'elementDiameter', label: 'Diâmetro dos elementos', unit: 'mm', defaultValue: 6, toSi: 0.001, min: 0 },
     {

@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { wavelength } from '../../core/wave';
 import { AVAILABLE_ELEMENT_COUNTS, calc, defaultParams, elementPositionsLambda, findDesign } from './calc';
 import { cutList } from './cutlist';
+import {
+  boomCorrection as dl6wuBoomCorrection,
+  directorLengths as dl6wuDirectorLengths,
+  reflectorLength as dl6wuReflectorLength,
+} from './dl6wu';
 import { NBS_DESIGNS, boomCorrection, directorLengths, reflectorLength } from './nbs688';
 
 // Referências: NBS Technical Note 688 (Viezbicke, 1976).
@@ -146,5 +151,65 @@ describe('Yagi: lista de corte', () => {
     const items = cutList(defaultParams);
     expect(items.map((i) => i.label)).toEqual(['R', 'D1', 'D2', 'D3', 'DE']);
     expect(items.filter((i) => i.adjustable).map((i) => i.label)).toEqual(['DE']);
+  });
+});
+
+describe('Yagi: método DL6WU (qualquer número de elementos)', () => {
+  const lambda = wavelength(432);
+  const base = { ...defaultParams, frequencyMHz: 432, method: 2, elementDiameter: 0.006, boomDiameter: 0 };
+  const m = (r: ReturnType<typeof calc>, label: string) => r.measurements.find((x) => x.label === label)!.meters;
+
+  it('aceita qualquer número de elementos de 3 a 102 e rejeita o resto', () => {
+    for (const n of [3, 4, 7, 11, 13, 19, 50, 102]) {
+      expect(() => calc({ ...base, elementCount: n })).not.toThrow();
+    }
+    for (const n of [2, 103, 8.5]) expect(() => calc({ ...base, elementCount: n })).toThrow(RangeError);
+  });
+
+  it('o boom é a soma dos espaçamentos da tabela do DL6WU (0,2λ + Σ S)', () => {
+    // 11 elementos = 9 diretores: 0,2 + 0,075 + 0,18 + 0,215 + 0,25 + 0,28 + 0,3 + 0,315 + 0,33 + 0,345 = 2,49λ
+    expect(m(calc({ ...base, elementCount: 11 }), 'L') / lambda).toBeCloseTo(2.49, 9);
+    // 16 elementos = 14 diretores: 4,415λ; cada diretor extra soma 0,4λ
+    expect(m(calc({ ...base, elementCount: 16 }), 'L') / lambda).toBeCloseTo(4.415, 9);
+    expect(m(calc({ ...base, elementCount: 18 }), 'L') / lambda).toBeCloseTo(4.415 + 0.8, 9);
+  });
+
+  it('posições P1…Pn crescem e a última é o boom', () => {
+    const r = calc({ ...base, elementCount: 12 });
+    const p = r.measurements.filter((x) => /^P[0-9]+$/.test(x.label));
+    expect(p).toHaveLength(10);
+    p.forEach((x, i) => i > 0 && expect(x.meters).toBeGreaterThan(p[i - 1]!.meters));
+    expect(p[9]!.meters).toBe(m(r, 'L'));
+    expect(m(r, 'E')).toBeCloseTo(0.2 * lambda, 12);
+  });
+
+  it('comprimentos em metros = λ × (equação do DL6WU + correção do boom)', () => {
+    const d = 0.006 / lambda;
+    const r = calc({ ...base, elementCount: 11, boomDiameter: 0.02 });
+    const extra = dl6wuBoomCorrection(0.02 / lambda);
+    dl6wuDirectorLengths(9, d).forEach((l, i) => expect(m(r, `D${i + 1}`)).toBeCloseTo((l + extra) * lambda, 12));
+    expect(m(r, 'R')).toBeCloseTo((dl6wuReflectorLength(d) + extra) * lambda, 12);
+    expect(m(r, 'DE')).toBeCloseTo(0.5 * 0.95 * lambda, 12);
+  });
+
+  it('o ganho estimado cresce com o boom, só dentro da faixa 2,2–39λ', () => {
+    const g = (n: number) => calc({ ...base, elementCount: n }).expected.gain;
+    expect(g(11).typical).toBeCloseTo(9.2 + 3.39 * Math.log(2.49) + 2.15, 9);
+    expect(g(20).typical!).toBeGreaterThan(g(11).typical!);
+    // 10 elementos: boom de 2,145λ, abaixo de 2,2λ: sem ganho e com aviso
+    expect(g(10).typical).toBeUndefined();
+    expect(calc({ ...base, elementCount: 10 }).warnings.some((w) => w.message.includes('fora da faixa do método DL6WU'))).toBe(true);
+    expect(calc({ ...base, elementCount: 11 }).warnings.some((w) => w.message.includes('fora da faixa do método DL6WU'))).toBe(false);
+  });
+
+  it('método NBS continua recusando quantidades sem projeto, e o método é validado', () => {
+    expect(() => calc({ ...defaultParams, elementCount: 11 })).toThrow(RangeError);
+    expect(() => calc({ ...defaultParams, method: 3 })).toThrow(RangeError);
+    expect(() => calc({ ...base, elementDiameter: 0.0001, elementCount: 11 })).toThrow(RangeError); // d/λ < 0,001
+  });
+
+  it('lista de corte e diagrama funcionam com o DL6WU', () => {
+    const items = cutList({ ...base, elementCount: 11 });
+    expect(items.map((i) => i.label)).toEqual(['R', ...Array.from({ length: 9 }, (_, i) => `D${i + 1}`), 'DE']);
   });
 });

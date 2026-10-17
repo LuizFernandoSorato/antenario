@@ -7,7 +7,7 @@ import { esc, type Diagram, dimension, line, measure, rect, svgDoc, text } from 
 import { formatLength, lengthResolutionForFrequency } from '../../core/units';
 import type { CalcResult } from '../types';
 import type { YagiParams } from './calc';
-import { elementPositionsLambda, findDesign } from './calc';
+import { elementPositionsLambda } from './calc';
 import { wavelength } from '../../core/wave';
 
 /** Texto girado -90° (lê de baixo para cima), ancorado em (x, y). */
@@ -18,10 +18,18 @@ function rotatedLabel(x: number, y: number, content: string, cls: string): strin
 function topView(result: CalcResult, params: YagiParams): Diagram {
   const id = 'yg-top';
   const res = lengthResolutionForFrequency(params.frequencyMHz);
-  const design = findDesign(params.elementCount);
   const lambda = wavelength(params.frequencyMHz);
-  const positions = elementPositionsLambda(design.directorCount, design.spacing); // em λ
-  const labels = ['R', 'DE', ...design.directors.map((_, i) => `D${i + 1}`)];
+  const directorLabels = result.measurements.filter((m) => /^D[0-9]+$/.test(m.label)).map((m) => m.label);
+  const directorCount = directorLabels.length;
+  const labels = ['R', 'DE', ...directorLabels];
+  // Posições em λ a partir do refletor: tabela P1…Pn (DL6WU) ou espaçamento uniforme S (NBS).
+  const explicit = result.measurements.filter((m) => /^P[0-9]+$/.test(m.label));
+  const uniform = explicit.length === 0;
+  const positions = uniform
+    ? elementPositionsLambda(directorCount, measure(result, 'S') / lambda)
+    : [0, measure(result, 'E') / lambda, ...explicit.map((m) => m.meters / lambda)];
+  // Com muitos elementos os rótulos se sobrepõem; as medidas continuam na tabela.
+  const showLabels = labels.length <= 24;
 
   const left = 50;
   const usable = 560;
@@ -40,14 +48,25 @@ function topView(result: CalcResult, params: YagiParams): Diagram {
     parts.push(line(xs[i]!, cy - half, xs[i]!, cy + half, cls === 'dg-connector' ? 'dg-conductor' : cls));
     if (label === 'DE') parts.push(rect(xs[i]! - 4, cy - 7, 8, 14, 'dg-connector', 1));
     const topY = cy - (Math.max(...labels.map((l) => measure(result, l))) / lambda) * scale * 0.5 - 8;
-    parts.push(rotatedLabel(xs[i]! + 4, topY, `${label} = ${formatLength(meters, res)}`, 'dg-label'));
+    if (showLabels) parts.push(rotatedLabel(xs[i]! + 4, topY, `${label} = ${formatLength(meters, res)}`, 'dg-label'));
   });
 
   const baseY = cy + 80;
   parts.push(
     dimension(id, xs[0]!, baseY, xs[1]!, baseY, 14, `E = ${formatLength(measure(result, 'E'), res)}`),
-    design.directorCount >= 1
-      ? dimension(id, xs[1]!, baseY + 38, xs[2]!, baseY + 38, 14, `S = ${formatLength(measure(result, 'S'), res)}`, { labelDx: 0 })
+    directorCount >= 1
+      ? dimension(
+          id,
+          xs[1]!,
+          baseY + 38,
+          xs[2]!,
+          baseY + 38,
+          14,
+          uniform
+            ? `S = ${formatLength(measure(result, 'S'), res)}`
+            : `1º diretor = ${formatLength((positions[2]! - positions[1]!) * lambda, res)}`,
+          { labelDx: 0 },
+        )
       : '',
     dimension(id, xs[0]!, baseY + 76, xs[xs.length - 1]!, baseY + 76, 14, `L = ${formatLength(measure(result, 'L'), res)}`),
     text(xs[xs.length - 1]! + 14, cy + 4, 'frente →', 'dg-note'),
@@ -60,13 +79,18 @@ function topView(result: CalcResult, params: YagiParams): Diagram {
     caption:
       'Boom na horizontal e elementos em escala. R: refletor (atrás). DE: elemento excitado, onde liga o cabo. ' +
       'D1, D2…: diretores, até a frente. As cotas dos elementos são o comprimento total, de ponta a ponta. ' +
-      'E: refletor ao excitado. S: espaçamento dos diretores. L: comprimento do Yagi.',
+      'E: refletor ao excitado. ' +
+      (uniform
+        ? 'S: espaçamento dos diretores. '
+        : 'O espaçamento entre diretores cresce até o 14º; as posições P1, P2… (a partir do refletor) estão na tabela de medidas. ') +
+      (showLabels ? '' : 'Com muitos elementos os rótulos de cada um ficam só na tabela. ') +
+      'L: comprimento do boom.',
     svg: svgDoc(
       id,
       680,
       Math.round(baseY + 118),
       'Yagi: vista de cima',
-      `Yagi de ${design.directorCount + 2} elementos: refletor, excitado e ${design.directorCount} diretores num boom.`,
+      `Yagi de ${directorCount + 2} elementos: refletor, excitado e ${directorCount} diretores num boom.`,
       parts.join(''),
     ),
   };
