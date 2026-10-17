@@ -2,6 +2,11 @@
  * Registro de todas as antenas disponíveis na ferramenta.
  */
 
+import * as adsb from './adsb/calc';
+import { cutList as adsbCutList } from './adsb/cutlist';
+import { diagrams as adsbDiagrams } from './adsb/diagram';
+import adsbGuide from './adsb/guide.md?raw';
+import { meta as adsbMeta } from './adsb/meta';
 import * as turnstile from './turnstile/calc';
 import { cutList as turnstileCutList } from './turnstile/cutlist';
 import { diagrams as turnstileDiagrams } from './turnstile/diagram';
@@ -108,6 +113,7 @@ export const antennas: readonly AntennaModule[] = [
   register(magneticLoopMeta, magneticLoop.defaultParams, magneticLoop.calc, magneticLoopDiagrams, magneticLoopCutList, magneticLoopGuide),
   register(coaxCollinearMeta, coaxCollinear.defaultParams, coaxCollinear.calc, coaxCollinearDiagrams, coaxCollinearCutList, coaxCollinearGuide),
   register(turnstileMeta, turnstile.defaultParams, turnstile.calc, turnstileDiagrams, turnstileCutList, turnstileGuide),
+  register(adsbMeta, adsb.defaultParams, adsb.calc, adsbDiagrams, adsbCutList, adsbGuide),
   register(qfhMeta, qfh.defaultParams, qfh.calc, qfhDiagrams, qfhCutList, qfhGuide),
 ];
 
