@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calc, defaultParams } from './calc';
+import { calc, defaultParams, estimateImpedance } from './calc';
 
 // Referências:
 // - λ/4 × K, com λ = 299,792458/f (CLAUDE.md). K = 0,95 → 71,2007/f(MHz) m.
@@ -51,9 +51,27 @@ describe('ground plane 1/4 de onda: calc', () => {
     }
   });
 
-  it('valores esperados: 36,5 Ω e 5,15 dBi só como limite teórico (plano infinito)', () => {
+  it('impedância estimada passa pelos pontos de referência (0°, 45°, 90°)', () => {
+    expect(estimateImpedance(0)).toBeCloseTo(36.5, 9);
+    expect(estimateImpedance(45)).toBeCloseTo(50, 9);
+    expect(estimateImpedance(90)).toBeCloseTo(73, 9);
+  });
+
+  it('impedância estimada cresce com a inclinação e acompanha o parâmetro', () => {
+    let prev = -Infinity;
+    for (let a = 0; a <= 90; a += 5) {
+      const z = estimateImpedance(a);
+      expect(z).toBeGreaterThan(prev);
+      prev = z;
+    }
+    const lo = calc({ ...defaultParams, droopAngleDeg: 0 }).expected.impedance.typical!;
+    const hi = calc({ ...defaultParams, droopAngleDeg: 60 }).expected.impedance.typical!;
+    expect(lo).toBeCloseTo(36.5, 9);
+    expect(hi).toBeGreaterThan(lo);
+  });
+
+  it('valores esperados: 5,15 dBi só como limite teórico (plano infinito)', () => {
     const r = calc(defaultParams);
-    expect(r.expected.impedance.typical).toBe(36.5);
     expect(r.expected.gain.max).toBe(5.15);
     expect(r.expected.gain.typical).toBeUndefined();
     expect(r.expected.bandwidth).toBeNull();

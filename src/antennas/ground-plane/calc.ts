@@ -5,7 +5,8 @@
  * perfeito se comporta como metade de um dipolo de λ/2: metade da resistência de
  * radiação (≈ 36,5 Ω) e o dobro da diretividade (≈ 5,15 dBi). Os radiais são uma
  * aproximação desse plano. Com poucos radiais elevados o resultado real se afasta
- * desses limites teóricos, por isso eles aparecem só como referência.
+ * desses limites teóricos, por isso o ganho aparece só como referência. A impedância é
+ * estimada por interpolação indicativa em função da inclinação (ver estimateImpedance).
  */
 
 import { degToRad } from '../../core/complex';
@@ -25,6 +26,25 @@ export interface GroundPlaneParams {
   droopAngleDeg: number;
   /** Diâmetro do condutor, em metros. */
   conductorDiameter: number;
+}
+
+/**
+ * Impedância de entrada estimada (Ω) em função da inclinação dos radiais.
+ *
+ * INTERPOLAÇÃO INDICATIVA, não é um modelo publicado. Passa por três pontos de referência:
+ *  - 0° (radiais horizontais): 36,5 Ω, monopolo de λ/4 sobre plano perfeito (Balanis, Antenna Theory, §4.7);
+ *  - 45°: ≈ 50 Ω, regra prática repetida em fontes de radioamador (ARRL; ex.: electronics-notes.com);
+ *  - 90° (radiais alinhados ao radiador, vira um dipolo vertical): ≈ 73 Ω (Balanis, dipolo de λ/2).
+ * Entre os pontos usa a parábola que passa pelos três (monótona crescente em [0°, 90°]).
+ * A literatura não dá valores intermediários; o real depende de altura, diâmetro e arredores. Meça.
+ */
+export function estimateImpedance(droopAngleDeg: number): number {
+  const z0 = 36.5;
+  const z45 = 50;
+  const z90 = 73;
+  const c = (z90 - 2 * z45 + z0) / (2 * 45 * 45);
+  const b = (z45 - z0) / 45 - c * 45;
+  return z0 + b * droopAngleDeg + c * droopAngleDeg * droopAngleDeg;
 }
 
 export const defaultParams: GroundPlaneParams = {
@@ -77,9 +97,10 @@ export function calc(params: GroundPlaneParams): CalcResult {
       level: 'warning',
       message:
         'A impedância depende da inclinação e do número de radiais. Radiais horizontais dão ' +
-        'impedância bem abaixo de 50 Ω; inclinando-os para baixo ela sobe e pode chegar perto de ' +
-        '50 Ω (ARRL Antenna Book). TODO(fonte): tabela ângulo × impedância com fonte citada. ' +
-        'Ajuste a inclinação medindo a ROE.',
+        'impedância bem abaixo de 50 Ω; inclinando-os para baixo ela sobe e chega perto de ' +
+        '50 Ω a ≈ 45°. O valor mostrado é uma interpolação indicativa entre pontos de referência ' +
+        '(36,5 Ω a 0°, 50 Ω a 45°, 73 Ω a 90°). TODO(fonte): não há tabela publicada com valores ' +
+        'intermediários. Ajuste a inclinação medindo a ROE.',
     },
     {
       level: 'warning',
@@ -114,12 +135,12 @@ export function calc(params: GroundPlaneParams): CalcResult {
     ],
     expected: {
       impedance: {
-        typical: 36.5,
+        typical: estimateImpedance(angle),
         unit: 'Ω',
         note:
-          'Limite teórico: monopolo de λ/4 sobre plano condutor infinito e perfeito (metade dos 73 Ω ' +
-          'do dipolo). Com poucos radiais e inclinação, o valor real é diferente. Meça.',
-        source: 'Balanis, Antenna Theory, 4ª ed., §4.7 (teoria das imagens)',
+          'Estimativa por interpolação entre 36,5 Ω (0°, plano perfeito), ≈ 50 Ω (45°) e ≈ 73 Ω (90°). ' +
+          'Não é um modelo publicado; o valor real depende de altura, diâmetro e arredores. Meça.',
+        source: 'Balanis, Antenna Theory, 4ª ed., §4.7 (0° e 90°); regra prática de ≈ 45° → 50 Ω (ARRL, fonte secundária)',
       },
       gain: {
         max: 5.15,

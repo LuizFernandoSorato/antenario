@@ -173,7 +173,7 @@ Para retomar: `git log --oneline` mostra o que foi feito; o último commit de an
 - Hairpin: sem efeito de cantos e barra de curto; faixa de uso (25 a 35 Ω) vem de relatos de radioamadores.
 
 **Antenas sugeridas para adicionar (ordem recomendada):**
-1. ~~ADS-B (1090 MHz)~~ (feita: ground plane de λ/4, só RX; `TODO(fonte)`: ganho/alcance típicos).
+1. ~~ADS-B (1090 MHz)~~ (desativada no registro: é o ground plane em 1090 MHz; código mantido em `src/antennas/adsb`, comentado em `index.ts`).
 2. V-dipolo para satélites meteorológicos (137 MHz).
 3. Dipolo em V invertido (inverted-V).
 4. Moxon (fórmulas de L. B. Cebik, W4RNL; conferir a fonte).
