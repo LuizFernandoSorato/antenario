@@ -1,5 +1,6 @@
 import './style.css';
 import { antennas } from './antennas';
+import { mountHomePage } from './ui/home-page';
 import { mountAntennaPage } from './ui/antenna-page';
 import { mountSmithPage } from './ui/smith-page';
 import { mountToolPage } from './ui/tool-page';
@@ -10,52 +11,45 @@ if (!app) throw new Error('Elemento #app não encontrado.');
 
 app.innerHTML = `
   <header class="no-print">
-    <h1>Antenário</h1>
+    <h1><a class="home-link" href="#">Antenário</a></h1>
     <p>Projete, calcule e construa antenas.</p>
-    <nav aria-label="Páginas">
-      <label>
-        Página
-        <select id="page-select">
-          <optgroup label="Antenas">
-            ${antennas.map((a) => `<option value="${a.meta.id}">${a.meta.name}</option>`).join('')}
-          </optgroup>
-          <optgroup label="Cabos, casamento e segurança">
-            ${tools.map((t) => `<option value="${t.id}">${t.name}</option>`).join('')}
-            <option value="smith">Carta de Smith</option>
-          </optgroup>
-        </select>
-      </label>
-    </nav>
   </header>
   <main id="page"></main>
 `;
 
-const select = app.querySelector<HTMLSelectElement>('#page-select')!;
 const page = app.querySelector<HTMLElement>('#page')!;
 
+const BACK_LINK = '<p class="back no-print"><a href="#">← Início</a></p>';
+
+/** Roteia pelo hash: vazio = início (cartões); "#id" = página da antena, ferramenta ou Carta de Smith. */
 function show(id: string): void {
   if (id === 'smith') {
-    select.value = id;
     mountSmithPage(page);
+    page.insertAdjacentHTML('afterbegin', BACK_LINK);
     return;
   }
   const tool = tools.find((t) => t.id === id);
   if (tool) {
-    select.value = tool.id;
     mountToolPage(page, tool);
+    page.insertAdjacentHTML('afterbegin', BACK_LINK);
     return;
   }
-  const antenna = antennas.find((a) => a.meta.id === id) ?? antennas[0]!;
-  select.value = antenna.meta.id;
-  mountAntennaPage(page, antenna);
+  const antenna = antennas.find((a) => a.meta.id === id);
+  if (antenna) {
+    mountAntennaPage(page, antenna);
+    page.insertAdjacentHTML('afterbegin', BACK_LINK);
+    return;
+  }
+  mountHomePage(page, antennas, tools);
 }
 
-select.addEventListener('change', () => {
-  history.replaceState(null, '', `#${select.value}`);
-  show(select.value);
-});
+function route(): void {
+  show(decodeURIComponent(location.hash.slice(1)));
+  window.scrollTo(0, 0);
+}
 
-show(location.hash.slice(1));
+window.addEventListener('hashchange', route);
+route();
 
 // Offline: o service worker (gerado no build por tools/sw-plugin.ts) guarda o app em cache.
 // Só em produção: no `npm run dev` ele atrapalharia o recarregamento automático.

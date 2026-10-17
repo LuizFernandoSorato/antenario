@@ -629,3 +629,56 @@ svg.smith {
 .smith .sm-rot {
   fill: var(--dg-conductor);
 }
+
+/* --- Navegação: cartões da página inicial ------------------------------- */
+
+.home-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.back {
+  margin: 0 0 0.75rem;
+}
+
+.home h2 {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+.pick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: 0.75rem;
+}
+
+.pick-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  padding: 1rem 0.5rem;
+  text-align: center;
+  text-decoration: none;
+  color: var(--fg);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.pick-card .icon {
+  color: var(--accent);
+}
+
+.pick-card:hover,
+.pick-card:focus-visible {
+  border-color: var(--accent);
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.pick-name {
+  font-size: 0.9rem;
+  line-height: 1.25;
+}

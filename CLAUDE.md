@@ -63,7 +63,7 @@ src/
   matching/        # rede L, 1/4 de onda, stub, balun de coaxial, hairpin (gamma: sem fonte ainda)
   lines/           # cabos coaxiais: perdas, potência máxima, fator de velocidade
   data/            # tabelas (cabos, limites de exposição, bandas) COM fonte citada
-  ui/              # componentes e páginas (ui/tools: calculadoras de cabo, casamento e RF)
+  ui/              # componentes e páginas: início com cartões (home-page, icons), antena, ferramentas (ui/tools)
 tools/             # plugins de build (service worker)
 tests/
 ```
