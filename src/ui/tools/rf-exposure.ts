@@ -133,8 +133,9 @@ export const rfExposureTool: Tool = {
       {
         level: 'info',
         message:
-          'No Brasil, a Anatel (Resolução nº 700/2018) adota limites baseados na ICNIRP; confira a versão vigente e a edição ' +
-          'adotada. TODO(fonte): valores da Resolução 700 não foram conferidos aqui.',
+          'No Brasil, a Resolução Anatel nº 700/2018 adota os limites da ICNIRP, detalhados em Ato específico (hoje o Ato nº ' +
+          '17.865, em vigor desde 01/03/2024). A minuta desse Ato usa os mesmos valores da ICNIRP 2020 aplicados aqui. ' +
+          'Confira o texto vigente no site da Anatel.',
       },
     );
 

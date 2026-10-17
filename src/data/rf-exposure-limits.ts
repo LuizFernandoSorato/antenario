@@ -10,9 +10,16 @@
  *   (f em MHz.) De 0,1 a 30 MHz a tabela não traz densidade de potência: usa campo E e H (zona de campo
  *   próximo), e o cálculo de campo distante desta ferramenta NÃO se aplica.
  *
- * Legislação brasileira: a Anatel (Resolução nº 700/2018; Ato nº 458/2019) adota limites baseados na ICNIRP,
- * mas a edição da ICNIRP e os valores vigentes NÃO foram conferidos nos textos da Anatel.
- * TODO(fonte): conferir a Resolução 700/2018 vigente (gov.br/anatel) e a edição da ICNIRP adotada.
+ * Legislação brasileira (consultada em 2026-10-17):
+ *  - Resolução Anatel nº 700/2018, Art. 4º, § 1º: adota os limites da ICNIRP, "detalhados em Ato específico"
+ *    (https://informacoes.anatel.gov.br/legislacao/resolucoes/2018/1161-resolucao-700). A resolução não traz tabelas.
+ *  - O Ato nº 458/2019 (que detalhava a ICNIRP) está REVOGADO. Foi substituído pelo Ato nº 17.865 (DOU, jan/2024,
+ *    em vigor desde 01/03/2024; fonte secundária: https://dplnews.com/?p=220353).
+ *  - A minuta desse Ato (Consulta Pública nº 63/2022, Anexo A, Tabelas A.I e A.II) adota a ICNIRP 2020 com os
+ *    MESMOS valores de densidade de potência acima (público: 2 W/m², f/200, 10 W/m²; ocupacional: 10, f/40, 50).
+ *    https://apps.anatel.gov.br/ParticipaAnatel/VisualizarTextoConsulta.aspx?TelaDeOrigem=3&ConsultaId=10077
+ * Ressalva: o texto final do Ato nº 17.865 não foi lido, só a minuta e a notícia. O usuário deve conferir a versão
+ * vigente no site da Anatel.
  */
 
 export type ExposureScenario = 'public' | 'occupational';

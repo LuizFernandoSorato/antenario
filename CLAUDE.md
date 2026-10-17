@@ -155,8 +155,12 @@ Para retomar: `git log --oneline` mostra o que foi feito; o último commit de an
 
 **Falta fonte (não implementar de memória):**
 - Gamma match: sem equações com fonte. Precisa do capítulo de casamento do ARRL Antenna Book (Tolles, W7ITB).
-- Resolução 700/2018 da Anatel: conferir os limites de exposição vigentes e a edição da ICNIRP adotada
-  (`src/data/rf-exposure-limits.ts` usa a ICNIRP 2020, Tabela 5).
+- Resolução 700/2018 da Anatel (conferida em 2026-10-17): Art. 4º § 1º adota a ICNIRP via Ato; o Ato 458/2019 foi
+  revogado e substituído pelo Ato 17.865 (em vigor desde 01/03/2024). A minuta (CP 63/2022) usa a ICNIRP 2020 com
+  os mesmos valores de `src/data/rf-exposure-limits.ts`. Resta ler o texto final do Ato 17.865.
+- Tentativas de fonte sem sucesso (2026-10-17): equações do Moxon (artigo de Cebik, antenna2.net: erro de SSL),
+  gamma match (Balanis cap. 9: só o cabeçalho do programa MATLAB está online, sem as equações) e Kilgus (QFH,
+  IEEE paywall). Precisam do livro/PDF fornecido pelo usuário.
 
 **`TODO(fonte)` nas antenas existentes:**
 - Yagi: divergência entre a tabela e a curva do NBS TN 688 no projeto de 0,4λ.
