@@ -50,7 +50,7 @@ src/
     reflection.ts  # Γ, ROE/SWR, perda de retorno, perda por descasamento
     complex.ts     # aritmética de impedâncias complexas
     smith.ts       # geometria da Carta de Smith
-    pattern.ts     # padrões de irradiação de dipolo/monopolo (Balanis), com testes
+    pattern.ts     # padrões de irradiação de dipolo, monopolo e dipolos cruzados (Balanis), com testes
     exposure.ts    # exposição a RF em campo distante (estimativa)
   antennas/
     <antenna-id>/
@@ -59,6 +59,7 @@ src/
       cutlist.ts   # folha de corte (peças e quantidades)
       guide.md     # materiais + passo a passo + ajuste + dicas de TX
       meta.ts      # nome, faixa típica, impedância, polarização, ganho, uso RX/TX
+  antennas/pattern-kit.ts  # gráfico polar SVG dos padrões de irradiação
       calc.test.ts
   matching/        # rede L, 1/4 de onda, stub, balun de coaxial, hairpin (gamma: sem fonte ainda)
   lines/           # cabos coaxiais: perdas, potência máxima, fator de velocidade
@@ -149,40 +150,85 @@ Cada guia segue o mesmo modelo:
 - **Fase 3** (feita): diagramas SVG completos, PWA offline e "folha de corte" imprimível.
 - **Fase 4** (feita, com pendências): Yagi, quadra cúbica, helicoidal, discone, colinear coaxial, QFH, loop magnética
   e Carta de Smith interativa. Também entraram a turnstile, a calculadora de exposição a RF e o hairpin.
+- **Fase 5** (feita em 2026-10-17): navegação por cartões (início com ícone e nome; página própria com dados,
+  diagramas e guia), padrões de irradiação (dipolo, ground plane, turnstile), impedância do ground plane em função
+  da inclinação dos radiais e Yagi com entrada por número de elementos (métodos NBS e DL6WU).
 
-### Pendências (atualizado em 2026-10-16)
+### Estado atual (atualizado em 2026-10-17)
 
-Para retomar: `git log --oneline` mostra o que foi feito; o último commit de antena foi a turnstile.
+Para retomar: `git log --oneline` mostra o que foi feito. 519 testes passando e build ok no último commit
+(`7a7c55c`, Yagi DL6WU).
 
-**Falta fonte (não implementar de memória):**
-- Gamma match: sem equações com fonte. Precisa do capítulo de casamento do ARRL Antenna Book (Tolles, W7ITB).
-- Resolução 700/2018 da Anatel (conferida em 2026-10-17): Art. 4º § 1º adota a ICNIRP via Ato; o Ato 458/2019 foi
-  revogado e substituído pelo Ato 17.865 (em vigor desde 01/03/2024). A minuta (CP 63/2022) usa a ICNIRP 2020 com
-  os mesmos valores de `src/data/rf-exposure-limits.ts`. Resta ler o texto final do Ato 17.865.
-- Tentativas de fonte sem sucesso (2026-10-17): equações do Moxon (artigo de Cebik, antenna2.net: erro de SSL),
-  gamma match (Balanis cap. 9: só o cabeçalho do programa MATLAB está online, sem as equações) e Kilgus (QFH,
-  IEEE paywall). Precisam do livro/PDF fornecido pelo usuário.
+**Navegação (`src/main.ts`, `src/ui/`):** roteamento por hash. Vazio = página inicial com cartões
+(`home-page.ts`, ícones SVG em `icons.ts`; todo id de antena do registro precisa de ícone, há teste). `#id` = página
+da antena (formulário primeiro, depois diagramas, medidas, folha de corte e guia), ferramenta ou Carta de Smith.
+O seletor de páginas antigo foi removido.
+
+**Yagi (`src/antennas/yagi/`):** a entrada é o **número de elementos** (refletor + excitado + diretores); o boom
+(cota **L**, entre centros) é calculado. Parâmetro `method`: 1 = NBS TN 688 (só 3, 5, 6, 12, 15 ou 17 elementos;
+o de 15 tem boom maior que o de 17 por usar espaçamento maior); 2 = DL6WU (`dl6wu.ts`, `dl6wu-calc.ts`), qualquer
+número de 3 a 102, com posições P1…Pn (espaçamento crescente até o 14º diretor, depois 0,4λ). Fonte do DL6WU: programa
+`DL6WU.BAS` (G3SEK, versão Oct 2006, http://www.ifwtech.co.uk/g3sek/diy-yagi/dl6wu-2006.bas, baixado com `curl`;
+o `WebFetch` dava ECONNRESET). O método é para boom de 2,2λ a 39λ (≥ 11 elementos); abaixo disso calcula, avisa e
+não estima ganho. O excitado segue λ/2 × K (o programa o dá para dipolo dobrado, mostrado só como aviso).
+
+**ADS-B:** desativada no registro (é o ground plane em 1090 MHz). Código mantido em `src/antennas/adsb/` e
+comentado em `src/antennas/index.ts`. Para reativar, descomente os imports e a linha do `register`.
+
+**Ground plane:** a impedância mostrada vem de `estimateImpedance(ângulo)`, uma interpolação INDICATIVA (parábola
+por 36,5 Ω a 0°, 50 Ω a 45° e 73 Ω a 90°). Os pontos têm fonte (Balanis e regra prática do ARRL), mas a curva entre
+eles não: continua `TODO(fonte)`.
+
+**Padrões de irradiação:** `core/pattern.ts` (dipolo fino com corrente senoidal, Balanis §4.2; monopolo sobre plano
+perfeito, §4.7; dois dipolos cruzados em quadratura, com refletor opcional = plano perfeito infinito a λ/4) e
+`antennas/pattern-kit.ts` (gráfico polar em dB, piso de −40 dB). Só dipolo, ground plane e turnstile. As demais
+precisam de fórmula com fonte (helicoidal: Kraus; colinear: fator de arranjo) ou das correntes dos elementos (quad;
+a Yagi, com o DL6WU, ainda não tem padrão).
+
+**Exposição a RF:** conferida em 2026-10-17. A Resolução Anatel 700/2018 (Art. 4º § 1º) adota a ICNIRP via Ato; o Ato
+458/2019 foi revogado e substituído pelo Ato 17.865 (em vigor desde 01/03/2024, fonte secundária
+https://dplnews.com/?p=220353). A minuta (Consulta Pública 63/2022) usa a ICNIRP 2020 com os mesmos valores de
+`src/data/rf-exposure-limits.ts`. Falta ler o texto final do Ato 17.865.
+
+### Pendências
+
+**Falta fonte (não implementar de memória). O usuário precisa fornecer o livro/PDF:**
+- Fator de encurtamento K em função de L/d (diâmetro do condutor): a curva do ARRL Antenna Book (ver
+  `dipole/calc.ts`, `TODO(fonte)`). O material do condutor quase não muda o comprimento; o isolamento do fio sim.
+- Gamma match: equações no cap. 9 do Balanis (só o cabeçalho do programa MATLAB está online) ou no ARRL Antenna
+  Book (Tolles, W7ITB).
+- Moxon: equações do artigo de L. B. Cebik, W4RNL ("Designing Moxon Rectangles by Equation and by Model", em
+  antenna2.net; deu erro de SSL no `WebFetch`, vale tentar `curl`).
+- QFH: equações do Kilgus (IEEE, paywall).
+- Padrão de irradiação da helicoidal (Kraus) e da colinear.
+- Texto final do Ato 17.865 da Anatel.
+
+**Fontes avaliadas e descartadas:** pcbantenna.com (sem fórmulas completas nem referências; ver a memória do
+projeto). A página do YO5OSF com saída do AntMaker não bate com o DL6WU.BAS (outra versão).
 
 **`TODO(fonte)` nas antenas existentes:**
-- Yagi: divergência entre a tabela e a curva do NBS TN 688 no projeto de 0,4λ. O método DL6WU (qualquer número de elementos) foi implementado a partir do DL6WU.BAS de G3SEK (2006); os artigos originais do DL6WU não foram consultados e não há comparação com dados medidos (faltam o excitado como gamma e a validação numérica).
+- Yagi: divergência entre a tabela e a curva do NBS TN 688 no projeto de 0,4λ. DL6WU: os artigos originais do Hoch não
+  foram consultados e não há comparação com dados medidos.
 - Quadra cúbica: ganho é estimativa aditiva sem fonte.
 - Discone: regra do gap e ganho.
 - Colinear de coaxial: tabela de ganho vem de fonte de radioamador; impedância da seção de baixo não consta.
 - Loop magnética: regra do loop de acoplamento (diâmetro ≈ 1/5) sem fonte.
 - QFH: medidas são a saída da calculadora de Coppens a 137,5 MHz, escaladas; faltam as equações (Kilgus) e a definição dos "separadores".
-- Turnstile: tamanho do refletor, impedância com refletor e ganho absoluto sem fonte.
+- Turnstile: tamanho do refletor, impedância com refletor e ganho absoluto sem fonte. O padrão com refletor ideal
+  indica diretividade bem acima do "+3 dB" da Wikipedia usado no texto (ver `turnstile/calc.ts`); não reconciliado.
 - Hairpin: sem efeito de cantos e barra de curto; faixa de uso (25 a 35 Ω) vem de relatos de radioamadores.
-
-**Padrões de irradiação:** dipolo, ground plane e turnstile (dipolos cruzados em quadratura; refletor = plano perfeito infinito a λ/4) (campo do dipolo fino, Balanis §4.2/§4.7; `antennas/pattern-kit.ts` desenha o polar). As demais precisam de fórmula com fonte (helicoidal: Kraus; colinear: fator de arranjo) ou de correntes dos elementos (Yagi, quad).
+- Ground plane: curva ângulo × impedância (ver acima). ADS-B: ganho e alcance típicos.
 
 **Antenas sugeridas para adicionar (ordem recomendada):**
-1. ~~ADS-B (1090 MHz)~~ (desativada no registro: é o ground plane em 1090 MHz; código mantido em `src/antennas/adsb`, comentado em `index.ts`).
-2. V-dipolo para satélites meteorológicos (137 MHz).
-3. Dipolo em V invertido (inverted-V).
-4. Moxon (fórmulas de L. B. Cebik, W4RNL; conferir a fonte).
-5. Dipolo multibanda (fan dipole), EFHW com unun 49:1 (exige dados de ferrite com fonte) e log-periódica.
+1. V-dipolo para satélites meteorológicos (137 MHz).
+2. Dipolo em V invertido (inverted-V).
+3. Moxon (precisa da fonte do Cebik).
+4. Dipolo multibanda (fan dipole), EFHW com unun 49:1 (exige dados de ferrite com fonte) e log-periódica.
 
 Antes de cada uma, pesquisar a fonte e avisar o usuário dos `TODO(fonte)`.
+
+**Ideias de melhoria da interface (sem pedido ainda):** ícones próprios para cada ferramenta (hoje todas, menos a
+Carta de Smith, usam o mesmo medidor) e conferir visualmente o ícone da QFH, redesenhado sem captura de tela.
 
 ---
 
