@@ -93,3 +93,71 @@ export function halfPowerBeamwidthDeg(field: (angleRad: number) => number, peakR
   };
   return ((edge(1) - edge(-1)) * 180) / Math.PI;
 }
+
+/**
+ * Dois dipolos cruzados a 90° (um em x, outro em y), de comprimento total `lengthLambda`, alimentados em
+ * quadratura (turnstile). Densidade de potência relativa na direção de cossenos diretores (ux, uy, uz), com o
+ * eixo z perpendicular ao plano dos dipolos.
+ *
+ * Derivação: o campo de um dipolo é E = g(u)·(ê − u·r̂), com u = cos do ângulo entre r̂ e o eixo do dipolo e
+ * g(u) = [cos(kl/2·u) − cos(kl/2)]/(1 − u²) (Balanis §4.2, já dividido por sin ψ). Somando os dois campos com
+ * defasagem de 90°, o termo cruzado é imaginário e some na potência, que fica
+ *   P = g(ux)²·(1 − ux²) + g(uy)²·(1 − uy²).
+ * Acoplamento mútuo desprezado (os dipolos são ortogonais).
+ *
+ * Refletor (`reflector`): plano condutor perfeito e infinito a λ/4 atrás dos dipolos. Pela teoria das imagens
+ * (Balanis §4.7–4.8), o fator de arranjo para dipolos paralelos ao plano é 2·sin(k·d·cos θ), com d = λ/4,
+ * e não há irradiação atrás do plano (uz < 0).
+ */
+export function crossedDipolePower(ux: number, uy: number, uz: number, lengthLambda: number, reflector: boolean): number {
+  assertPositive(lengthLambda, 'O comprimento do dipolo');
+  const half = Math.PI * lengthLambda;
+  const g = (u: number): number => {
+    const d = 1 - u * u;
+    return Math.abs(d) < 1e-9 ? 0 : (Math.cos(half * u) - Math.cos(half)) / d;
+  };
+  let p = g(ux) ** 2 * (1 - ux * ux) + g(uy) ** 2 * (1 - uy * uy);
+  if (reflector) p = uz < 0 ? 0 : p * Math.sin((Math.PI / 2) * uz) ** 2;
+  return p;
+}
+
+const crossedMaxCache = new Map<string, number>();
+
+function crossedMax(lengthLambda: number, reflector: boolean): number {
+  const key = `${lengthLambda}|${reflector}`;
+  const cached = crossedMaxCache.get(key);
+  if (cached !== undefined) return cached;
+  let max = 0;
+  for (let i = 0; i <= 90; i++) {
+    const theta = ((Math.PI / 2) * i) / 90;
+    for (let j = 0; j <= 45; j++) {
+      const phi = ((Math.PI / 2) * j) / 45;
+      const p = crossedDipolePower(Math.sin(theta) * Math.cos(phi), Math.sin(theta) * Math.sin(phi), Math.cos(theta), lengthLambda, reflector);
+      if (p > max) max = p;
+    }
+  }
+  crossedMaxCache.set(key, max);
+  return max;
+}
+
+/** Campo normalizado (máximo = 1) dos dipolos cruzados em quadratura, na direção (ux, uy, uz). */
+export function crossedDipoleField(ux: number, uy: number, uz: number, lengthLambda: number, reflector: boolean): number {
+  return Math.sqrt(crossedDipolePower(ux, uy, uz, lengthLambda, reflector) / crossedMax(lengthLambda, reflector));
+}
+
+/** Diretividade (razão) dos dipolos cruzados, por integração numérica na esfera. */
+export function crossedDipoleDirectivity(lengthLambda: number, reflector: boolean): number {
+  const nTheta = 360;
+  const nPhi = 180;
+  let integral = 0;
+  for (let i = 0; i < nTheta; i++) {
+    const theta = (Math.PI * (i + 0.5)) / nTheta;
+    let row = 0;
+    for (let j = 0; j < nPhi; j++) {
+      const phi = (2 * Math.PI * (j + 0.5)) / nPhi;
+      row += crossedDipolePower(Math.sin(theta) * Math.cos(phi), Math.sin(theta) * Math.sin(phi), Math.cos(theta), lengthLambda, reflector);
+    }
+    integral += row * (2 * Math.PI / nPhi) * Math.sin(theta) * (Math.PI / nTheta);
+  }
+  return (4 * Math.PI * crossedMax(lengthLambda, reflector)) / integral;
+}

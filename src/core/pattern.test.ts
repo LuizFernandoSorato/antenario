@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  crossedDipoleDirectivity,
+  crossedDipoleField,
   dipoleDirectivity,
   dipoleField,
   fieldToDb,
@@ -72,5 +74,39 @@ describe('fieldToDb', () => {
     expect(fieldToDb(Math.SQRT1_2)).toBeCloseTo(-3.0103, 3);
     expect(fieldToDb(0)).toBe(-40);
     expect(fieldToDb(1e-9)).toBe(-40);
+  });
+});
+
+describe('dipolos cruzados em quadratura (turnstile)', () => {
+  const field = (ux: number, uy: number, uz: number, reflector = false) => crossedDipoleField(ux, uy, uz, 0.5, reflector);
+
+  it('máximo no eixo (zênite), igual para cima e para baixo sem refletor', () => {
+    expect(field(0, 0, 1)).toBeCloseTo(1, 9);
+    expect(field(0, 0, -1)).toBeCloseTo(1, 9);
+  });
+
+  it('no plano dos dipolos o campo cai 3 dB em relação ao eixo (soma de potências: g(0)² contra 2·g(0)²)', () => {
+    expect(fieldToDb(field(1, 0, 0))).toBeCloseTo(-3.0103, 3);
+    expect(fieldToDb(field(0, 1, 0))).toBeCloseTo(-3.0103, 3);
+  });
+
+  it('ondulação azimutal de ≈ 1 dB entre os eixos dos dipolos e a diagonal', () => {
+    const diag = fieldToDb(field(Math.SQRT1_2, Math.SQRT1_2, 0));
+    expect(Math.abs(diag - fieldToDb(field(1, 0, 0)))).toBeCloseTo(1.03, 1);
+  });
+
+  it('simetria entre os dois dipolos', () => {
+    expect(field(0.3, 0.6, 0.7416)).toBeCloseTo(field(0.6, 0.3, 0.7416), 12);
+  });
+
+  it('diretividade sem refletor ≈ a do dipolo (1,643): potência total é a soma das dos dois', () => {
+    expect(crossedDipoleDirectivity(0.5, false)).toBeCloseTo(1.643, 2);
+  });
+
+  it('refletor ideal a λ/4: nada atrás do plano, nulo no plano dos dipolos, máximo no eixo', () => {
+    expect(field(0, 0, -1, true)).toBe(0);
+    expect(field(1, 0, 0, true)).toBeCloseTo(0, 9);
+    expect(field(0, 0, 1, true)).toBeCloseTo(1, 9);
+    expect(crossedDipoleDirectivity(0.5, true)).toBeGreaterThan(crossedDipoleDirectivity(0.5, false));
   });
 });

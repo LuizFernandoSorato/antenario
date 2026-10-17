@@ -3,8 +3,11 @@
  * e esquema de alimentação (um dipolo direto, outro pela linha de 1/4 de onda).
  */
 
-import { lengthResolutionForFrequency } from '../../core/units';
+import { crossedDipoleDirectivity, crossedDipoleField } from '../../core/pattern';
+import { formatNumber, lengthResolutionForFrequency } from '../../core/units';
+import { wavelength } from '../../core/wave';
 import { type Diagram, circle, dimLabel, dimension, line, measure, rect, svgDoc, text } from '../diagram-kit';
+import { polarPlot } from '../pattern-kit';
 import type { CalcResult } from '../types';
 import type { TurnstileParams } from './calc';
 
@@ -113,10 +116,60 @@ function feed(): Diagram {
   };
 }
 
+/**
+ * Padrões da turnstile: dois dipolos cruzados em quadratura no espaço livre (Balanis §4.2 + soma de potências,
+ * ver core/pattern.ts). Com refletor, usa plano perfeito e infinito a λ/4 (teoria das imagens). O eixo vertical
+ * do desenho 3D é o eixo da turnstile (apontando para cima).
+ */
+function patterns(result: CalcResult, params: TurnstileParams): Diagram[] {
+  const lengthLambda = measure(result, 'A') / wavelength(params.frequencyMHz);
+  const reflector = params.reflector > 0;
+  // Corte vertical que contém um dipolo (leste-oeste): α é a elevação medida a partir de leste.
+  const vertical = (a: number) => crossedDipoleField(Math.cos(a), 0, Math.sin(a), lengthLambda, reflector);
+  // Corte horizontal: no plano dos dipolos sem refletor (que não irradia o suficiente com refletor ideal:
+  // nulo no plano), ou a 45° de elevação com refletor.
+  const elDeg = reflector ? 45 : 0;
+  const el = (elDeg * Math.PI) / 180;
+  const horizontal = (a: number) =>
+    crossedDipoleField(Math.cos(el) * Math.cos(a), Math.cos(el) * Math.sin(a), Math.sin(el), lengthLambda, reflector);
+  const ideal =
+    'Dipolos ideais, sem acoplamento mútuo. ' +
+    (reflector
+      ? 'O refletor é um plano condutor perfeito e infinito a λ/4: um refletor real, finito, tem diagrama e ganho diferentes (o tamanho dele é TODO(fonte)).'
+      : 'Espaço livre, sem refletor.');
+  const gainText = reflector
+    ? ''
+    : ` Diretividade ideal ≈ ${formatNumber(10 * Math.log10(crossedDipoleDirectivity(lengthLambda, false)), 2)} dBi.`;
+  return [
+    polarPlot({
+      id: 'turnstile-pattern-v',
+      title: 'Padrão vertical (elevação)',
+      caption:
+        'Corte vertical que contém um dos dipolos. O máximo está no eixo da antena (zênite), onde a polarização é circular; ' +
+        'no plano dos dipolos o campo cai 3 dB e a polarização vira linear. ' +
+        (reflector ? 'Atrás do refletor não há irradiação. ' : 'Sem refletor, a antena irradia igualmente para baixo. ') +
+        ideal + gainText,
+      desc: 'Gráfico polar de elevação: lóbulo principal no zênite, e queda de 3 dB no plano dos dipolos.',
+      axisLabels: { right: 'leste (dipolo)', up: 'zênite (eixo)', left: 'oeste (dipolo)', down: 'nadir' },
+      field: vertical,
+    }),
+    polarPlot({
+      id: 'turnstile-pattern-h',
+      title: reflector ? 'Padrão horizontal (a 45° de elevação)' : 'Padrão horizontal (no plano dos dipolos)',
+      caption:
+        (reflector
+          ? 'Corte horizontal a 45° de elevação (com refletor ideal, o plano dos dipolos tem nulo). '
+          : 'Corte horizontal no plano dos dipolos. ') +
+        'Quase circular: a ondulação entre os eixos dos dipolos e a diagonal é de cerca de 1 dB (calculado), sem os efeitos de ' +
+        'mastro, cabo e refletor reais. ' +
+        ideal,
+      desc: 'Gráfico polar quase circular, com pequena ondulação a cada 90 graus.',
+      axisLabels: { right: 'leste (dipolo)', up: 'norte (dipolo)', left: 'oeste', down: 'sul' },
+      field: horizontal,
+    }),
+  ];
+}
+
 export function diagrams(result: CalcResult, params: TurnstileParams): Diagram[] {
-  const out = [crossed(result, params)];
-  const s = side(result, params);
-  if (s) out.push(s);
-  out.push(feed());
-  return out;
+  return [crossed(result, params), side(result, params), feed(), ...patterns(result, params)].filter((d): d is Diagram => d !== null);
 }
