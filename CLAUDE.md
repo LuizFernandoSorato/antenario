@@ -50,6 +50,7 @@ src/
     reflection.ts  # Γ, ROE/SWR, perda de retorno, perda por descasamento
     complex.ts     # aritmética de impedâncias complexas
     smith.ts       # geometria da Carta de Smith
+    pattern.ts     # padrões de irradiação de dipolo/monopolo (Balanis), com testes
     exposure.ts    # exposição a RF em campo distante (estimativa)
   antennas/
     <antenna-id>/
@@ -171,6 +172,8 @@ Para retomar: `git log --oneline` mostra o que foi feito; o último commit de an
 - QFH: medidas são a saída da calculadora de Coppens a 137,5 MHz, escaladas; faltam as equações (Kilgus) e a definição dos "separadores".
 - Turnstile: tamanho do refletor, impedância com refletor e ganho absoluto sem fonte.
 - Hairpin: sem efeito de cantos e barra de curto; faixa de uso (25 a 35 Ω) vem de relatos de radioamadores.
+
+**Padrões de irradiação:** só dipolo e ground plane (campo do dipolo fino, Balanis §4.2/§4.7; `antennas/pattern-kit.ts` desenha o polar). As demais precisam de fórmula com fonte (helicoidal: Kraus; colinear: fator de arranjo) ou de correntes dos elementos (Yagi, quad).
 
 **Antenas sugeridas para adicionar (ordem recomendada):**
 1. ~~ADS-B (1090 MHz)~~ (desativada no registro: é o ground plane em 1090 MHz; código mantido em `src/antennas/adsb`, comentado em `index.ts`).

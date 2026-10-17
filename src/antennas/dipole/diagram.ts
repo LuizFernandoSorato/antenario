@@ -3,7 +3,9 @@
  * Esquemático (fora de escala): um dipolo é muito mais comprido que largo.
  */
 
-import { lengthResolutionForFrequency } from '../../core/units';
+import { dipoleDirectivity, dipoleField, halfPowerBeamwidthDeg } from '../../core/pattern';
+import { formatNumber, lengthResolutionForFrequency } from '../../core/units';
+import { wavelength } from '../../core/wave';
 import {
   type Diagram,
   chokeBeads,
@@ -12,12 +14,14 @@ import {
   dimension,
   highVoltage,
   line,
+  measure,
   path,
   rect,
   svgDoc,
   text,
   textLines,
 } from '../diagram-kit';
+import { polarPlot } from '../pattern-kit';
 import type { CalcResult } from '../types';
 import type { DipoleParams } from './calc';
 
@@ -107,6 +111,42 @@ function feedDetail(): Diagram {
   };
 }
 
+/**
+ * Padrões do dipolo no espaço livre (corrente senoidal, Balanis §4.2). O fio está na horizontal do gráfico
+ * no plano E; no plano H ele é visto de ponta (um ponto no centro) e o padrão é um círculo.
+ */
+function patterns(result: CalcResult, params: DipoleParams): Diagram[] {
+  const lengthLambda = measure(result, 'A') / wavelength(params.frequencyMHz);
+  const field = (a: number) => dipoleField(a, lengthLambda);
+  const hp = halfPowerBeamwidthDeg(field, Math.PI / 2);
+  const gain = 10 * Math.log10(dipoleDirectivity(lengthLambda));
+  const note =
+    'Espaço livre, dipolo ideal (corrente senoidal). O solo, a altura e objetos próximos mudam o padrão real, ' +
+    'principalmente em dipolos horizontais baixos.';
+  return [
+    polarPlot({
+      id: 'dipole-pattern-e',
+      title: 'Padrão no plano do fio (plano E)',
+      caption:
+        `Corte que contém o fio (na horizontal do desenho): forma de "8", com nulos ao longo do fio e máximo a 90° dele. ` +
+        `Largura de meia potência ≈ ${formatNumber(hp, 0)}°; diretividade ideal ≈ ${formatNumber(gain, 2)} dBi. ${note}`,
+      desc: 'Gráfico polar em forma de oito: máximo perpendicular ao fio e nulos nas pontas.',
+      axisLabels: { right: 'ponta do fio', up: 'perpendicular ao fio', left: 'ponta do fio', down: 'perpendicular ao fio' },
+      field,
+    }),
+    polarPlot({
+      id: 'dipole-pattern-h',
+      title: 'Padrão perpendicular ao fio (plano H)',
+      caption:
+        'Corte perpendicular ao fio, visto de ponta: circular (omnidirecional) neste plano, 0 dB em todas as direções. ' +
+        'Quem tem a forma de "8" é o outro corte (plano do fio). ' + note,
+      desc: 'Gráfico polar circular: a irradiação é igual em todas as direções deste plano.',
+      axisLabels: { right: '0°', up: '90°', left: '180°', down: '270°' },
+      field: () => 1,
+    }),
+  ];
+}
+
 export function diagrams(result: CalcResult, params: DipoleParams): Diagram[] {
-  return [overview(result, params), feedDetail()];
+  return [overview(result, params), feedDetail(), ...patterns(result, params)];
 }

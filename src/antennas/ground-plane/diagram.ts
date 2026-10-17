@@ -4,7 +4,9 @@
  */
 
 import { degToRad } from '../../core/complex';
+import { halfPowerBeamwidthDeg, monopoleDirectivity, monopoleField } from '../../core/pattern';
 import { formatNumber, lengthResolutionForFrequency } from '../../core/units';
+import { wavelength } from '../../core/wave';
 import {
   type Diagram,
   chokeBeads,
@@ -19,6 +21,7 @@ import {
   svgDoc,
   text,
 } from '../diagram-kit';
+import { polarPlot } from '../pattern-kit';
 import type { CalcResult } from '../types';
 import type { GroundPlaneParams } from './calc';
 
@@ -112,6 +115,45 @@ function topView(params: GroundPlaneParams): Diagram {
   };
 }
 
+/**
+ * Padrões do monopolo sobre plano condutor perfeito e infinito (Balanis §4.7). Radiais elevados e inclinados
+ * não são esse plano ideal: o máximo sobe alguns graus acima do horizonte e há alguma irradiação para baixo.
+ */
+function patterns(result: CalcResult, params: GroundPlaneParams): Diagram[] {
+  const h = measure(result, 'A') / wavelength(params.frequencyMHz);
+  // α do gráfico = elevação à direita (0°–90°) e espelhada à esquerda (90°–180°); abaixo do horizonte, zero.
+  const elevation = (a: number) => {
+    const deg = ((a * 180) / Math.PI + 360) % 360;
+    if (deg > 180) return 0;
+    return monopoleField(deg <= 90 ? a : Math.PI - a, h);
+  };
+  const hp = halfPowerBeamwidthDeg((e) => monopoleField(e, h), 0);
+  const gain = 10 * Math.log10(monopoleDirectivity(h));
+  return [
+    polarPlot({
+      id: 'gp-pattern-v',
+      title: 'Padrão vertical (elevação)',
+      caption:
+        `Corte vertical: o máximo fica no horizonte e cai a zero na vertical (sobre a antena). Largura de meia potência ≈ ` +
+        `${formatNumber(hp, 0)}° de elevação (no ideal; a direita e a esquerda são o mesmo corte espelhado). Diretividade ideal ≈ ` +
+        `${formatNumber(gain, 2)} dBi, sobre plano perfeito e infinito. Com radiais inclinados o máximo sobe um pouco acima do horizonte.`,
+      desc: 'Gráfico polar de elevação: lóbulo achatado no horizonte, nulo no zênite e nada abaixo do plano.',
+      axisLabels: { right: 'horizonte', up: 'zênite', left: 'horizonte', down: 'solo' },
+      field: elevation,
+    }),
+    polarPlot({
+      id: 'gp-pattern-h',
+      title: 'Padrão horizontal (azimute)',
+      caption:
+        'Vista de cima: circular (omnidirecional), a mesma intensidade em todas as direções. Na prática, o mastro, ' +
+        'o cabo e radiais desiguais deformam o círculo. Use o choke e mantenha a simetria.',
+      desc: 'Gráfico polar circular: a irradiação é igual em todas as direções do plano horizontal.',
+      axisLabels: { right: 'leste', up: 'norte', left: 'oeste', down: 'sul' },
+      field: () => 1,
+    }),
+  ];
+}
+
 export function diagrams(result: CalcResult, params: GroundPlaneParams): Diagram[] {
-  return [sideView(result, params), topView(params)];
+  return [sideView(result, params), topView(params), ...patterns(result, params)];
 }
