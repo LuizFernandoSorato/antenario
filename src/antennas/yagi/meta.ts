@@ -22,16 +22,16 @@ export const meta: AntennaMeta = {
   params: [
     { key: 'frequencyMHz', label: 'Frequência de projeto', unit: 'MHz', defaultValue: 145, toSi: 1, min: 0 },
     {
-      key: 'designLength',
-      label: 'Comprimento do Yagi (em λ)',
-      unit: 'λ',
-      defaultValue: 0.8,
+      key: 'elementCount',
+      label: 'Número de elementos (refletor + excitado + diretores)',
+      unit: '',
+      defaultValue: 5,
       toSi: 1,
-      min: 0.4,
-      max: 4.2,
+      min: 3,
+      max: 17,
       help:
-        'Só os projetos do NBS: 0,4 (3 elementos), 0,8 (5), 1,2 (6), 2,2 (12), 3,2 (17) ou 4,2 (15). ' +
-        'Mais comprido = mais ganho e feixe mais estreito.',
+        'Só os projetos do NBS: 3, 5, 6, 12, 15 ou 17 elementos. O comprimento do boom é calculado (de 0,4λ a 4,2λ). ' +
+        'Atenção: o projeto de 15 elementos (4,2λ) é mais comprido que o de 17 (3,2λ) porque usa espaçamento maior.',
     },
     { key: 'elementDiameter', label: 'Diâmetro dos elementos', unit: 'mm', defaultValue: 6, toSi: 0.001, min: 0 },
     {

@@ -24,8 +24,11 @@ import {
 
 export interface YagiParams {
   frequencyMHz: number;
-  /** Comprimento do projeto do NBS, em λ (0,4; 0,8; 1,2; 2,2; 3,2 ou 4,2). */
-  designLength: number;
+  /**
+   * Número total de elementos (refletor + excitado + diretores). Só os projetos do NBS existem:
+   * 3, 5, 6, 12, 15 ou 17. O comprimento do boom sai do projeto escolhido.
+   */
+  elementCount: number;
   /** Diâmetro dos elementos, em metros. */
   elementDiameter: number;
   /** Diâmetro do boom condutor, em metros; 0 = boom isolante. */
@@ -36,18 +39,23 @@ export interface YagiParams {
 
 export const defaultParams: YagiParams = {
   frequencyMHz: 145,
-  designLength: 0.8,
+  elementCount: 5,
   elementDiameter: 0.006,
   boomDiameter: 0.02,
   drivenFactor: 0.95,
 };
 
-/** Projeto do NBS com esse comprimento (aceita erro de arredondamento de 1e-9). */
-export function findDesign(designLength: number) {
-  const design = NBS_DESIGNS.find((d) => Math.abs(d.lengthLambda - designLength) < 1e-9);
+/** Números de elementos disponíveis (refletor + excitado + diretores), em ordem crescente. */
+export const AVAILABLE_ELEMENT_COUNTS: readonly number[] = NBS_DESIGNS.map((d) => d.directorCount + 2).sort((a, b) => a - b);
+
+/** Projeto do NBS com esse número total de elementos. */
+export function findDesign(elementCount: number) {
+  const design = NBS_DESIGNS.find((d) => d.directorCount + 2 === elementCount);
   if (!design) {
-    const valid = NBS_DESIGNS.map((d) => formatNumber(d.lengthLambda, 1)).join(', ');
-    throw new RangeError(`O comprimento do Yagi deve ser um dos projetos do NBS (${valid} λ); recebido: ${designLength}.`);
+    throw new RangeError(
+      `O número de elementos deve ser um dos projetos do NBS (${AVAILABLE_ELEMENT_COUNTS.join(', ')}); recebido: ${elementCount}. ` +
+        'O método não cobre outras quantidades.',
+    );
   }
   return design;
 }
@@ -60,14 +68,14 @@ export function elementPositionsLambda(directorCount: number, spacing: number): 
 }
 
 export function calc(params: YagiParams): CalcResult {
-  const { frequencyMHz: f, designLength, elementDiameter: d, boomDiameter: boom, drivenFactor: k } = params;
+  const { frequencyMHz: f, elementCount, elementDiameter: d, boomDiameter: boom, drivenFactor: k } = params;
   assertFrequencyMHz(f);
   assertPositive(d, 'O diâmetro dos elementos');
   assertFactor(k, 'O fator de encurtamento do excitado');
   if (!Number.isFinite(boom) || boom < 0) {
     throw new RangeError(`O diâmetro do boom deve ser ≥ 0 (recebido: ${boom}).`);
   }
-  const design = findDesign(designLength);
+  const design = findDesign(elementCount);
 
   const lambda = wavelength(f);
   const dOverLambda = d / lambda;
@@ -90,7 +98,13 @@ export function calc(params: YagiParams): CalcResult {
     })),
     { label: 'E', name: 'Refletor ao excitado', meters: NBS_REFLECTOR_SPACING * lambda, description: 'Distância no boom entre o refletor e o elemento excitado (0,2λ).' },
     { label: 'S', name: 'Espaçamento dos diretores', meters: spacing, description: 'Do excitado ao 1º diretor e entre diretores consecutivos.' },
-    { label: 'L', name: 'Comprimento do Yagi', meters: overall, description: 'Do refletor ao último diretor (distância entre centros).' },
+    {
+      label: 'L',
+      name: 'Comprimento do boom (entre centros)',
+      meters: overall,
+      description:
+        'Do refletor ao último diretor, medido entre os centros dos elementos. O boom físico precisa de sobra nas pontas para fixar os elementos de ponta e o suporte.',
+    },
   ];
 
   const warnings: CalcWarning[] = [];
@@ -145,7 +159,7 @@ export function calc(params: YagiParams): CalcResult {
       { name: 'Comprimento de onda (λ)', value: `${formatNumber(lambda, 4)} m`, source: 'λ = 299,792458 / f(MHz)' },
       {
         name: 'Projeto',
-        value: `${formatNumber(design.lengthLambda, 1)}λ: refletor, excitado e ${design.directorCount} diretor${design.directorCount > 1 ? 'es' : ''}`,
+        value: `${elementCount} elementos (refletor, excitado e ${design.directorCount} diretor${design.directorCount > 1 ? 'es' : ''}); boom de ${formatNumber(overall / lambda, 2)}λ entre centros`,
         source: 'NBS TN 688, Tabela 1',
       },
       { name: 'Diâmetro dos elementos', value: `${formatNumber(d * 1000, 2)} mm (d/λ = ${formatNumber(dOverLambda, 4)})` },

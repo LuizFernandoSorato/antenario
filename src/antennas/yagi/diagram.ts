@@ -18,7 +18,7 @@ function rotatedLabel(x: number, y: number, content: string, cls: string): strin
 function topView(result: CalcResult, params: YagiParams): Diagram {
   const id = 'yg-top';
   const res = lengthResolutionForFrequency(params.frequencyMHz);
-  const design = findDesign(params.designLength);
+  const design = findDesign(params.elementCount);
   const lambda = wavelength(params.frequencyMHz);
   const positions = elementPositionsLambda(design.directorCount, design.spacing); // em λ
   const labels = ['R', 'DE', ...design.directors.map((_, i) => `D${i + 1}`)];

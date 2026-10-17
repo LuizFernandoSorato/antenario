@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { wavelength } from '../../core/wave';
-import { calc, defaultParams, elementPositionsLambda, findDesign } from './calc';
+import { AVAILABLE_ELEMENT_COUNTS, calc, defaultParams, elementPositionsLambda, findDesign } from './calc';
 import { cutList } from './cutlist';
 import { NBS_DESIGNS, boomCorrection, directorLengths, reflectorLength } from './nbs688';
 
@@ -89,12 +89,12 @@ describe('Yagi: calc', () => {
 
   it('ganho em dBi = dBd da tabela + 2,16', () => {
     expect(calc(defaultParams).expected.gain.typical).toBeCloseTo(9.2 + 2.16, 12);
-    expect(calc({ ...defaultParams, designLength: 4.2 }).expected.gain.typical).toBeCloseTo(14.2 + 2.16, 12);
+    expect(calc({ ...defaultParams, elementCount: 15 }).expected.gain.typical).toBeCloseTo(14.2 + 2.16, 12);
   });
 
   it('número de elementos e posições', () => {
     for (const d of NBS_DESIGNS) {
-      const r = calc({ ...defaultParams, designLength: d.lengthLambda });
+      const r = calc({ ...defaultParams, elementCount: d.directorCount + 2 });
       expect(r.measurements.filter((m) => /^D\d+$/.test(m.label))).toHaveLength(d.directorCount);
       const pos = elementPositionsLambda(d.directorCount, d.spacing);
       expect(pos).toHaveLength(d.directorCount + 2);
@@ -109,13 +109,27 @@ describe('Yagi: calc', () => {
     for (const l of ['D1', 'D2', 'D3']) expect(m(l)).toBeLessThan(m('DE'));
   });
 
-  it('aceita só os projetos do NBS', () => {
-    expect(() => findDesign(1.0)).toThrow(RangeError);
-    expect(() => calc({ ...defaultParams, designLength: 1.5 })).toThrow(RangeError);
+  it('aceita só os números de elementos dos projetos do NBS (3, 5, 6, 12, 15, 17)', () => {
+    expect(AVAILABLE_ELEMENT_COUNTS).toEqual([3, 5, 6, 12, 15, 17]);
+    for (const n of [2, 4, 7, 16, 5.5]) {
+      expect(() => findDesign(n)).toThrow(RangeError);
+      expect(() => calc({ ...defaultParams, elementCount: n })).toThrow(RangeError);
+    }
+  });
+
+  it('o boom calculado é (0,2 + diretores × S)·λ da Tabela 1', () => {
+    const lambda = wavelength(145);
+    for (const d of NBS_DESIGNS) {
+      const r = calc({ ...defaultParams, elementCount: d.directorCount + 2 });
+      const boom = r.measurements.find((m) => m.label === 'L')!.meters;
+      expect(boom).toBeCloseTo((0.2 + d.directorCount * d.spacing) * lambda, 9);
+      // O NBS dá o comprimento total do projeto (0,4λ ... 4,2λ); aceita ±0,05λ (arredondamento da tabela).
+      expect(Math.abs(boom / lambda - d.lengthLambda)).toBeLessThan(0.1);
+    }
   });
 
   it('avisa sobre o Yagi de 0,4λ (inconsistência da fonte) e sobre d/λ fora do gráfico', () => {
-    expect(calc({ ...defaultParams, designLength: 0.4 }).warnings.some((w) => w.message.includes('0,424'))).toBe(true);
+    expect(calc({ ...defaultParams, elementCount: 3 }).warnings.some((w) => w.message.includes('0,424'))).toBe(true);
     expect(calc({ ...defaultParams, elementDiameter: 0.0001 }).warnings.some((w) => w.message.includes('fora da faixa dos gráficos'))).toBe(true);
     expect(calc(defaultParams).warnings.some((w) => w.message.includes('fora da faixa dos gráficos'))).toBe(false);
   });

@@ -38,7 +38,8 @@ Serra de arco ou cortador de tubos, lima, furadeira, trena, **paquímetro** (a t
 1. Calcule as medidas na ferramenta com o diâmetro de elemento e de boom que você realmente vai usar.
    **R** é o refletor, **DE** o elemento excitado, **D1**, **D2**, **D3**… os diretores (do mais
    próximo do excitado para a frente). **E** é a distância refletor→excitado, **S** o espaçamento dos
-   diretores e **L** o comprimento do Yagi.
+   diretores e **L** o comprimento do boom (entre os centros do refletor e do último diretor; some uma sobra
+   nas pontas para fixação).
 2. Corte os elementos com tolerância de 0,003λ (a ferramenta mostra o valor em mm). Em VHF isso
    são alguns milímetros; em UHF, 1 mm ou menos. Use um gabarito para cortar todos com a mesma precisão.
 3. Marque no boom as posições, medidas a partir do refletor: refletor em 0, excitado em **E**,
