@@ -8,7 +8,7 @@ quase hemisférico, então a antena recebe satélites de órbita baixa sem rastr
 
 - **Uso:** recepção (satélites meteorológicos de 137 MHz, por exemplo). Esta ferramenta não traz dados de transmissão para a QFH.
 - **Polarização:** circular. O sentido de enrolamento define direita ou esquerda; satélites de 137 MHz usam circular à direita.
-- **Ganho:** não há valor com fonte aqui (TODO). O que importa na prática é o diagrama largo.
+- **Ganho:** o modelo por momentos (ver as referências) dá ≈ 4,8 dBi no zênite, com −6 a −7 dB no horizonte e ≈ −16 dB para baixo; a faixa de 3 a 5 dBic vem de uma fonte secundária. Não há medida com fonte aqui (TODO). O que importa na prática é o diagrama largo.
 - **Aviso importante:** as medidas são as de uma calculadora publicada para 137,5 MHz, **escaladas** pela frequência. Meça e ajuste.
 
 ## 2. Materiais
@@ -67,4 +67,5 @@ balun/choke) **não consta das fontes consultadas** para esta ferramenta. TODO(f
 
 - John Coppens, calculadora de QFH (jcoppens.com), saída a 137,5 MHz reproduzida em qsl.net/ik1hgi/qfh-2_hgi.htm (consultada em 2026-10-16).
 - rfwireless-world.com, "QFH antenna" (condutor de 7 mm), usada só para medir a sensibilidade ao condutor.
+- Padrão de irradiação: método dos momentos (Harrington, 1968) sobre as duas espiras de fio de 4,1 mm, com a geometria reconstruída das medidas da calculadora de Coppens (os "separadores" conferem: o vertical é o comprimento do braço helicoidal e o horizontal é o diâmetro entre os centros do fio) e as duas espiras alimentadas no topo, em amplitude igual e 90° de diferença (suposto ideal; sem cilindro de suporte nem coaxial). O padrão resultante é um cardioide com razão axial < 1 dB no zênite. Não foi comparado com medidas; o sentido de polarização não é afirmado.
 - C. C. Kilgus, publicações de 1969 (IEEE AP-17) e 1970 (Microwave Journal) sobre a hélice quadrifilar. Citadas por resumos secundários; não consultadas diretamente.

@@ -3,10 +3,14 @@
  * diâmetro interno cotados. É um esquema; a torção real é feita sobre um cilindro de suporte.
  */
 
-import { lengthResolutionForFrequency } from '../../core/units';
+import type { Vec3 } from '../../core/mom';
+import { fieldToDb, halfPowerBeamwidthDeg } from '../../core/pattern';
+import { formatNumber, lengthResolutionForFrequency } from '../../core/units';
 import { type Diagram, dimLabel, dimension, line, measure, path, svgDoc, text } from '../diagram-kit';
+import { polarPlot } from '../pattern-kit';
 import type { CalcResult } from '../types';
 import type { QfhParams } from './calc';
+import { solveQfh } from './pattern-model';
 
 function helix(cx: number, top: number, h: number, d: number): string {
   const l = cx - d / 2;
@@ -81,6 +85,49 @@ function loops(result: CalcResult, params: QfhParams): Diagram {
   };
 }
 
+/**
+ * Padrões da QFH por método dos momentos (ver `pattern-model.ts`): as duas espiras de fio, com correntes de mesma amplitude e 90° de
+ * diferença. O padrão é quase simétrico em torno do eixo; os dois cortes mostram a pequena diferença entre o plano de uma espira e o diagonal.
+ */
+function patterns(result: CalcResult, params: QfhParams): Diagram[] {
+  const model = solveQfh(result, params.frequencyMHz);
+  const planes: { id: string; title: string; label: string; dir: (a: number) => Vec3 }[] = [
+    { id: 'qfh-pattern-a', title: 'Padrão no plano de uma espira', label: 'plano de uma espira', dir: (a) => [Math.cos(a), 0, Math.sin(a)] },
+    { id: 'qfh-pattern-d', title: 'Padrão no plano diagonal (45° entre as espiras)', label: 'plano diagonal', dir: (a) => [Math.cos(a) * Math.SQRT1_2, Math.cos(a) * Math.SQRT1_2, Math.sin(a)] },
+  ];
+  let peak = 0;
+  for (let i = 0; i < 360; i++) for (const p of planes) peak = Math.max(peak, model.power(p.dir((i * Math.PI) / 180)));
+  const dDb = 10 * Math.log10(model.directivity);
+  const below = (p: (typeof planes)[number]) => fieldToDb(Math.sqrt(model.power(p.dir(-Math.PI / 2)) / peak));
+  const horizon = (p: (typeof planes)[number]) => fieldToDb(Math.sqrt(model.power(p.dir(0)) / peak));
+  const z = model.zenithField;
+  const mag = (re: number, im: number) => Math.hypot(re, im);
+  // componentes circulares (Ex ± jEy)/√2 no zênite: a razão axial mede o quanto a polarização é circular
+  const plus = mag(z.re[0] - z.im[1], z.im[0] + z.re[1]);
+  const minus = mag(z.re[0] + z.im[1], z.im[0] - z.re[1]);
+  const axial = 20 * Math.log10((plus + minus) / Math.max(1e-9, Math.abs(plus - minus)));
+  const note =
+    ` Diretividade calculada ${formatNumber(dDb, 1)} dBi (soma das duas polarizações); razão axial no zênite ${formatNumber(axial, 1)} dB. ` +
+    'Calculado por método dos momentos com fio de 4,1 mm, no espaço livre, sem o cilindro de suporte nem o coaxial, com as duas espiras alimentadas no topo ' +
+    'em amplitude igual e 90° de diferença (a QFH real obtém isso da diferença de comprimento das espiras; aqui é suposto ideal). ' +
+    'Num coaxial real que desce pelo centro, o padrão para baixo e a ROE mudam. O sentido da polarização (direita ou esquerda) não é afirmado: ' +
+    'depende do sentido de enrolamento e de qual espira adianta. TODO(fonte).';
+  return planes.map((p) => {
+    const field = (a: number) => Math.sqrt(model.power(p.dir(a)) / peak);
+    return polarPlot({
+      id: p.id,
+      title: p.title,
+      caption:
+        `Eixo da antena para cima. Lóbulo largo, quase hemisférico, com máximo no zênite: ` +
+        `largura de meia potência ≈ ${formatNumber(halfPowerBeamwidthDeg(field, Math.PI / 2), 0)}°, ${formatNumber(horizon(p), 0)} dB no horizonte e ` +
+        `${formatNumber(below(p), 0)} dB diretamente para baixo.` + note,
+      desc: 'Gráfico polar de um lóbulo largo com máximo no eixo, para cima, e pouca radiação para baixo (cardioide).',
+      axisLabels: { right: 'horizonte', up: 'zênite', left: 'horizonte', down: 'abaixo' },
+      field,
+    });
+  });
+}
+
 export function diagrams(result: CalcResult, params: QfhParams): Diagram[] {
-  return [loops(result, params)];
+  return [loops(result, params), ...patterns(result, params)];
 }

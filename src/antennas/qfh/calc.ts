@@ -61,8 +61,12 @@ export function diameterSensitivity(): Record<string, number> {
   };
 }
 
-/** Os separadores são grandezas da saída da calculadora; a função construtiva exata não consta da fonte consultada. */
-const SEPARATOR_NOTE = 'Valor da calculadora de Coppens; definição construtiva exata: TODO(fonte).';
+/**
+ * Os separadores horizontais são a saída da calculadora. Conferido (sem fonte escrita): o horizontal é o diâmetro entre os centros do fio e o
+ * vertical é o comprimento do braço helicoidal √(H² + (π·r)²), com r = (diâmetro interno + diâmetro do fio)/2.
+ */
+const SEPARATOR_NOTE =
+  'Valor da calculadora de Coppens. Confere com o diâmetro entre os centros do fio (diâmetro interno + 4,1 mm): ver pattern-model.test.ts.';
 
 /** Escala uma medida de referência (mm, a 137,5 MHz) para a frequência dada, em metros. */
 export function scaleFromReference(mm: number, fMHz: number): number {
