@@ -50,7 +50,8 @@ src/
     reflection.ts  # Γ, ROE/SWR, perda de retorno, perda por descasamento
     complex.ts     # aritmética de impedâncias complexas
     smith.ts       # geometria da Carta de Smith
-    pattern.ts     # padrões de irradiação de dipolo, monopolo e dipolos cruzados (Balanis), com testes
+    pattern.ts     # padrões analíticos: dipolo, monopolo, dipolos cruzados, loop pequena, colinear, hélice axial, com testes
+    mom.ts         # método dos momentos para fios finos (Yagi, quadra), validado contra NBS TN 688 e Balanis
     exposure.ts    # exposição a RF em campo distante (estimativa)
   antennas/
     <antenna-id>/
@@ -60,6 +61,7 @@ src/
       guide.md     # materiais + passo a passo + ajuste + dicas de TX
       meta.ts      # nome, faixa típica, impedância, polarização, ganho, uso RX/TX
   antennas/pattern-kit.ts  # gráfico polar SVG dos padrões de irradiação
+  antennas/mom-kit.ts      # cortes E/H/diagonal de padrões por momentos (boom em z)
       calc.test.ts
   matching/        # rede L, 1/4 de onda, stub, balun de coaxial, hairpin (gamma: sem fonte ainda)
   lines/           # cabos coaxiais: perdas, potência máxima, fator de velocidade
@@ -156,8 +158,8 @@ Cada guia segue o mesmo modelo:
 
 ### Estado atual (atualizado em 2026-10-17)
 
-Para retomar: `git log --oneline` mostra o que foi feito. 519 testes passando e build ok no último commit
-(`7a7c55c`, Yagi DL6WU).
+Para retomar: `git log --oneline` mostra o que foi feito. 575 testes passando e build ok em 2026-10-19 (depois da cross Yagi e dos padrões por momentos;
+o último commit está em `git log`).
 
 **Navegação (`src/main.ts`, `src/ui/`):** roteamento por hash. Vazio = página inicial com cartões
 (`home-page.ts`, ícones SVG em `icons.ts`; todo id de antena do registro precisa de ícone, há teste). `#id` = página
@@ -165,9 +167,9 @@ da antena (formulário primeiro, depois diagramas, medidas, folha de corte e gui
 O seletor de páginas antigo foi removido.
 
 **Yagi (`src/antennas/yagi/`):** a entrada é o **número de elementos** (refletor + excitado + diretores); o boom
-(cota **L**, entre centros) é calculado. Parâmetro `method`: 1 = NBS TN 688 (só 3, 5, 6, 12, 15 ou 17 elementos;
-o de 15 tem boom maior que o de 17 por usar espaçamento maior); 2 = DL6WU (`dl6wu.ts`, `dl6wu-calc.ts`), qualquer
-número de 3 a 102, com posições P1…Pn (espaçamento crescente até o 14º diretor, depois 0,4λ). Fonte do DL6WU: programa
+(cota **L**, entre centros) é calculado. Método AUTOMÁTICO (`chooseMethod`, sem campo na interface): 3, 5 e 6 elementos = NBS TN 688; o resto (4, 7 a 40) = DL6WU.
+Os projetos NBS de 12, 15 e 17 só com `method: 1` no código (o de 15 tem boom maior que o de 17 por usar espaçamento maior). DL6WU (`dl6wu.ts`, `dl6wu-calc.ts`), qualquer
+número de 3 a 40, com posições P1…Pn (espaçamento crescente até o 14º diretor, depois 0,4λ). Fonte do DL6WU: programa
 `DL6WU.BAS` (G3SEK, versão Oct 2006, http://www.ifwtech.co.uk/g3sek/diy-yagi/dl6wu-2006.bas, baixado com `curl`;
 o `WebFetch` dava ECONNRESET). O método é para boom de 2,2λ a 39λ (≥ 11 elementos); abaixo disso calcula, avisa e
 não estima ganho. O excitado segue λ/2 × K (o programa o dá para dipolo dobrado, mostrado só como aviso).
@@ -179,16 +181,33 @@ comentado em `src/antennas/index.ts`. Para reativar, descomente os imports e a l
 por 36,5 Ω a 0°, 50 Ω a 45° e 73 Ω a 90°). Os pontos têm fonte (Balanis e regra prática do ARRL), mas a curva entre
 eles não: continua `TODO(fonte)`.
 
-**Padrões de irradiação:** `core/pattern.ts` (dipolo fino com corrente senoidal, Balanis §4.2; monopolo sobre plano
-perfeito, §4.7; dois dipolos cruzados em quadratura, com refletor opcional = plano perfeito infinito a λ/4) e
-`antennas/pattern-kit.ts` (gráfico polar em dB, piso de −40 dB). Só dipolo, ground plane e turnstile. As demais
-precisam de fórmula com fonte (helicoidal: Kraus; colinear: fator de arranjo) ou das correntes dos elementos (quad;
-a Yagi, com o DL6WU, ainda não tem padrão).
+**Padrões de irradiação (2026-10-19; todas as antenas, menos discone e QFH):**
+- Analíticos (`core/pattern.ts`, com testes): dipolo (Balanis §4.2, serve também ao J-pole), monopolo (§4.7), dipolos cruzados (turnstile),
+  loop pequena sin θ (§5.2, só para circunferência < λ/10), arranjo colinear (§6.4: elemento × fator de arranjo; o colinear de coaxial usa N dipolos
+  de λ/2 em fase a λ/2, que reproduz a tabela de ganho da ferramenta, mas NÃO é o modelo do coaxial real) e hélice axial (Kraus: arranjo de N
+  voltas × cos θ, fase de Hansen–Woodyard; D e HPBW a 0,3–1,7 dB e 3° das fórmulas empíricas de Kraus; fonte secundária, livros não consultados).
+- Método dos momentos (`core/mom.ts`: EFIE de fio fino, Galerkin com bases triangulares, fios abertos ou fechados, sem junções) para Yagi, cross
+  Yagi e quadra, porque dependem das correntes dos elementos parasitas. VALIDAÇÃO: dipolo (D = 1,643, HPBW 78°, ressonância em ≈ 0,47λ com R ≈ 70 Ω;
+  o 73,1 Ω do Balanis é de corrente senoidal exata), dois dipolos (5,98 dBi, igual ao elemento × arranjo), conservação de energia, e Yagi contra o ganho MEDIDO dos
+  6 projetos do NBS TN 688 (−0,5 a +0,3 dB) e contra a estimativa do DL6WU (−0,6 a −0,3 dB). O modelo da Yagi usa os elementos SEM a correção do boom
+  (`isolatedElements`): a correção compensa o boom, que o modelo não tem; com ela, a relação frente–costas desabava. Limite de 40 elementos na Yagi e na cross Yagi (`DL6WU_MAX_ELEMENTS`,
+  porque o MoM é O(N³) no navegador): o `calc` recusa mais que isso e a tela mostra o erro. O DL6WU.BAS original vai a 102. Quadra: fio de 2 mm assumido (premissa do modelo); o ganho do modelo (2 el. 7,5 dBi, 3 el. 9,5 dBi) fica ≈ 1,5–2 dB
+  abaixo da "estimativa aditiva" do calc (que continua sem fonte). O refletor do ARRL dá o ganho máximo; um refletor ≈ 3 % maior sobe a relação frente–costas
+  de ≈ 5 para ≈ 24 dB, perdendo < 1 dB. Cross Yagi: o plano diagonal difere um pouco do principal (termo cruzado).
+- Sem padrão: **discone** (só se sabe que é omni no azimute; o desvio da elevação com a frequência não tem fórmula nas fontes achadas, só patentes e um exemplo
+  do MathWorks) e **QFH** (o artigo do Kilgus, IEEE AP 1969, está em lso.fe.uni-lj.si/literatura/Razno/Antene/knjige/Kilgus/01139459.pdf, mas é um escaneamento com OCR ruim: as integrais
+  não são legíveis; seria preciso o PDF limpo ou o MoM com a geometria e a alimentação reais da QFH).
 
 **Exposição a RF:** conferida em 2026-10-17. A Resolução Anatel 700/2018 (Art. 4º § 1º) adota a ICNIRP via Ato; o Ato
 458/2019 foi revogado e substituído pelo Ato 17.865 (em vigor desde 01/03/2024, fonte secundária
 https://dplnews.com/?p=220353). A minuta (Consulta Pública 63/2022) usa a ICNIRP 2020 com os mesmos valores de
 `src/data/rf-exposure-limits.ts`. Falta ler o texto final do Ato 17.865.
+
+**Cross Yagi (`src/antennas/cross-yagi/`, 2026-10-19):** dois Yagis idênticos girados 90° com os elementos no mesmo plano; os
+elementos vêm da Yagi (NBS ou DL6WU), para qualquer frequência. Alimentação: Yagi A direto e Yagi B por linha de 1/4 de onda (cota **F**) com
+impedância igual à do Yagi; junção em Z/2 e transformador **T** só se não der 50 Ω. Fonte: LY3H (https://www.ly3h.net/uhf-9v-9h-hand-cross-yagi-for-satellite/),
+que dá 436,5 MHz, Yagis de 100 Ω e 113 mm de linha (teste: VF 0,66), mas NÃO as medidas dos elementos. Divergência não resolvida na página: um
+comentário cita RG-62 com VF 0,83 e 142 mm. A impedância de cada Yagi é entrada do usuário (default 100 Ω). Padrão por momentos.
 
 ### Pendências
 
@@ -207,6 +226,8 @@ https://dplnews.com/?p=220353). A minuta (Consulta Pública 63/2022) usa a ICNIR
 projeto). A página do YO5OSF com saída do AntMaker não bate com o DL6WU.BAS (outra versão).
 
 **`TODO(fonte)` nas antenas existentes:**
+- Cross Yagi: impedância real de cada Yagi com dipolo simples ou dobrado; efeito do cruzamento (acoplamento) e razão axial; sentido RHCP/LHCP
+  foi derivado (Ey atrasado 90°), não tirado de fonte; confirmar com um passe de satélite.
 - Yagi: divergência entre a tabela e a curva do NBS TN 688 no projeto de 0,4λ. DL6WU: os artigos originais do Hoch não
   foram consultados e não há comparação com dados medidos.
 - Quadra cúbica: ganho é estimativa aditiva sem fonte.

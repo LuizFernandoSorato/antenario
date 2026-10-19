@@ -23,6 +23,7 @@ const scenarios: Record<string, Record<string, number>[]> = {
   adsb: [{}, { droopAngleDeg: 0 }, { radialCount: 3 }],
   'j-pole': [{}, { frequencyMHz: 435 }, { frequencyMHz: 52 }],
   yagi: [{ method: 2, elementCount: 11 }, { method: 2, elementCount: 14, boomDiameter: 0 }, { method: 2, elementCount: 20, frequencyMHz: 435 }, { method: 2, elementCount: 24 }, {}, { elementCount: 3 }, { elementCount: 6, frequencyMHz: 435 }, { elementCount: 17 }, { elementCount: 15, boomDiameter: 0 }],
+  'cross-yagi': [{}, { yagiImpedance: 50 }, { method: 2, elementCount: 12, frequencyMHz: 137.5 }],
   'cubic-quad': [{}, { directorCount: 0 }, { directorCount: 4, spacingLambda: 0.15 }, { frequencyMHz: 28.5 }],
   discone: [{}, { frequencyMHz: 470 }, { designImpedance: 75, rodCount: 16 }, { frequencyMHz: 2000 }],
   'magnetic-loop': [{}, { frequencyMHz: 14.2, loopDiameter: 0.6 }, { frequencyMHz: 3.6, loopDiameter: 2, tubeDiameter: 0.0254 }],
@@ -59,7 +60,7 @@ describe('diagramas das antenas', () => {
             // A cota C do dipolo (isolador) aparece só com a letra; o valor está na tabela.
             if (antenna.meta.id === 'dipole' && m.label === 'C') {
               expect(all).toContain('>C<');
-            } else if (antenna.meta.id === 'yagi' && /^P[0-9]+$/.test(m.label)) {
+            } else if ((antenna.meta.id === 'yagi' || antenna.meta.id === 'cross-yagi') && /^P[0-9]+$/.test(m.label)) {
               // Posições do DL6WU: só na tabela de medidas (o desenho mostra os elementos nelas).
               continue;
             } else {
@@ -76,13 +77,25 @@ describe('diagramas das antenas', () => {
     });
   }
 
-  it('yagi DL6WU com muitos elementos: SVG válido, sem rótulos individuais (ficam na tabela)', () => {
+  it('yagi DL6WU com muitos elementos (até o limite de 40): SVG válido, sem rótulos individuais (ficam na tabela)', () => {
     const yagi = antennas.find((a) => a.meta.id === 'yagi')!;
-    for (const n of [40, 102]) {
+    for (const n of [40]) {
       const svg = yagi.diagrams({ method: 2, elementCount: n })[0]!.svg;
       expect(svg).not.toMatch(/NaN|undefined|Infinity/);
       expect(svg).not.toContain('D1 =');
       expect(svg).toContain('L = ');
+    }
+  });
+
+  it('Yagi e cross Yagi recusam mais de 40 elementos (limite do padrão por momentos)', () => {
+    for (const id of ['yagi', 'cross-yagi']) {
+      const a = antennas.find((x) => x.meta.id === id)!;
+      expect(a.meta.params.find((p) => p.key === 'elementCount')!.max).toBe(40);
+      expect(() => a.calc({ elementCount: 40 })).not.toThrow();
+      for (const n of [41, 60, 102]) {
+        expect(() => a.calc({ elementCount: n })).toThrow(RangeError);
+        expect(() => a.diagrams({ elementCount: n })).toThrow(RangeError);
+      }
     }
   });
 
