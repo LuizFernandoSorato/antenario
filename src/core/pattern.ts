@@ -161,3 +161,69 @@ export function crossedDipoleDirectivity(lengthLambda: number, reflector: boolea
   }
   return (4 * Math.PI * crossedMax(lengthLambda, reflector)) / integral;
 }
+
+/**
+ * Loop pequena (circunferência ≪ λ): campo normalizado |sin θ|, com θ medido a partir do EIXO da espira (perpendicular ao plano
+ * dela). É o dual de um dipolo curto: máximo no plano da espira, nulo no eixo. Diretividade 1,5 (1,76 dBi).
+ * Fonte: Balanis, Antenna Theory, §5.2 (loop pequena, uniform current); confirmado em notas de curso (Univ. of Kentucky EE522,
+ * consultadas em 2026-10-19). Vale para circunferência < ≈ λ/10.
+ */
+export function smallLoopField(thetaFromAxisRad: number): number {
+  return Math.abs(Math.sin(thetaFromAxisRad));
+}
+
+/**
+ * Fator de arranjo normalizado (máximo = 1) de N elementos iguais em linha, com corrente de mesma amplitude e defasagem
+ * progressiva β entre elementos: |sin(Nψ/2) / (N sin(ψ/2))|, com ψ a diferença de fase total entre elementos vizinhos.
+ * Fonte: Balanis, Antenna Theory, §6.4 (arranjo uniforme).
+ */
+export function uniformArrayFactor(count: number, psiRad: number): number {
+  if (!Number.isInteger(count) || count < 1) throw new RangeError(`O número de elementos deve ser um inteiro ≥ 1 (recebido: ${count}).`);
+  const half = psiRad / 2;
+  if (Math.abs(Math.sin(half)) < 1e-9) return 1;
+  return Math.abs(Math.sin(count * half) / (count * Math.sin(half)));
+}
+
+/**
+ * Arranjo colinear de `count` dipolos de comprimento `elementLengthLambda`, em fase, com espaçamento centro a centro
+ * `spacingLambda` (em λ), ao longo do eixo (θ a partir do eixo): multiplicação de padrões, elemento × fator de arranjo
+ * com ψ = 2π·d·cos θ (Balanis §6.4: elementos em linha). Máximo no plano perpendicular ao eixo (θ = 90°).
+ */
+export function collinearField(thetaFromAxisRad: number, count: number, spacingLambda: number, elementLengthLambda = 0.5): number {
+  assertPositive(spacingLambda, 'O espaçamento do arranjo');
+  return dipoleField(thetaFromAxisRad, elementLengthLambda) * uniformArrayFactor(count, 2 * Math.PI * spacingLambda * Math.cos(thetaFromAxisRad));
+}
+
+/**
+ * Hélice de modo axial com `turns` voltas e passo `pitchLambda` (S/λ), sobre plano de terra: campo normalizado (máximo = 1 no eixo)
+ * em função do ângulo θ a partir do eixo, no hemisfério da frente (θ ≤ 90°; zero atrás, plano de terra ideal).
+ *
+ *   E(θ) = sin(π/2N) · cos θ · sin(Nψ/2) / sin(ψ/2),   ψ = k₀ (S cos θ − L₀/p)
+ *
+ * Fator de arranjo de N fontes isotrópicas espaçadas de S (cada volta) vezes o padrão cos θ de uma volta (Kraus). Para a velocidade de
+ * fase relativa p usa-se a condição de Hansen–Woodyard de diretividade aumentada, L₀/p = S + λ(2N+1)/(2N), que as medidas de Kraus
+ * seguem e que a corrente da hélice acompanha na maior parte do comprimento (Stutzman e Thiele, via tese da Virginia Tech sobre
+ * hélices axiais, e Kraus, "Antennas", 2ª ed., 1988; os livros NÃO foram consultados diretamente). Como a fase só importa módulo
+ * 2π, ψ = 2π(S/λ)(cos θ − 1) − π/N. Aproximação: ver o aviso na legenda do gráfico.
+ */
+export function helixAxialField(thetaFromAxisRad: number, turns: number, pitchLambda: number): number {
+  if (!Number.isInteger(turns) || turns < 1) throw new RangeError(`O número de voltas deve ser um inteiro ≥ 1 (recebido: ${turns}).`);
+  assertPositive(pitchLambda, 'O passo da hélice');
+  const c = Math.cos(thetaFromAxisRad);
+  if (c <= 0) return 0;
+  const psi = 2 * Math.PI * pitchLambda * (c - 1) - Math.PI / turns;
+  const axis = uniformArrayFactor(turns, -Math.PI / turns); // valor em θ = 0 (máximo do arranjo Hansen–Woodyard)
+  return (c * uniformArrayFactor(turns, psi)) / axis;
+}
+
+/** Diretividade (razão) de um padrão com simetria de revolução em torno do eixo: D = 2 / ∫₀^π F(θ)² sin θ dθ. */
+export function revolutionDirectivity(field: (thetaRad: number) => number): number {
+  const steps = 7200;
+  let integral = 0;
+  for (let i = 0; i < steps; i++) {
+    const t = (Math.PI * (i + 0.5)) / steps;
+    const f = field(t);
+    integral += f * f * Math.sin(t) * (Math.PI / steps);
+  }
+  return 2 / integral;
+}

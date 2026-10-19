@@ -1,13 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import {
+  collinearField,
   crossedDipoleDirectivity,
   crossedDipoleField,
   dipoleDirectivity,
   dipoleField,
   fieldToDb,
   halfPowerBeamwidthDeg,
+  helixAxialField,
   monopoleDirectivity,
   monopoleField,
+  revolutionDirectivity,
+  smallLoopField,
+  uniformArrayFactor,
 } from './pattern';
 
 // Referências (Balanis, Antenna Theory, 4ª ed.):
@@ -108,5 +113,53 @@ describe('dipolos cruzados em quadratura (turnstile)', () => {
     expect(field(1, 0, 0, true)).toBeCloseTo(0, 9);
     expect(field(0, 0, 1, true)).toBeCloseTo(1, 9);
     expect(crossedDipoleDirectivity(0.5, true)).toBeGreaterThan(crossedDipoleDirectivity(0.5, false));
+  });
+});
+
+describe('loop pequena, arranjo uniforme, colinear e hélice axial', () => {
+  it('loop pequena: D = 1,5 e nulo no eixo; meia potência a 90°', () => {
+    expect(revolutionDirectivity(smallLoopField)).toBeCloseTo(1.5, 3);
+    expect(smallLoopField(0)).toBeCloseTo(0, 12);
+    expect(smallLoopField(Math.PI / 2)).toBe(1);
+    expect(halfPowerBeamwidthDeg(smallLoopField, Math.PI / 2)).toBeCloseTo(90, 0);
+  });
+
+  it('fator de arranjo: máximo 1 em ψ = 0, nulos em ψ = 2πk/N, 1 elemento = 1', () => {
+    expect(uniformArrayFactor(4, 0)).toBe(1);
+    expect(uniformArrayFactor(1, 1.3)).toBeCloseTo(1, 12);
+    expect(uniformArrayFactor(4, (2 * Math.PI) / 4)).toBeCloseTo(0, 12);
+    expect(uniformArrayFactor(2, Math.PI)).toBeCloseTo(0, 12);
+    expect(() => uniformArrayFactor(0, 1)).toThrow(RangeError);
+  });
+
+  it('colinear: 1 dipolo = dipolo; mais elementos, mais diretividade; máximo em 90°', () => {
+    expect(collinearField(1.1, 1, 0.5)).toBeCloseTo(dipoleField(1.1, 0.5), 12);
+    let last = revolutionDirectivity((t) => dipoleField(t, 0.5));
+    for (const n of [2, 4, 8]) {
+      const d = revolutionDirectivity((t) => collinearField(t, n, 0.5));
+      expect(d).toBeGreaterThan(last);
+      last = d;
+    }
+    expect(collinearField(Math.PI / 2, 6, 0.5)).toBeCloseTo(1, 9);
+    // N elementos em fase a d = λ/2 têm ≈ 3 dB a mais por dobra de N (regra de aula citada na busca)
+    const d4 = revolutionDirectivity((t) => collinearField(t, 4, 0.5));
+    const d8 = revolutionDirectivity((t) => collinearField(t, 8, 0.5));
+    expect(10 * Math.log10(d8 / d4)).toBeGreaterThan(2.3);
+    expect(10 * Math.log10(d8 / d4)).toBeLessThan(3.1);
+  });
+
+  it('hélice axial (Kraus + Hansen–Woodyard): máximo no eixo, zero atrás, e diretividade/largura na ordem das fórmulas empíricas de Kraus', () => {
+    // C = λ, S = 0,23λ (≈ 12,5°), N = 8. Fórmulas empíricas (Kraus; Wikipedia "Helical antenna", citando Tomasi 2004 e Kraus & Marhefka 2003):
+    //   D ≈ 15·N·(C/λ)²·(S/λ) = 27,6 (14,4 dBi);  HPBW ≈ 52 / ((C/λ)·√(N·S/λ)) = 38°.
+    // O modelo é teórico; as fórmulas, empíricas e conhecidas por exagerar o ganho em alguns dB: tolerância larga.
+    const n = 8;
+    const s = 0.23;
+    const f = (t: number) => helixAxialField(t, n, s);
+    expect(f(0)).toBeCloseTo(1, 12);
+    expect(f(Math.PI / 2 + 0.01)).toBe(0);
+    expect(f(0.2)).toBeLessThan(1);
+    const dDb = 10 * Math.log10(revolutionDirectivity(f));
+    expect(Math.abs(dDb - 14.4)).toBeLessThan(1.5); // medido: 13,7 dBi
+    expect(Math.abs(halfPowerBeamwidthDeg(f, 0) - 38.3)).toBeLessThan(5); // medido: 41,3°
   });
 });
