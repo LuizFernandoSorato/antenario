@@ -9,13 +9,15 @@ import type { CalcResult } from '../types';
 import type { YagiParams } from './calc';
 import { elementPositionsLambda } from './calc';
 import { wavelength } from '../../core/wave';
+import { boomPatternPlots } from '../mom-kit';
+import { isolatedElements, solveYagi } from './pattern-model';
 
 /** Texto girado -90° (lê de baixo para cima), ancorado em (x, y). */
 function rotatedLabel(x: number, y: number, content: string, cls: string): string {
   return `<text transform="translate(${Math.round(x * 10) / 10} ${Math.round(y * 10) / 10}) rotate(-90)" class="${cls}">${esc(content)}</text>`;
 }
 
-function topView(result: CalcResult, params: YagiParams): Diagram {
+export function topView(result: CalcResult, params: YagiParams): Diagram {
   const id = 'yg-top';
   const res = lengthResolutionForFrequency(params.frequencyMHz);
   const lambda = wavelength(params.frequencyMHz);
@@ -96,6 +98,22 @@ function topView(result: CalcResult, params: YagiParams): Diagram {
   };
 }
 
+/**
+ * Padrões do Yagi por método dos momentos (ver `pattern-model.ts`). Validado contra o ganho medido dos seis projetos do NBS TN 688
+ * (diferença de até 0,5 dB) e contra o estimador do DL6WU (até 0,6 dB). O cálculo da Yagi já limita o número de elementos ao do modelo.
+ */
+function patterns(_result: CalcResult, params: YagiParams): Diagram[] {
+  const solution = solveYagi(isolatedElements(params), params);
+  return boomPatternPlots({
+    idPrefix: 'yagi',
+    power: solution.power,
+    directivity: solution.directivity([0, 0, 1]),
+    modelNote:
+      'Calculado por método dos momentos (fio fino, espaço livre, sem boom, sem perdas), com as correntes induzidas em cada elemento; ' +
+      'o ganho medido de uma Yagi real fica um pouco abaixo. Ver o guia.',
+  });
+}
+
 export function diagrams(result: CalcResult, params: YagiParams): Diagram[] {
-  return [topView(result, params)];
+  return [topView(result, params), ...patterns(result, params)];
 }
