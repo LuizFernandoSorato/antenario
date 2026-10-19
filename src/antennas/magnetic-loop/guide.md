@@ -92,3 +92,4 @@ Gamma match e acoplamento direto ainda não têm equações com fonte aqui (TODO
 - F. W. Grover, *Inductance Calculations* (indutância de um anel circular).
 - Anatel: regulamentação do Serviço de Radioamador (versão vigente).
 - LABRE: plano de bandas (versão vigente).
+- Padrão de irradiação: loop pequena, campo ∝ sin θ, D = 1,5 (Balanis, *Antenna Theory*, §5.2). Vale para circunferência abaixo de ≈ λ/10.

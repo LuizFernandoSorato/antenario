@@ -3,7 +3,10 @@
  * loop de acoplamento embaixo).
  */
 
-import { formatEngineering } from '../../core/units';
+import { halfPowerBeamwidthDeg, smallLoopField } from '../../core/pattern';
+import { formatEngineering, formatNumber } from '../../core/units';
+import { wavelength } from '../../core/wave';
+import { polarPlot } from '../pattern-kit';
 import { type Diagram, circle, dimLabel, dimension, highVoltage, line, measure, rect, svgDoc, text } from '../diagram-kit';
 import type { CalcResult } from '../types';
 import type { MagneticLoopParams } from './calc';
@@ -50,6 +53,43 @@ function front(result: CalcResult, params: MagneticLoopParams): Diagram {
   };
 }
 
+/**
+ * Padrões da loop magnética: loop pequena (circunferência ≪ λ), dual de um dipolo curto: campo ∝ sin θ, com θ a partir do eixo
+ * (perpendicular ao plano da espira). Balanis §5.2; D = 1,5. No espaço livre, com corrente uniforme na espira; vale para circunferência
+ * abaixo de ≈ λ/10. O solo e a altura mudam muito o padrão real, principalmente na vertical.
+ */
+function patterns(result: CalcResult, params: MagneticLoopParams): Diagram[] {
+  const circumferenceLambda = measure(result, 'B') / wavelength(params.frequencyMHz);
+  const small = circumferenceLambda <= 0.1;
+  const note =
+    `Modelo de loop pequena (corrente uniforme, espaço livre). Esta espira tem circunferência de ${formatNumber(circumferenceLambda, 3)}λ` +
+    (small
+      ? ', dentro do limite de λ/10 do modelo. '
+      : ', ACIMA do limite de λ/10 do modelo: a corrente deixa de ser uniforme e o padrão real se afasta deste. TODO(fonte): loop não pequena. ') +
+    'O solo e a altura mudam muito o padrão real.';
+  return [
+    polarPlot({
+      id: 'mloop-pattern-axis',
+      title: 'Padrão no plano que contém o eixo da espira',
+      caption:
+        'Forma de "8": máximo no plano da espira (cima e baixo no desenho) e nulos ao longo do eixo (perpendicular à espira). ' +
+        `Largura de meia potência ≈ ${formatNumber(halfPowerBeamwidthDeg(smallLoopField, Math.PI / 2), 0)}°; diretividade ${formatNumber(10 * Math.log10(1.5), 2)} dBi. ` +
+        note,
+      desc: 'Gráfico polar em forma de oito, com nulos ao longo do eixo da espira e máximo no plano dela.',
+      axisLabels: { right: 'eixo (nulo)', up: 'plano da espira', left: 'eixo (nulo)', down: 'plano da espira' },
+      field: (a) => smallLoopField(a),
+    }),
+    polarPlot({
+      id: 'mloop-pattern-plane',
+      title: 'Padrão no plano da espira',
+      caption: `Círculo: omnidirecional dentro do plano da espira. ${note}`,
+      desc: 'Gráfico polar circular: a irradiação é igual em todas as direções do plano da espira.',
+      axisLabels: { right: '0°', up: '90°', left: '180°', down: '270°' },
+      field: () => 1,
+    }),
+  ];
+}
+
 export function diagrams(result: CalcResult, params: MagneticLoopParams): Diagram[] {
-  return [front(result, params)];
+  return [front(result, params), ...patterns(result, params)];
 }

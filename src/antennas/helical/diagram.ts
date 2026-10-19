@@ -3,7 +3,9 @@
  * o triângulo de uma volta desenrolada, que relaciona C, A, passo e fio.
  */
 
+import { halfPowerBeamwidthDeg, helixAxialField, revolutionDirectivity } from '../../core/pattern';
 import { formatNumber, lengthResolutionForFrequency } from '../../core/units';
+import { polarPlot } from '../pattern-kit';
 import { type Diagram, circle, dimLabel, dimension, line, measure, path, rect, svgDoc, text } from '../diagram-kit';
 import type { CalcResult } from '../types';
 import type { HelicalParams } from './calc';
@@ -107,6 +109,34 @@ function unrolledTurn(result: CalcResult, params: HelicalParams): Diagram {
   };
 }
 
+/**
+ * Padrão da hélice de modo axial: fator de arranjo de N voltas (espaçadas de S) × cos θ de uma volta, com a fase da condição de
+ * Hansen–Woodyard (Kraus; ver `helixAxialField`). Hemisfério da frente, plano de terra ideal e infinito. Simetria de revolução em torno do eixo.
+ */
+function patterns(params: HelicalParams): Diagram[] {
+  const field = (t: number) => helixAxialField(t, params.turns, params.pitchRatio);
+  const hp = halfPowerBeamwidthDeg(field, 0);
+  const gain = 10 * Math.log10(revolutionDirectivity(field));
+  const kraus = 10 * Math.log10(15 * params.turns * params.circumferenceRatio ** 2 * params.pitchRatio);
+  const nearOne = Math.abs(params.circumferenceRatio - 1) <= 0.25;
+  return [
+    polarPlot({
+      id: 'helical-pattern',
+      title: 'Padrão (corte que contém o eixo)',
+      caption:
+        `Lóbulo principal no eixo (para cima no desenho), com lóbulos laterais pequenos. Largura de meia potência ≈ ${formatNumber(hp, 0)}°; ` +
+        `diretividade do modelo ≈ ${formatNumber(gain, 1)} dBi (a fórmula empírica de Kraus, 15·N·(C/λ)²·S/λ, dá ${formatNumber(kraus, 1)} dBi). ` +
+        'O padrão tem simetria em torno do eixo. Modelo: N voltas como arranjo de fontes × cos θ, com a fase de Hansen–Woodyard, diante de um plano de terra ' +
+        'ideal e infinito (zero atrás); um refletor real tem diâmetro finito e irradia um pouco para trás. ' +
+        (nearOne ? '' : 'C/λ está fora de 0,75 a 1,25, a faixa do modo axial: o modelo não vale bem aqui. ') +
+        'Fonte: Kraus (via Stutzman e Thiele e teses de hélices axiais); os livros não foram consultados. A polarização circular não aparece no corte.',
+      desc: 'Gráfico polar com lóbulo principal estreito no eixo da hélice e lóbulos laterais pequenos; nada atrás do plano de terra.',
+      axisLabels: { right: 'plano de terra', up: 'eixo (frente)', left: 'plano de terra', down: 'atrás' },
+      field: (a) => field(Math.acos(Math.sin(a))),
+    }),
+  ];
+}
+
 export function diagrams(result: CalcResult, params: HelicalParams): Diagram[] {
-  return [sideView(result, params), unrolledTurn(result, params)];
+  return [sideView(result, params), unrolledTurn(result, params), ...patterns(params)];
 }

@@ -4,7 +4,10 @@
  * desenhado só como indicação (a posição real se acha medindo; ver guia).
  */
 
-import { lengthResolutionForFrequency } from '../../core/units';
+import { dipoleDirectivity, dipoleField, halfPowerBeamwidthDeg } from '../../core/pattern';
+import { formatNumber, lengthResolutionForFrequency } from '../../core/units';
+import { wavelength } from '../../core/wave';
+import { polarPlot } from '../pattern-kit';
 import {
   type Diagram,
   chokeBeads,
@@ -86,5 +89,42 @@ function overview(result: CalcResult, params: JPoleParams): Diagram {
 }
 
 export function diagrams(result: CalcResult, params: JPoleParams): Diagram[] {
-  return [overview(result, params)];
+  return [overview(result, params), ...patterns(result, params)];
+}
+
+/**
+ * Padrões do J-pole: o radiador (cota B) é um dipolo de meia onda alimentado na ponta, e a seção de casamento de 1/4 de onda é uma linha
+ * de dois condutores (as correntes se cancelam e quase não irradiam). Por isso o padrão é o do dipolo vertical (Wikipedia, "J-pole antenna";
+ * diferenças de relatos: distorção pequena do círculo horizontal, ganho médio ≈ 2,2 dBi). Modelo: dipolo de comprimento B, corrente senoidal
+ * (Balanis §4.2), no espaço livre.
+ */
+function patterns(result: CalcResult, params: JPoleParams): Diagram[] {
+  const lengthLambda = measure(result, 'B') / wavelength(params.frequencyMHz);
+  // α = ângulo no gráfico a partir da horizontal; θ = ângulo a partir do eixo vertical do radiador
+  const field = (a: number) => dipoleField(Math.acos(Math.sin(a)), lengthLambda);
+  const hp = halfPowerBeamwidthDeg((t) => dipoleField(t, lengthLambda), Math.PI / 2);
+  const gain = 10 * Math.log10(dipoleDirectivity(lengthLambda));
+  const note =
+    'Modelo: o radiador como dipolo vertical no espaço livre. O solo, o mastro e a seção de casamento mudam o padrão real: relatos citam um ' +
+    'círculo horizontal levemente deformado (ganho de 1,5 a 2,6 dBi conforme o lado, Wikipedia) e nulo no zênite.';
+  return [
+    polarPlot({
+      id: 'jpole-pattern-v',
+      title: 'Padrão vertical (elevação)',
+      caption:
+        `Forma de "8" em pé: nulos em cima e embaixo (ao longo do radiador) e máximo no horizonte. Largura de meia potência ≈ ${formatNumber(hp, 0)}° ` +
+        `na vertical; diretividade ideal ≈ ${formatNumber(gain, 2)} dBi. ${note}`,
+      desc: 'Gráfico polar em forma de oito na vertical: máximo no horizonte e nulos no zênite e no nadir.',
+      axisLabels: { right: 'horizonte', up: 'zênite', left: 'horizonte', down: 'nadir' },
+      field,
+    }),
+    polarPlot({
+      id: 'jpole-pattern-h',
+      title: 'Padrão horizontal (azimute)',
+      caption: `Círculo: omnidirecional no plano horizontal (dipolo ideal). ${note}`,
+      desc: 'Gráfico polar circular: a irradiação é igual em todas as direções horizontais.',
+      axisLabels: { right: '0°', up: '90°', left: '180°', down: '270°' },
+      field: () => 1,
+    }),
+  ];
 }

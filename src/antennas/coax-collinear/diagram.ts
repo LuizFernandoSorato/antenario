@@ -3,7 +3,9 @@
  * seção de baixo, choke e conector), com a ligação cruzada vivo↔malha em cada junção.
  */
 
-import { lengthResolutionForFrequency } from '../../core/units';
+import { collinearField, halfPowerBeamwidthDeg, revolutionDirectivity } from '../../core/pattern';
+import { formatNumber, lengthResolutionForFrequency } from '../../core/units';
+import { polarPlot } from '../pattern-kit';
 import { type Diagram, chokeBeads, circle, dimLabel, dimension, line, measure, rect, svgDoc, text } from '../diagram-kit';
 import type { CalcResult } from '../types';
 import type { CoaxCollinearParams } from './calc';
@@ -73,6 +75,42 @@ function stack(result: CalcResult, params: CoaxCollinearParams): Diagram {
   };
 }
 
+/**
+ * Padrões do colinear de coaxial: modelo de arranjo colinear IDEAL de N dipolos de meia onda em fase, espaçados de λ/2
+ * (elemento × fator de arranjo, Balanis §6.4). A diretividade do modelo (3,8 / 6,4 / 8,0 / 9,2 dBi para 2 / 4 / 6 / 8 seções) fica na
+ * faixa da tabela de ganho da ferramenta (3–4 / 6 / 8–9 / 8–9 dBi). O coaxial real tem seções de λ/2·VF (≈ 0,33λ) e a distribuição de
+ * corrente não é a de dipolos separados: TODO(fonte) para a corrente real.
+ */
+function patterns(params: CoaxCollinearParams): Diagram[] {
+  const n = params.sections;
+  const field = (a: number) => collinearField(Math.acos(Math.sin(a)), n, 0.5);
+  const hp = halfPowerBeamwidthDeg((t) => collinearField(t, n, 0.5), Math.PI / 2);
+  const gain = 10 * Math.log10(revolutionDirectivity((t) => collinearField(t, n, 0.5)));
+  const note =
+    'Modelo de arranjo ideal (N dipolos de meia onda em fase, espaçados de λ/2), não do coaxial real: o mastro, o cabo e o solo mudam o padrão. ' +
+    'O ideal tem lóbulos laterais na elevação e nulos entre eles. TODO(fonte): corrente real do colinear de coaxial.';
+  return [
+    polarPlot({
+      id: 'coaxcol-pattern-v',
+      title: 'Padrão vertical (elevação)',
+      caption:
+        `${n} seções: lóbulo principal achatado no horizonte (quanto mais seções, mais estreito na vertical). Largura de meia potência ≈ ${formatNumber(hp, 0)}°; ` +
+        `diretividade do modelo ≈ ${formatNumber(gain, 1)} dBi. ${note}`,
+      desc: 'Gráfico polar na vertical: lóbulo principal no horizonte, estreito, com lóbulos laterais pequenos.',
+      axisLabels: { right: 'horizonte', up: 'zênite', left: 'horizonte', down: 'nadir' },
+      field,
+    }),
+    polarPlot({
+      id: 'coaxcol-pattern-h',
+      title: 'Padrão horizontal (azimute)',
+      caption: `Círculo: omnidirecional no plano horizontal. ${note}`,
+      desc: 'Gráfico polar circular: a irradiação é igual em todas as direções horizontais.',
+      axisLabels: { right: '0°', up: '90°', left: '180°', down: '270°' },
+      field: () => 1,
+    }),
+  ];
+}
+
 export function diagrams(result: CalcResult, params: CoaxCollinearParams): Diagram[] {
-  return [stack(result, params)];
+  return [stack(result, params), ...patterns(params)];
 }

@@ -102,3 +102,4 @@ O J-pole tem **dois ajustes**, feitos nesta ordem:
 - D. M. Pozar, *Microwave Engineering*, 4ª ed., tabela 2.1 (linha de dois fios).
 - Anatel: regulamentação do Serviço de Radioamador (versão vigente).
 - LABRE: plano de bandas (versão vigente).
+- Padrão de irradiação: o radiador como dipolo vertical de meia onda (Balanis, *Antenna Theory*, §4.2; Wikipedia, "J-pole antenna").
