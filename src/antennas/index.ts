@@ -14,6 +14,11 @@ import { cutList as turnstileCutList } from './turnstile/cutlist';
 import { diagrams as turnstileDiagrams } from './turnstile/diagram';
 import turnstileGuide from './turnstile/guide.md?raw';
 import { meta as turnstileMeta } from './turnstile/meta';
+import * as crossYagi from './cross-yagi/calc';
+import { cutList as crossYagiCutList } from './cross-yagi/cutlist';
+import { diagrams as crossYagiDiagrams } from './cross-yagi/diagram';
+import crossYagiGuide from './cross-yagi/guide.md?raw';
+import { meta as crossYagiMeta } from './cross-yagi/meta';
 import * as qfh from './qfh/calc';
 import { cutList as qfhCutList } from './qfh/cutlist';
 import { diagrams as qfhDiagrams } from './qfh/diagram';
@@ -110,6 +115,7 @@ export const antennas: readonly AntennaModule[] = [
   register(jPoleMeta, jPole.defaultParams, jPole.calc, jPoleDiagrams, jPoleCutList, jPoleGuide),
   register(helicalMeta, helical.defaultParams, helical.calc, helicalDiagrams, helicalCutList, helicalGuide),
   register(yagiMeta, yagi.defaultParams, yagi.calc, yagiDiagrams, yagiCutList, yagiGuide),
+  register(crossYagiMeta, crossYagi.defaultParams, crossYagi.calc, crossYagiDiagrams, crossYagiCutList, crossYagiGuide),
   register(cubicQuadMeta, cubicQuad.defaultParams, cubicQuad.calc, cubicQuadDiagrams, cubicQuadCutList, cubicQuadGuide),
   register(disconeMeta, discone.defaultParams, discone.calc, disconeDiagrams, disconeCutList, disconeGuide),
   register(magneticLoopMeta, magneticLoop.defaultParams, magneticLoop.calc, magneticLoopDiagrams, magneticLoopCutList, magneticLoopGuide),

@@ -24,6 +24,8 @@ const ICONS: Readonly<Record<string, string>> = {
   'magnetic-loop': '<path d="M19 33A14 14 0 1 1 29 33M18 31v12M30 31v12"/>',
   // Seções radiantes empilhadas, ligadas por linhas de fase.
   'coax-collinear': '<rect x="20" y="4" width="8" height="10"/><rect x="20" y="19" width="8" height="10"/><rect x="20" y="34" width="8" height="10"/><path d="M24 14v5M24 29v5"/>',
+  // Yagi visto de cima (boom e elementos), com círculos no refletor e no excitado: o par cruzado.
+  'cross-yagi': '<path d="M5 24h38"/><path d="M11 10v28M21 13v22M30 16v16M38 19v10"/><circle cx="11" cy="24" r="3"/><circle cx="21" cy="24" r="3"/>',
   // Dois dipolos cruzados, vistos de cima.
   turnstile: '<path d="M5 24h38M24 5v38"/><circle cx="24" cy="24" r="4"/>',
   // Dois laços de meia espira cruzados, em forma de gaiola torcida (quadrifilar).
