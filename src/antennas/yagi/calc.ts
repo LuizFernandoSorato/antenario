@@ -25,11 +25,14 @@ import {
 
 export interface YagiParams {
   frequencyMHz: number;
-  /** Método de projeto: 1 = projetos do NBS TN 688; 2 = DL6WU (qualquer número de elementos). */
-  method: number;
+  /**
+   * Método de projeto: 1 = projetos do NBS TN 688; 2 = DL6WU (qualquer número de elementos). Omitido = automático, conforme o
+   * número de elementos (ver `chooseMethod`). A interface não pergunta: usa sempre o automático.
+   */
+  method?: number;
   /**
    * Número total de elementos (refletor + excitado + diretores). No método NBS só existem 3, 5, 6, 12,
-   * 15 ou 17; no DL6WU, qualquer número de 3 a 102. O comprimento do boom sai do projeto escolhido.
+   * 15 ou 17; no DL6WU, qualquer número de 3 a 40 (DL6WU_MAX_ELEMENTS). O comprimento do boom sai do projeto escolhido.
    */
   elementCount: number;
   /** Diâmetro dos elementos, em metros. */
@@ -42,7 +45,6 @@ export interface YagiParams {
 
 export const defaultParams: YagiParams = {
   frequencyMHz: 145,
-  method: 1,
   elementCount: 5,
   elementDiameter: 0.006,
   boomDiameter: 0.02,
@@ -71,11 +73,49 @@ export function elementPositionsLambda(directorCount: number, spacing: number): 
   return positions;
 }
 
+/** Menor número de elementos (boom de 2,2λ) a partir do qual o DL6WU vale (ver `dl6wu.ts`). */
+const DL6WU_MIN_ELEMENTS = 11;
+
+/**
+ * Método automático: o NBS (projetos medidos e otimizados) para Yagis curtos que ele cobre, ou seja, 3, 5 e 6 elementos; o DL6WU a partir
+ * de 11 elementos, a faixa dele, e também nos números intermediários que o NBS não tem (4 e de 7 a 10; ali o DL6WU calcula, mas avisa e
+ * não estima ganho). O NBS tem 12, 15 e 17 elementos, mas aí o DL6WU é o método próprio para boom de 2,2λ ou mais; o NBS segue disponível
+ * com `method: 1` no código.
+ */
+export function chooseMethod(elementCount: number): 1 | 2 {
+  const hasNbsDesign = NBS_DESIGNS.some((d) => d.directorCount + 2 === elementCount);
+  return hasNbsDesign && elementCount < DL6WU_MIN_ELEMENTS ? 1 : 2;
+}
+
 export function calc(params: YagiParams): CalcResult {
-  if (params.method === 2) return calcDl6wu(params);
-  if (params.method !== 1) {
+  const auto = params.method === undefined;
+  const method = params.method ?? chooseMethod(params.elementCount);
+  if (method === 2) return withAutoNote(calcDl6wu(params), auto, 'DL6WU');
+  if (method !== 1) {
     throw new RangeError(`O método deve ser 1 (NBS TN 688) ou 2 (DL6WU); recebido: ${params.method}.`);
   }
+  return withAutoNote(calcNbs(params), auto, 'NBS TN 688');
+}
+
+/** Em modo automático, informa na tela qual método foi usado e por quê. */
+function withAutoNote(result: CalcResult, auto: boolean, name: string): CalcResult {
+  if (!auto) return result;
+  return {
+    ...result,
+    warnings: [
+      {
+        level: 'info',
+        message:
+          `Método escolhido automaticamente pelo número de elementos: ${name}. ` +
+          'O NBS TN 688 (projetos medidos) vale para 3, 5 e 6 elementos; o DL6WU, para 11 ou mais (boom a partir de 2,2λ) e também ' +
+          'cobre os números intermediários, com aviso e sem estimativa de ganho abaixo de 11.',
+      },
+      ...result.warnings,
+    ],
+  };
+}
+
+function calcNbs(params: YagiParams): CalcResult {
   const { frequencyMHz: f, elementCount, elementDiameter: d, boomDiameter: boom, drivenFactor: k } = params;
   assertFrequencyMHz(f);
   assertPositive(d, 'O diâmetro dos elementos');

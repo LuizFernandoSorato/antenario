@@ -22,28 +22,17 @@ export const meta: AntennaMeta = {
   params: [
     { key: 'frequencyMHz', label: 'Frequência de projeto', unit: 'MHz', defaultValue: 145, toSi: 1, min: 0 },
     {
-      key: 'method',
-      label: 'Método (1 = NBS TN 688, 2 = DL6WU)',
-      unit: '',
-      defaultValue: 1,
-      toSi: 1,
-      min: 1,
-      max: 2,
-      help:
-        '1: projetos otimizados do NBS, só com 3, 5, 6, 12, 15 ou 17 elementos (bons para Yagis curtos). ' +
-        '2: DL6WU, qualquer número de elementos de 3 a 102, pensado para Yagis longos (boom de 2,2λ a 39λ, ou seja, a partir de 11 elementos).',
-    },
-    {
       key: 'elementCount',
       label: 'Número de elementos (refletor + excitado + diretores)',
       unit: '',
       defaultValue: 5,
       toSi: 1,
       min: 3,
-      max: 102,
+      max: 40,
       help:
-        'Com o método 1 só valem 3, 5, 6, 12, 15 ou 17 (o projeto de 15, com 4,2λ, é mais comprido que o de 17, com 3,2λ, por usar espaçamento maior). ' +
-        'Com o método 2 vale qualquer inteiro de 3 a 102. O comprimento do boom é sempre calculado.',
+        'O método é escolhido sozinho: com 3, 5 ou 6 elementos, os projetos otimizados do NBS TN 688; com 11 ou mais, o DL6WU (feito para ' +
+        'Yagis longos, boom a partir de 2,2λ). Com 4 ou de 7 a 10 elementos o DL6WU calcula, mas avisa e não estima o ganho. ' +
+        'Vale qualquer inteiro de 3 a 40 (acima disso o padrão de irradiação, calculado por momentos, ficaria lento demais); o comprimento do boom é sempre calculado.',
     },
     { key: 'elementDiameter', label: 'Diâmetro dos elementos', unit: 'mm', defaultValue: 6, toSi: 0.001, min: 0 },
     {

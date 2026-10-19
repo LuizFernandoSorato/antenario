@@ -26,8 +26,11 @@ import {
 } from './dl6wu';
 import { meta } from './meta';
 
-/** Maior número de elementos aceito (o programa original tem tabelas para 101 diretores). */
-export const DL6WU_MAX_ELEMENTS = 102;
+/**
+ * Maior número de elementos aceito pela ferramenta. O programa original (DL6WU.BAS) vai a 102, mas o padrão de irradiação por momentos
+ * custa O(N³) no navegador e só é calculado até 40; por isso a ferramenta não aceita mais que isso.
+ */
+export const DL6WU_MAX_ELEMENTS = 40;
 
 export function calcDl6wu(params: YagiParams): CalcResult {
   const { frequencyMHz: f, elementCount: n, elementDiameter: d, boomDiameter: boom, drivenFactor: k } = params;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { wavelength } from '../../core/wave';
-import { AVAILABLE_ELEMENT_COUNTS, calc, defaultParams, elementPositionsLambda, findDesign } from './calc';
+import { AVAILABLE_ELEMENT_COUNTS, calc, chooseMethod, defaultParams, elementPositionsLambda, findDesign } from './calc';
 import { cutList } from './cutlist';
 import {
   boomCorrection as dl6wuBoomCorrection,
@@ -94,12 +94,12 @@ describe('Yagi: calc', () => {
 
   it('ganho em dBi = dBd da tabela + 2,16', () => {
     expect(calc(defaultParams).expected.gain.typical).toBeCloseTo(9.2 + 2.16, 12);
-    expect(calc({ ...defaultParams, elementCount: 15 }).expected.gain.typical).toBeCloseTo(14.2 + 2.16, 12);
+    expect(calc({ ...defaultParams, method: 1, elementCount: 15 }).expected.gain.typical).toBeCloseTo(14.2 + 2.16, 12);
   });
 
   it('número de elementos e posições', () => {
     for (const d of NBS_DESIGNS) {
-      const r = calc({ ...defaultParams, elementCount: d.directorCount + 2 });
+      const r = calc({ ...defaultParams, method: 1, elementCount: d.directorCount + 2 });
       expect(r.measurements.filter((m) => /^D\d+$/.test(m.label))).toHaveLength(d.directorCount);
       const pos = elementPositionsLambda(d.directorCount, d.spacing);
       expect(pos).toHaveLength(d.directorCount + 2);
@@ -118,14 +118,14 @@ describe('Yagi: calc', () => {
     expect(AVAILABLE_ELEMENT_COUNTS).toEqual([3, 5, 6, 12, 15, 17]);
     for (const n of [2, 4, 7, 16, 5.5]) {
       expect(() => findDesign(n)).toThrow(RangeError);
-      expect(() => calc({ ...defaultParams, elementCount: n })).toThrow(RangeError);
+      expect(() => calc({ ...defaultParams, method: 1, elementCount: n })).toThrow(RangeError);
     }
   });
 
   it('o boom calculado é (0,2 + diretores × S)·λ da Tabela 1', () => {
     const lambda = wavelength(145);
     for (const d of NBS_DESIGNS) {
-      const r = calc({ ...defaultParams, elementCount: d.directorCount + 2 });
+      const r = calc({ ...defaultParams, method: 1, elementCount: d.directorCount + 2 });
       const boom = r.measurements.find((m) => m.label === 'L')!.meters;
       expect(boom).toBeCloseTo((0.2 + d.directorCount * d.spacing) * lambda, 9);
       // O NBS dá o comprimento total do projeto (0,4λ ... 4,2λ); aceita ±0,05λ (arredondamento da tabela).
@@ -159,11 +159,11 @@ describe('Yagi: método DL6WU (qualquer número de elementos)', () => {
   const base = { ...defaultParams, frequencyMHz: 432, method: 2, elementDiameter: 0.006, boomDiameter: 0 };
   const m = (r: ReturnType<typeof calc>, label: string) => r.measurements.find((x) => x.label === label)!.meters;
 
-  it('aceita qualquer número de elementos de 3 a 102 e rejeita o resto', () => {
-    for (const n of [3, 4, 7, 11, 13, 19, 50, 102]) {
+  it('aceita qualquer número de elementos de 3 a 40 (limite da ferramenta) e rejeita o resto', () => {
+    for (const n of [3, 4, 7, 11, 13, 19, 40]) {
       expect(() => calc({ ...base, elementCount: n })).not.toThrow();
     }
-    for (const n of [2, 103, 8.5]) expect(() => calc({ ...base, elementCount: n })).toThrow(RangeError);
+    for (const n of [2, 41, 60, 102, 8.5]) expect(() => calc({ ...base, elementCount: n })).toThrow(RangeError);
   });
 
   it('o boom é a soma dos espaçamentos da tabela do DL6WU (0,2λ + Σ S)', () => {
@@ -202,8 +202,23 @@ describe('Yagi: método DL6WU (qualquer número de elementos)', () => {
     expect(calc({ ...base, elementCount: 11 }).warnings.some((w) => w.message.includes('fora da faixa do método DL6WU'))).toBe(false);
   });
 
+  it('método automático: NBS para 3, 5 e 6 elementos; DL6WU para o resto (4, 7 a 40)', () => {
+    for (const n of [3, 5, 6]) expect(chooseMethod(n)).toBe(1);
+    for (const n of [4, 7, 8, 9, 10, 11, 12, 15, 17, 40]) expect(chooseMethod(n)).toBe(2);
+    // O resultado automático é o do método escolhido, com o aviso de qual foi usado.
+    for (const n of [3, 5, 6, 4, 9, 12, 17]) {
+      const auto = calc({ ...defaultParams, elementCount: n });
+      const manual = calc({ ...defaultParams, method: chooseMethod(n), elementCount: n });
+      expect(auto.measurements).toEqual(manual.measurements);
+      expect(auto.warnings.slice(1)).toEqual(manual.warnings);
+      expect(auto.warnings[0]!.message).toContain(chooseMethod(n) === 1 ? 'NBS' : 'DL6WU');
+    }
+    // Sem o método explícito, qualquer inteiro de 3 a 40 calcula.
+    for (const n of [3, 4, 5, 6, 7, 10, 11, 14, 15, 17, 30, 40]) expect(() => calc({ ...defaultParams, elementCount: n })).not.toThrow();
+  });
+
   it('método NBS continua recusando quantidades sem projeto, e o método é validado', () => {
-    expect(() => calc({ ...defaultParams, elementCount: 11 })).toThrow(RangeError);
+    expect(() => calc({ ...defaultParams, method: 1, elementCount: 11 })).toThrow(RangeError);
     expect(() => calc({ ...defaultParams, method: 3 })).toThrow(RangeError);
     expect(() => calc({ ...base, elementDiameter: 0.0001, elementCount: 11 })).toThrow(RangeError); // d/λ < 0,001
   });

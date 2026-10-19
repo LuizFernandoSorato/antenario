@@ -14,10 +14,10 @@ campo na frente e o cancelam atrás.
 - **Diagrama:** direcional, para o lado dos diretores. Mais comprido = mais ganho e feixe mais estreito.
 - **Ganho:** no método NBS, 7,1 a 14,2 dB sobre um dipolo (9,2 a 16,4 dBi) para 0,4λ a 4,2λ de comprimento.
   No método DL6WU, a estimativa é 9,2 + 3,39·ln(boom em λ) dBd, para boom de 2,2λ a 39λ.
-- **Dois métodos:** o **método 1 (NBS TN 688)** usa projetos otimizados e testados, mas só com 3, 5, 6, 12, 15
-  ou 17 elementos. O **método 2 (DL6WU)** aceita qualquer número de elementos (3 a 102) e foi feito para Yagis
-  longos (boom a partir de 2,2λ, ou seja, 11 elementos ou mais). Abaixo de 11 elementos ele ainda calcula, mas
-  sem estimar o ganho e com aviso. Para Yagis curtos, prefira o NBS.
+- **Dois métodos, escolhidos automaticamente pelo número de elementos:** com **3, 5 ou 6 elementos** vale o **NBS TN 688**
+  (projetos otimizados e testados). Com **11 ou mais**, o **DL6WU** (qualquer número de 3 a 40; feito para Yagis longos, boom a partir
+  de 2,2λ). Com 4 ou de 7 a 10 elementos o NBS não tem projeto e o DL6WU calcula, mas com aviso e sem estimar o ganho. A tela informa
+  qual método foi usado.
 - **Medidas:** no NBS, os projetos da Tabela 1 corrigidos para o diâmetro dos elementos (Fig. 9) e do boom
   (Fig. 10). No DL6WU, as equações do programa DL6WU.BAS (Hoch, DL6WU; G3SEK), com espaçamento crescente
   entre os diretores até o 14º e constante (0,4λ) depois.
@@ -112,3 +112,4 @@ do casamento escolhido. Um dipolo simples dentro do Yagi fica bem abaixo de 50 �
   Bouwen van VHF en UHF Antennes", VERON. As equações usadas vêm do programa DL6WU.BAS de J. Haigwood KY4Z, B. Stein
   W6NBI e I. White G3SEK (versão de 2006): http://www.ifwtech.co.uk/g3sek/diy-yagi/dl6wu-2006.bas. Os artigos
   originais não foram consultados diretamente.
+- Padrão de irradiação: método dos momentos para fio fino (Harrington, *Field Computation by Moment Methods*, 1968; Burke e Poggio, NEC, NOSC TD 116, 1981), implementado em `core/mom.ts`. Validado contra o ganho MEDIDO dos seis projetos do NBS TN 688 (diferença de −0,5 a +0,3 dB) e contra a estimativa do DL6WU (até 0,6 dB). Até 40 elementos.
