@@ -51,7 +51,7 @@ src/
     complex.ts     # aritmética de impedâncias complexas
     smith.ts       # geometria da Carta de Smith
     pattern.ts     # padrões analíticos: dipolo, monopolo, dipolos cruzados, loop pequena, colinear, hélice axial, com testes
-    mom.ts         # método dos momentos para fios finos (Yagi, quadra), validado contra NBS TN 688 e Balanis
+    mom.ts         # método dos momentos para fios finos (Yagi, quadra, QFH, discone), validado contra NBS TN 688 e Balanis
     exposure.ts    # exposição a RF em campo distante (estimativa)
   antennas/
     <antenna-id>/
@@ -158,7 +158,7 @@ Cada guia segue o mesmo modelo:
 
 ### Estado atual (atualizado em 2026-10-17)
 
-Para retomar: `git log --oneline` mostra o que foi feito. 575 testes passando e build ok em 2026-10-19 (depois da cross Yagi e dos padrões por momentos;
+Para retomar: `git log --oneline` mostra o que foi feito. 588 testes passando e build ok em 2026-10-19 (depois da cross Yagi e dos padrões por momentos, inclusive QFH e discone;
 o último commit está em `git log`).
 
 **Navegação (`src/main.ts`, `src/ui/`):** roteamento por hash. Vazio = página inicial com cartões
@@ -181,7 +181,7 @@ comentado em `src/antennas/index.ts`. Para reativar, descomente os imports e a l
 por 36,5 Ω a 0°, 50 Ω a 45° e 73 Ω a 90°). Os pontos têm fonte (Balanis e regra prática do ARRL), mas a curva entre
 eles não: continua `TODO(fonte)`.
 
-**Padrões de irradiação (2026-10-19; todas as antenas, menos discone e QFH):**
+**Padrões de irradiação (2026-10-19; todas as antenas):**
 - Analíticos (`core/pattern.ts`, com testes): dipolo (Balanis §4.2, serve também ao J-pole), monopolo (§4.7), dipolos cruzados (turnstile),
   loop pequena sin θ (§5.2, só para circunferência < λ/10), arranjo colinear (§6.4: elemento × fator de arranjo; o colinear de coaxial usa N dipolos
   de λ/2 em fase a λ/2, que reproduz a tabela de ganho da ferramenta, mas NÃO é o modelo do coaxial real) e hélice axial (Kraus: arranjo de N
@@ -194,9 +194,20 @@ eles não: continua `TODO(fonte)`.
   porque o MoM é O(N³) no navegador): o `calc` recusa mais que isso e a tela mostra o erro. O DL6WU.BAS original vai a 102. Quadra: fio de 2 mm assumido (premissa do modelo); o ganho do modelo (2 el. 7,5 dBi, 3 el. 9,5 dBi) fica ≈ 1,5–2 dB
   abaixo da "estimativa aditiva" do calc (que continua sem fonte). O refletor do ARRL dá o ganho máximo; um refletor ≈ 3 % maior sobe a relação frente–costas
   de ≈ 5 para ≈ 24 dB, perdendo < 1 dB. Cross Yagi: o plano diagonal difere um pouco do principal (termo cruzado).
-- Sem padrão: **discone** (só se sabe que é omni no azimute; o desvio da elevação com a frequência não tem fórmula nas fontes achadas, só patentes e um exemplo
-  do MathWorks) e **QFH** (o artigo do Kilgus, IEEE AP 1969, está em lso.fe.uni-lj.si/literatura/Razno/Antene/knjige/Kilgus/01139459.pdf, mas é um escaneamento com OCR ruim: as integrais
-  não são legíveis; seria preciso o PDF limpo ou o MoM com a geometria e a alimentação reais da QFH).
+- **QFH** (`qfh/pattern-model.ts`), por momentos: duas espiras fechadas de fio de 4,1 mm, cada uma com 2 braços helicoidais de meia volta (mesmo sentido) e
+  2 braços horizontais, reconstruídas das medidas da calculadora de Coppens. Os "separadores" conferem a 0,1 mm: o vertical é o comprimento do braço helicoidal
+  √(H² + (π·r)²) e o horizontal é o diâmetro entre os centros do fio, com r = (diâmetro interno + 4,1 mm)/2 (teste). Alimentação no topo, espiras em quadratura IDEAL
+  (correntes de módulos iguais e 90°, obtidas por superposição de duas soluções), porque a quadratura real depende da junção e do coaxial, que não constam das fontes.
+  Resultado: cardioide, 4,8 dBi no zênite, −6 a −7 dB no horizonte, ≈ −16 dB para baixo, razão axial < 1 dB no zênite e simetria em torno do eixo dentro de ~1 dB
+  (faixa de 3 a 5 dBic e rejeição > 15 dB abaixo do horizonte: rfessentials.com, fonte secundária; protótipo de 2,22 GHz com 5,19 dB: BRIN 2019). Só ficou o máximo para cima
+  quando a espira MENOR adianta a maior (maior indutiva, menor capacitiva); com a troca de sinal o feixe vai para baixo. **O sentido (RHCP/LHCP) NÃO foi afirmado**: com enrolamento
+  à direita e a convenção de fase da cross Yagi (Ey atrasado 90° = RHCP), o modelo daria LHCP no zênite, o que contraria a afirmação comum de que a QFH enrolada à direita
+  dá RHCP. Não resolvido: pode ser convenção de fase (conferir no `mom.ts`) ou a regra de qual espira adianta. TODO(fonte).
+- **Discone** (`discone/pattern-model.ts`), por momentos, em 1×, 2× e 4× a menor frequência: cada par haste do disco + folga + haste do cone é UM fio (sem junções), com a fonte
+  de 1 V no meio da folga e todos os pares em paralelo; usa o número e o diâmetro das hastes do cálculo (até 16; λ/12 por trecho). Verificações: limite de baixa frequência
+  (dipolo curto, D ≈ 1,6 dBi), convergência com a discretização (≤ 0,2 dB) e ROE mínima do projeto de 50 Ω (≈ 1,5; Stearns cita ≈ 1,4). Resultado: em 1× um "donut" largo; em 2× e 4×
+  o máximo desce ABAIXO do horizonte (coerente com a região entre o disco e o cone, que se abre para baixo) e, com 8 hastes, aparece ondulação em azimute de até 4 dB em 4×.
+  Sem coaxial nem mastro. Não comparado com padrões medidos nem com os do artigo de Stearns (a figura não foi lida). TODO(fonte).
 
 **Exposição a RF:** conferida em 2026-10-17. A Resolução Anatel 700/2018 (Art. 4º § 1º) adota a ICNIRP via Ato; o Ato
 458/2019 foi revogado e substituído pelo Ato 17.865 (em vigor desde 01/03/2024, fonte secundária
@@ -219,7 +230,7 @@ comentário cita RG-62 com VF 0,83 e 142 mm. A impedância de cada Yagi é entra
 - Moxon: equações do artigo de L. B. Cebik, W4RNL ("Designing Moxon Rectangles by Equation and by Model", em
   antenna2.net; deu erro de SSL no `WebFetch`, vale tentar `curl`).
 - QFH: equações do Kilgus (IEEE, paywall).
-- Padrão de irradiação da helicoidal (Kraus) e da colinear.
+- Padrão de irradiação da helicoidal (Kraus) e da colinear. O padrão do discone e da QFH vem de modelo por momentos sem comparação com medidas.
 - Texto final do Ato 17.865 da Anatel.
 
 **Fontes avaliadas e descartadas:** pcbantenna.com (sem fórmulas completas nem referências; ver a memória do
@@ -234,7 +245,7 @@ projeto). A página do YO5OSF com saída do AntMaker não bate com o DL6WU.BAS (
 - Discone: regra do gap e ganho.
 - Colinear de coaxial: tabela de ganho vem de fonte de radioamador; impedância da seção de baixo não consta.
 - Loop magnética: regra do loop de acoplamento (diâmetro ≈ 1/5) sem fonte.
-- QFH: medidas são a saída da calculadora de Coppens a 137,5 MHz, escaladas; faltam as equações (Kilgus) e a definição dos "separadores".
+- QFH: medidas são a saída da calculadora de Coppens a 137,5 MHz, escaladas; faltam as equações (Kilgus). Os "separadores" foram reconstruídos (ver os padrões). Falta o arranjo real de alimentação (qual espira adianta, junção) e o sentido de polarização.
 - Turnstile: tamanho do refletor, impedância com refletor e ganho absoluto sem fonte. O padrão com refletor ideal
   indica diretividade bem acima do "+3 dB" da Wikipedia usado no texto (ver `turnstile/calc.ts`); não reconciliado.
 - Hairpin: sem efeito de cantos e barra de curto; faixa de uso (25 a 35 Ω) vem de relatos de radioamadores.
