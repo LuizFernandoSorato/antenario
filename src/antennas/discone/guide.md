@@ -87,3 +87,4 @@ o disco e o cone mudar, a ROE muda: ela é o ajuste fino.
   Performance", *QEX*, jan/fev 2007, pp. 37-43 (Eqs. 1 a 5; regra de 0,7 da menor frequência).
 - Anatel: regulamentação do Serviço de Radioamador (versão vigente).
 - LABRE: plano de bandas (versão vigente).
+- Padrão de irradiação: método dos momentos (Harrington, 1968) sobre hastes de fio (cada par disco+cone é um fio com a fonte na folga), a λ/12 por trecho, no espaço livre e sem coaxial nem mastro. Verificado no limite de baixa frequência (dipolo curto, ≈ 1,6 dBi), na convergência com a discretização e na ROE mínima (≈ 1,5 contra ≈ 1,4 citada por Stearns). Não foi comparado com padrões medidos; nas frequências altas o modelo mostra lóbulos e ondulação em azimute que dependem do número de hastes.

@@ -5,10 +5,12 @@
 
 import { degToRad } from '../../core/complex';
 import { formatNumber, lengthResolutionForFrequency } from '../../core/units';
+import { polarPlot } from '../pattern-kit';
 import { type Diagram, chokeBeads, circle, dimLabel, dimension, line, measure, path, rect, svgDoc, text } from '../diagram-kit';
 import type { CalcResult } from '../types';
 import type { DisconeParams } from './calc';
 import { coneHalfAngleDeg } from './calc';
+import { MAX_MODEL_RODS, solveDiscone } from './pattern-model';
 
 function sideView(result: CalcResult, params: DisconeParams): Diagram {
   const id = 'dc-side';
@@ -93,6 +95,56 @@ function topView(result: CalcResult, params: DisconeParams): Diagram {
   };
 }
 
+/** Frequências do padrão, como múltiplos da menor frequência de operação (o padrão do discone muda muito ao longo da banda). */
+const PATTERN_MULTIPLES = [1, 2, 4];
+
+/**
+ * Padrões do discone por método dos momentos (ver `pattern-model.ts`), em três frequências. Corte vertical que passa por uma haste;
+ * a ondulação em azimute (entre as hastes e sobre elas) vai na legenda.
+ */
+function patterns(result: CalcResult, params: DisconeParams): Diagram[] {
+  return PATTERN_MULTIPLES.map((multiple) => {
+    const f = params.frequencyMHz * multiple;
+    const model = solveDiscone(result, params.rodCount, params.rodDiameter, f);
+    const power = (a: number) => model.solution.power([Math.cos(a), 0, Math.sin(a)]);
+    let peak = 0;
+    let peakAlpha = 0;
+    for (let i = 0; i < 360; i++) {
+      const a = (i * Math.PI) / 180;
+      if (power(a) > peak) {
+        peak = power(a);
+        peakAlpha = a;
+      }
+    }
+    // Elevação do máximo (positiva acima do horizonte) e ondulação em azimute nesse ângulo.
+    const elevation = (Math.atan2(Math.sin(peakAlpha), Math.abs(Math.cos(peakAlpha))) * 180) / Math.PI;
+    let lo = Infinity;
+    let hi = 0;
+    for (let k = 0; k < 72; k++) {
+      const phi = (2 * Math.PI * k) / 72;
+      const v = model.solution.power([Math.cos(peakAlpha) * Math.cos(phi), Math.cos(peakAlpha) * Math.sin(phi), Math.sin(peakAlpha)]);
+      lo = Math.min(lo, v);
+      hi = Math.max(hi, v);
+    }
+    const ripple = 10 * Math.log10(hi / Math.max(lo, 1e-30));
+    return polarPlot({
+      id: `dc-pattern-${multiple}`,
+      title: `Padrão a ${formatNumber(f, 0)} MHz (${multiple === 1 ? 'menor frequência' : `${multiple}× a menor`})`,
+      caption:
+        `Corte vertical que passa por uma haste. O máximo fica ${formatNumber(Math.abs(elevation), 0)}° ${elevation >= 0 ? 'acima' : 'abaixo'} do horizonte (no horizonte o nível é ${formatNumber(10 * Math.log10(power(0) / peak), 1)} dB); diretividade ` +
+        `${formatNumber(10 * Math.log10(model.solution.directivity()), 1)} dBi; ondulação em azimute nesse ângulo de ${formatNumber(ripple, 1)} dB. ` +
+        `Impedância de entrada do modelo ${formatNumber(model.inputImpedance.re, 0)} ${model.inputImpedance.im < 0 ? '−' : '+'} j${formatNumber(Math.abs(model.inputImpedance.im), 0)} Ω. ` +
+        `Calculado por método dos momentos com ${model.rodCount} hastes no disco e no cone de ${formatNumber(params.rodDiameter * 1000, 1)} mm, no espaço livre, ` +
+        'sem o coaxial nem o mastro' + (params.rodCount > MAX_MODEL_RODS ? `; o modelo limita as hastes a ${MAX_MODEL_RODS}` : '') +
+        '. O padrão do discone muda muito com a frequência e, com hastes, ondula em azimute nas frequências altas, quando o vão entre as hastes cresce em relação ao ' +
+        'comprimento de onda (chapa, sem vãos, não foi modelada). O coaxial real e a corrente na malha deformam o padrão. TODO(fonte): comparar com padrões medidos ou do artigo de Stearns.',
+      desc: 'Gráfico polar do corte vertical do discone, com o eixo da antena para cima.',
+      axisLabels: { right: 'horizonte', up: 'zênite', left: 'horizonte', down: 'abaixo' },
+      field: (a) => Math.sqrt(power(a) / peak),
+    });
+  });
+}
+
 export function diagrams(result: CalcResult, params: DisconeParams): Diagram[] {
-  return [sideView(result, params), topView(result, params)];
+  return [sideView(result, params), topView(result, params), ...patterns(result, params)];
 }
