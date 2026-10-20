@@ -32,5 +32,15 @@ export function cutList(params: TurnstileParams): CutItem[] {
       note: 'Distância de montagem (espaçadores), não uma peça.',
     });
   }
+  if (m['G'] !== undefined) {
+    items.push({
+      label: 'G',
+      name: 'Refletor: tela metálica quadrada (lado)',
+      quantity: 1,
+      meters: m['G'],
+      adjustable: false,
+      note: 'Lado do quadrado; a tela tem vãos de até H. Pode ser chapa inteira ou disco do mesmo diâmetro.',
+    });
+  }
   return items;
 }

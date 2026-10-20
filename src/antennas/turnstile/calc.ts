@@ -15,7 +15,9 @@
  * o dipolo A liga direto no ponto de alimentação e o dipolo B por uma linha de 1/4 de onda de impedância Zq. Para uma
  * linha de 1/4 de onda, V_in = jZq·I_L, então I_B = −j·V/Zq e I_A = V/R. A razão I_B/I_A = −j·R/Zq tem módulo 1
  * quando Zq = R: correntes iguais e a 90°. A impedância no ponto de alimentação é R ∥ (Zq²/R) = R/2 ≈ 36,5 Ω.
- * TODO(fonte): o efeito do refletor sobre R (a 1/4 de onda o valor muda) e as dimensões do refletor.
+ * Tamanho do refletor: nenhuma fonte consultada o dá; vem do estudo por momentos de `reflector-model.ts` (tela quadrada de lado 1λ,
+ * vãos de até 0,05λ), um modelo sem comparação com medida.
+ * TODO(fonte): o efeito do refletor sobre R (a 1/4 de onda o valor muda) e uma regra publicada para o tamanho do refletor.
  */
 
 import { type Complex, abs, complex } from '../../core/complex';
@@ -25,6 +27,7 @@ import { assertFactor, physicalLength, wavelength } from '../../core/wave';
 import { type AssemblyGuide, type CalcResult, type CalcWarning, type Estimate, type Measurement, rangeWarning } from '../types';
 import { RHCP, SENSE_NAME, type Sense, senseOf } from '../circular';
 import { meta } from './meta';
+import { MESH_OPENING_LAMBDA, REFLECTOR_MIN_SIDE_LAMBDA, REFLECTOR_SIDE_LAMBDA, REFLECTOR_STUDY } from './reflector-model';
 
 export interface TurnstileParams {
   frequencyMHz: number;
@@ -106,6 +109,18 @@ export function calc(params: TurnstileParams): CalcResult {
   ];
   if (withReflector) {
     measurements.push({ label: 'D', name: 'Distância ao refletor', meters: spacing, description: 'Do plano dos dipolos até o refletor, 1/4 de onda no ar.' });
+    measurements.push({
+      label: 'G',
+      name: 'Refletor: lado da tela quadrada',
+      meters: REFLECTOR_SIDE_LAMBDA * lambda,
+      description: `Tela metálica quadrada de 1λ de lado (mínimo ${formatNumber(REFLECTOR_MIN_SIDE_LAMBDA, 2)}λ = ${formatNumber(REFLECTOR_MIN_SIDE_LAMBDA * lambda * 100, 0)} cm). Centrada sob os dipolos. Também serve um disco de mesmo diâmetro.`,
+    });
+    measurements.push({
+      label: 'H',
+      name: 'Refletor: vão máximo da tela',
+      meters: MESH_OPENING_LAMBDA * lambda,
+      description: 'Distância máxima entre fios ou hastes da tela (centro a centro). Chapa inteira também serve; vãos maiores pioram a relação frente–costas.',
+    });
   }
 
   if (gap > 0) {
@@ -184,13 +199,17 @@ export function calc(params: TurnstileParams): CalcResult {
         'Há outras formas de obter os 90° (divisor com defasador, ou dipolos de comprimentos diferentes, um indutivo e outro capacitivo; Kraus, via Wikipedia). ' +
         'Esta ferramenta calcula só a linha de 1/4 de onda.',
     },
-    {
-      level: 'info',
-      message:
-        // TODO(fonte): fonte pendente para o texto abaixo.
-        'Dimensões do refletor (tamanho, tela ou hastes) não constam das fontes consultadas. Um refletor maior que os dipolos é o ponto ' +
-        'de partida lógico; modele ou meça.',
-    },
+    ...(withReflector
+      ? [
+          {
+            level: 'info' as const,
+            message:
+              'Tamanho do refletor: não consta das fontes consultadas; o valor vem de um modelo por momentos desta ferramenta (tela de hastes, sem medida). ' +
+              `No modelo, lado de 0,5λ dá relação frente–costas de ≈ ${formatNumber(REFLECTOR_STUDY[0]!.frontToBackDb, 0)} dB, 0,75λ de ≈ ${formatNumber(REFLECTOR_STUDY[1]!.frontToBackDb, 0)} dB e 1λ de ≈ ${formatNumber(REFLECTOR_STUDY[2]!.frontToBackDb, 0)} dB, ` +
+              `com ganho de ≈ ${formatNumber(REFLECTOR_STUDY[2]!.directivityDbi, 1)} dBi em 1λ; acima disso não houve melhora estável. Confirme medindo.`,
+          },
+        ]
+      : []),
     {
       level: 'danger',
       message:

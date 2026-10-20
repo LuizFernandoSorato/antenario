@@ -57,18 +57,20 @@ function side(result: CalcResult, params: TurnstileParams): Diagram | null {
   const res = lengthResolutionForFrequency(params.frequencyMHz);
   const a = measure(result, 'A');
   const d = measure(result, 'D');
-  const scale = 280 / a;
+  const scale = 200 / a;
   const cx = 310;
   const top = 70;
   const yRef = top + d * scale;
   const half = (a * scale) / 2;
+  const reflectorHalf = (measure(result, 'G') * scale) / 2;
   const parts: string[] = [];
   parts.push(line(cx - half, top, cx + half, top, 'dg-conductor'));
   parts.push(circle(cx, top, 4, 'dg-connector'));
-  parts.push(rect(cx - half - 20, yRef, 2 * half + 40, 6, 'dg-mast', 1));
-  // TODO(fonte): tamanho.
-  parts.push(text(cx + half + 28, yRef + 6, 'refletor', 'dg-note'));
+  parts.push(rect(cx - reflectorHalf, yRef, 2 * reflectorHalf, 6, 'dg-mast', 1));
+  parts.push(text(cx + reflectorHalf - 4, yRef - 8, 'refletor', 'dg-note', 'end'));
   parts.push(text(cx + half + 12, top + 4, 'dipolos (vistos de lado)', 'dg-note'));
+  parts.push(text(cx, yRef + 58, `tela com vãos de até ${dimLabel(result, 'H', res)}`, 'dg-note', 'middle'));
+  parts.push(dimension(id, cx - reflectorHalf, yRef + 6, cx + reflectorHalf, yRef + 6, 26, dimLabel(result, 'G', res)));
   parts.push(line(cx, top - 38, cx, top, 'dg-ext'));
   parts.push(text(cx + 8, top - 28, '↑ eixo: polarização circular para cima', 'dg-note'));
   parts.push(dimension(id, cx - half, top, cx - half, yRef, 40, dimLabel(result, 'D', res), { anchor: 'end' }));
@@ -76,11 +78,11 @@ function side(result: CalcResult, params: TurnstileParams): Diagram | null {
   return {
     id,
     title: 'Dipolos sobre o refletor (vista de lado)',
-    caption: 'Os dipolos ficam a 1/4 de onda (D) do refletor. O ganho aponta para cima, no eixo.',
+    caption: 'Os dipolos ficam a 1/4 de onda (D) do refletor, uma tela quadrada de lado G (fora de escala na vertical). O ganho aponta para cima, no eixo.',
     svg: svgDoc(
       id,
       640,
-      Math.round(yRef + 60),
+      Math.round(yRef + 80),
       'Turnstile: dipolos sobre o refletor',
       'Vista lateral dos dipolos a 1/4 de onda de um refletor plano.',
       parts.join(''),
@@ -139,7 +141,7 @@ function patterns(result: CalcResult, params: TurnstileParams): Diagram[] {
     'Dipolos ideais, sem acoplamento mútuo. ' +
     (reflector
       // TODO(fonte): fonte pendente para o texto abaixo.
-      ? 'O refletor é um plano condutor perfeito e infinito a λ/4: um refletor real, finito, tem diagrama e ganho diferentes (o tamanho dele não consta das fontes).'
+      ? 'O refletor é um plano condutor perfeito e infinito a λ/4: um refletor real, finito, tem diagrama e ganho diferentes (o ganho e a relação frente–costas do refletor de lado G vêm de um modelo por momentos: ver a nota de tamanho).'
       : 'Espaço livre, sem refletor.');
   const gainText = reflector
     ? ''

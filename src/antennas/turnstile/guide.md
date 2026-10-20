@@ -10,7 +10,8 @@ Dois dipolos de meia onda **cruzados a 90°** e alimentados com **defasagem de 9
 
 - **Uso:** recepção e transmissão.
 - **Ganho:** o refletor a 1/4 de onda soma 3 dB ao turnstile sem refletor (Wikipedia, citando Milligan). Não há valor absoluto com fonte nesta ferramenta.
-- **Aviso importante:** esta ferramenta calcula os dipolos, a linha de fase e a distância ao refletor. O **tamanho do refletor** e a impedância com o refletor não constam das fontes consultadas. Meça e ajuste.
+- **Tamanho do refletor:** uma tela metálica **quadrada de 1λ de lado** (cota **G**; a 137,5 MHz, ≈ 2,18 m), com vãos de no máximo **0,05λ** (cota **H**), centrada sob os dipolos. Um disco do mesmo diâmetro também serve. O mínimo razoável é **0,75λ**: abaixo disso a antena irradia muito para baixo (com 0,5λ, a relação frente–costas do modelo cai para ≈ 8 dB). Esses números **não vêm de livro**: saem de um modelo por momentos desta ferramenta (condutor perfeito, sem mastro nem cabos), em que 0,75λ dá frente–costas de ≈ 16 dB, 1λ de ≈ 18 dB e ganho de ≈ 7,8 dBi; acima de 1λ não houve melhora estável. Confira medindo.
+- **Aviso importante:** a impedância com o refletor não consta das fontes consultadas. Meça e ajuste.
 
 ## 2. Materiais
 
@@ -20,7 +21,7 @@ Dois dipolos de meia onda **cruzados a 90°** e alimentados com **defasagem de 9
 | Suporte do cruzamento | Bloco de PVC ou nylon com furos | Caixa plástica estanque |
 | Linha de fase | Coaxial de **75 Ω** (RG-59, RG-6) | RG-58 de 50 Ω (aceitável, com perda na pureza da polarização) |
 | Cabo até o rádio | Coaxial de 50 Ω | RG-58 curto |
-| Refletor | Tela metálica ou hastes | Chapa de alumínio, tela de galinheiro |
+| Refletor (quadrado de lado **G**) | Tela metálica ou hastes | Chapa de alumínio, tela de galinheiro com vãos de até **H** (se o vão for maior, cubra com tela mais fina) |
 | Mastro | Tubo de PVC ou fibra (não metálico, perto dos dipolos) | Cano de PVC |
 
 ## 3. Ferramentas
@@ -29,13 +30,13 @@ Trena, paquímetro, serra, ferro de solda, estilete, descascador de coaxial, Nan
 
 ## 4. Passo a passo
 
-1. Calcule as medidas com o seu VF. **A** é o comprimento de cada dipolo (de ponta a ponta, incluindo o espaço central), **B** o braço (`(A − E)/2`), **C** a linha de fase, **D** a distância ao refletor e **E** o espaço central de cada dipolo (só aparece se você informar um valor).
+1. Calcule as medidas com o seu VF. **A** é o comprimento de cada dipolo (de ponta a ponta, incluindo o espaço central), **B** o braço (`(A − E)/2`), **C** a linha de fase, **D** a distância ao refletor, **G** o lado do refletor, **H** o vão máximo da tela e **E** o espaço central de cada dipolo (só aparece se você informar um valor).
 2. Corte os quatro braços com **B** (com sobra para ajuste, por igual nos quatro).
 3. Monte os dois dipolos cruzados a 90° no suporte: um fica levemente acima do outro, isolados entre si. A posição dos braços vivos define o **sentido da polarização** (veja a seção 5).
 4. Corte a linha de fase com **C**, medindo o cabo **sem a capa** nas pontas.
 5. Ligue o dipolo 1 direto na junção e o dipolo 2 pela linha de fase (esquema na seção de alimentação).
 6. Instale o choke no cabo que vai ao rádio.
-7. Fixe o refletor a **D** dos dipolos (se for usar), com espaçadores isolantes.
+7. Monte o refletor (quadrado de lado **G**, vãos de até **H**) e fixe-o a **D** dos dipolos, **centrado** sob o cruzamento e paralelo ao plano dos dipolos, com espaçadores isolantes. Una as hastes ou fios da tela entre si e solde ou aperte bem as emendas. Ligue a malha do cabo ao refletor só se o seu balun ou choke pedir (veja a seção de alimentação).
 8. Instale com o eixo apontado para cima, longe de objetos metálicos.
 
 ## 5. Alimentação e casamento
