@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { combinedPower, directivityOf } from '../../core/mom';
 import { calc as yagiCalc } from '../yagi/calc';
 import { solveYagi } from '../yagi/pattern-model';
+import { LHCP, RHCP } from '../circular';
 import { calc, defaultParams } from './calc';
 import { cutList } from './cutlist';
 
@@ -148,5 +149,23 @@ describe('cross Yagi: espaço central do excitado', () => {
     const arms = cutList({ ...defaultParams, drivenGap: 0.008 }).find((c) => c.label === 'DB')!;
     expect(arms.quantity).toBe(4);
     expect(() => calc({ ...defaultParams, drivenGap: -1 })).toThrow(RangeError);
+  });
+});
+
+describe('cross Yagi: sentido da polarização e montagem', () => {
+  it('RHCP e LHCP: mesmas cotas, passos opostos (3 horas horário × 9 horas anti-horário)', () => {
+    const rh = calc({ ...defaultParams, circularSense: RHCP });
+    const lh = calc({ ...defaultParams, circularSense: LHCP });
+    expect(rh.measurements).toEqual(lh.measurements);
+    const text = (r: ReturnType<typeof calc>) => r.assembly!.steps.join(' ');
+    expect(text(rh)).toContain('3 horas), no sentido HORÁRIO');
+    expect(text(lh)).toContain('9 horas), no sentido ANTI-HORÁRIO');
+    expect(rh.assembly!.title).toContain('RHCP');
+    expect(lh.assembly!.title).toContain('LHCP');
+  });
+
+  it('o padrão é RHCP e sentido inválido é recusado', () => {
+    expect(defaultParams.circularSense).toBe(RHCP);
+    expect(() => calc({ ...defaultParams, circularSense: 7 })).toThrow(RangeError);
   });
 });

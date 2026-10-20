@@ -57,9 +57,11 @@ fica difícil conferir a defasagem e a impedância dos Yagis).
   cada Yagi. Com Yagis de 100 Ω (excitado dobrado) a junção cai em **50 Ω**, direto no cabo. Foi o que o LY3H mediu: ROE ≈ 1,1 em 436,5 MHz.
 - Com Yagis de outra impedância (por exemplo um dipolo simples), a junção fica em Z/2 e é preciso um transformador de 1/4 de onda **T** de √(50·Z/2) Ω.
   A impedância de cada Yagi não vem do NBS nem do DL6WU: **meça o seu Yagi isolado** no NanoVNA e informe na ferramenta.
-- **Sentido da polarização:** olhando de trás da antena (do lado dos refletores) para a frente, se o Yagi que recebe a linha **F** está girado 90° no sentido
-  horário em relação ao Yagi direto, a polarização é circular à **direita** (RHCP). Para trocar, mude qual Yagi recebe a linha. Satélites meteorológicos de 137 MHz
-  usam RHCP; confirme o sentido do seu satélite e, no ar, num passe real.
+- **Sentido da polarização (RHCP ou LHCP):** o campo gira do Yagi adiantado (A, direto) para o atrasado (B, pela linha **F**). Olhando de trás da antena (do lado dos
+  refletores) para a frente, na direção do feixe, se o braço vivo (condutor central) do excitado do Yagi B está 90° no sentido **horário** do braço vivo do excitado do A, a
+  polarização é circular à **direita** (RHCP, convenção IEEE); no sentido **anti-horário**, circular à **esquerda** (LHCP). Para trocar, inverta vivo e malha do excitado do B
+  ou troque qual Yagi recebe a linha. A ferramenta mostra o método e o desenho para o sentido que você escolher. A regra é derivada do atraso de fase, não de fonte escrita
+  (TODO(fonte)). Satélites meteorológicos de 137 MHz usam RHCP; confirme o sentido do seu satélite e, no ar, num passe real.
 
 ## 6. Ajuste
 

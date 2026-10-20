@@ -7,6 +7,7 @@ import { combinedPower, directivityOf } from '../../core/mom';
 import { lengthResolutionForFrequency } from '../../core/units';
 import { type Diagram, circle, dimLabel, dimension, line, measure, rect, svgDoc, text } from '../diagram-kit';
 import type { CalcResult } from '../types';
+import { armPolarityDiagram, senseOf } from '../circular';
 import { boomPatternPlots } from '../mom-kit';
 import { topView as yagiTopView } from '../yagi/diagram';
 import { isolatedElements, solveYagi } from '../yagi/pattern-model';
@@ -51,8 +52,8 @@ function frontView(result: CalcResult, params: CrossYagiParams): Diagram {
     title: 'Vista pela frente (elementos no mesmo plano)',
     caption:
       'Vista de trás para a frente: os elementos de A e de B se cruzam no mesmo plano, no centro do boom. R: refletor (o mais comprido); ' +
-      'DE: elemento excitado. Cada posição do boom tem um elemento horizontal e um vertical. Com o Yagi B (o da linha F) girado 90° no ' +
-      'sentido horário em relação ao A, vista de trás, a polarização é circular à direita.',
+      'DE: elemento excitado. Cada posição do boom tem um elemento horizontal e um vertical. O sentido da polarização (RHCP ou LHCP) ' +
+      'depende da posição dos braços vivos dos excitados: veja o diagrama de polaridade.',
     svg: svgDoc(
       id,
       640,
@@ -104,7 +105,14 @@ function feed(result: CalcResult, params: CrossYagiParams): Diagram {
 }
 
 export function diagrams(result: CalcResult, params: CrossYagiParams): Diagram[] {
-  return [sideView(result, params), frontView(result, params), feed(result, params), ...patterns(params)];
+  const polarity = armPolarityDiagram({
+    id: 'cy-polarity',
+    sense: senseOf(params.circularSense),
+    viewText: 'de trás da antena (lado dos refletores) para a frente, na direção do feixe',
+    directName: 'Yagi A (direto)',
+    delayedName: 'Yagi B (linha F)',
+  });
+  return [sideView(result, params), frontView(result, params), feed(result, params), polarity, ...patterns(params)];
 }
 
 /**

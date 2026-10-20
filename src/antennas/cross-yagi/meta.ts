@@ -1,3 +1,4 @@
+import { circularSenseParam } from '../circular';
 import type { AntennaMeta } from '../types';
 import { meta as yagiMeta } from '../yagi/meta';
 
@@ -32,6 +33,7 @@ export const meta: AntennaMeta = {
     yagiParam('boomDiameter'),
     yagiParam('drivenFactor'),
     yagiParam('drivenGap'),
+    circularSenseParam(),
     {
       key: 'yagiImpedance',
       label: 'Impedância de cada Yagi no ponto de alimentação',

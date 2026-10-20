@@ -21,9 +21,10 @@ import { abs, complex } from '../../core/complex';
 import { reflectionCoefficient, swrFromGamma } from '../../core/reflection';
 import { assertFrequencyMHz, assertPositive, formatNumber } from '../../core/units';
 import { assertFactor, physicalLength } from '../../core/wave';
-import { type CalcResult, type CalcWarning, type Measurement, rangeWarning } from '../types';
+import { type AssemblyGuide, type CalcResult, type CalcWarning, type Measurement, rangeWarning } from '../types';
 import { quadratureFeed } from '../turnstile/calc';
 import { type YagiParams, calc as yagiCalc, defaultParams as yagiDefaults } from '../yagi/calc';
+import { RHCP, SENSE_NAME, type Sense, senseOf } from '../circular';
 import { meta } from './meta';
 
 export interface CrossYagiParams extends YagiParams {
@@ -31,6 +32,8 @@ export interface CrossYagiParams extends YagiParams {
   yagiImpedance: number;
   /** Fator de velocidade do coaxial defasador, em (0, 1]. */
   velocityFactor: number;
+  /** Sentido da polarização circular: RHCP ou LHCP (ver `circular.ts`). */
+  circularSense: number;
 }
 
 export const defaultParams: CrossYagiParams = {
@@ -39,6 +42,7 @@ export const defaultParams: CrossYagiParams = {
   elementDiameter: 0.0032,
   yagiImpedance: 100,
   velocityFactor: 0.66,
+  circularSense: RHCP,
 };
 
 /** Impedância do cabo até o rádio (Ω). */
@@ -62,6 +66,7 @@ function yagiParamsOf(p: CrossYagiParams): YagiParams {
 
 export function calc(params: CrossYagiParams): CalcResult {
   const { frequencyMHz: f, velocityFactor: vf, yagiImpedance: zy } = params;
+  const sense = senseOf(params.circularSense);
   assertFrequencyMHz(f);
   assertFactor(vf, 'O fator de velocidade');
   assertPositive(zy, 'A impedância do Yagi');
@@ -135,9 +140,8 @@ export function calc(params: CrossYagiParams): CalcResult {
     {
       level: 'info',
       message:
-        'Sentido da polarização: olhando de trás da antena (do lado dos refletores) para a frente, se o Yagi que recebe a linha defasadora ' +
-        'está girado 90° no sentido horário em relação ao Yagi direto, a polarização é circular à DIREITA (RHCP), segundo a derivação do atraso de fase ' +
-        '(Ey atrasado 90° em relação a Ex, com z na direção de propagação). Para trocar para a esquerda, mude qual Yagi recebe a linha. ' +
+        `Montagem para ${SENSE_NAME[sense]}: veja o método de montagem e o diagrama de polaridade (a posição dos braços vivos dos excitados define o sentido). ` +
+        'A regra vem da derivação do atraso de fase (Ey atrasado 90° em relação a Ex, com z na direção de propagação), não de uma fonte escrita. ' +
         'Satélites meteorológicos de 137 MHz usam RHCP; para os outros, confirme o sentido do SEU satélite. Confirme no ar, com um passe real.',
     },
     {
@@ -160,6 +164,7 @@ export function calc(params: CrossYagiParams): CalcResult {
     assumptions: [
       ...yagi.assumptions,
       { name: 'Montagem', value: 'Dois Yagis idênticos girados 90°, elementos cruzados nas mesmas posições (mesmo plano)', source: 'LY3H; pedido do projeto' },
+      { name: 'Sentido da polarização', value: SENSE_NAME[sense], source: 'Dado do usuário; convenção IEEE Std 145 (ver core/polarization.ts)' },
       { name: 'Impedância de cada Yagi', value: `${formatNumber(zy, 1)} Ω`, source: 'Dado do usuário (LY3H mediu 100 Ω); meça' },
       { name: 'Impedância da linha defasadora', value: `${formatNumber(zy, 1)} Ω (igual à do Yagi)`, source: 'Derivação por linha de 1/4 de onda (Pozar)' },
       { name: 'Fator de velocidade do coaxial (VF)', value: formatNumber(vf, 3), source: 'Dado do usuário; datasheet do cabo' },
@@ -189,5 +194,23 @@ export function calc(params: CrossYagiParams): CalcResult {
       bandwidth: null,
     },
     warnings,
+    assembly: assemblyFor(sense),
+  };
+}
+
+/** Método de montagem para o sentido pedido: posição do braço vivo do excitado do Yagi B em relação ao do Yagi A, vista de trás. */
+function assemblyFor(sense: Sense): AssemblyGuide {
+  const right = sense === 'rhcp';
+  return {
+    title: `Montagem para ${SENSE_NAME[sense]}`,
+    steps: [
+      'Marque em cada elemento excitado qual braço vai ao condutor central do coaxial (braço vivo) e qual vai à malha. Os dois Yagis são idênticos.',
+      'Yagi A (direto): excitado ligado direto na junção. Yagi B (atrasado): excitado ligado à junção pela linha F, de 1/4 de onda.',
+      'Posicione o Yagi A com os elementos na horizontal e o braço vivo do excitado para CIMA.',
+      `Olhando de TRÁS da antena (do lado dos refletores) para a FRENTE, na direção do feixe, gire o Yagi B 90° em torno do boom até que o braço vivo do excitado dele fique ${right ? 'à DIREITA (3 horas), no sentido HORÁRIO' : 'à ESQUERDA (9 horas), no sentido ANTI-HORÁRIO'} do braço vivo do A.`,
+      `Por quê: o campo gira do Yagi adiantado (A) para o atrasado (B); girando no sentido ${right ? 'horário' : 'anti-horário'} visto na direção do feixe, a onda é ${right ? 'RHCP' : 'LHCP'} (IEEE Std 145).`,
+      `Para trocar para ${right ? 'LHCP' : 'RHCP'} sem refazer a montagem: inverta vivo e malha do excitado do Yagi B (ou troque qual Yagi recebe a linha F).`,
+      'Confirme com um passe real: o sentido contrário perde muito sinal. Esta derivação não foi conferida com medida (TODO(fonte)).',
+    ],
   };
 }
