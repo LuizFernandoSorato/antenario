@@ -25,6 +25,8 @@ export interface DisconeParams {
   rodCount: number;
   /** Diâmetro das hastes, em metros. */
   rodDiameter: number;
+  /** Folga disco–cone, em metros; 0 ou omitido = automática (proporção do exemplo de Stearns). */
+  centerGap?: number;
 }
 
 export const defaultParams: DisconeParams = {
@@ -32,6 +34,7 @@ export const defaultParams: DisconeParams = {
   designImpedance: 50,
   rodCount: 8,
   rodDiameter: 0.004,
+  centerGap: 0,
 };
 
 /** Primeira ressonância = 0,7 × a menor frequência de operação (Stearns, QEX 2007, p. 40). */
@@ -54,9 +57,13 @@ export function monoconeImpedance(thetaDeg: number): number {
 
 export function calc(params: DisconeParams): CalcResult {
   const { frequencyMHz: fLow, designImpedance: z0, rodCount, rodDiameter } = params;
+  const userGap = params.centerGap ?? 0;
   assertFrequencyMHz(fLow);
   assertPositive(z0, 'A impedância de projeto');
   assertPositive(rodDiameter, 'O diâmetro das hastes');
+  if (!Number.isFinite(userGap) || userGap < 0) {
+    throw new RangeError(`A folga deve ser ≥ 0 (recebido: ${userGap}).`);
+  }
   if (!Number.isInteger(rodCount) || rodCount < 3) {
     throw new RangeError(`O número de hastes deve ser um inteiro ≥ 3 (recebido: ${rodCount}).`);
   }
@@ -71,7 +78,10 @@ export function calc(params: DisconeParams): CalcResult {
   const discRadius = ratio * slant;
   const baseDiameter = 2 * slant * Math.sin(theta);
   const height = slant * Math.cos(theta);
-  const gap = GAP_OVER_SLANT * slant;
+  const gap = userGap > 0 ? userGap : GAP_OVER_SLANT * slant;
+  if (gap >= discRadius) {
+    throw new RangeError('A folga é maior que o raio do disco.');
+  }
 
   const measurements: Measurement[] = [
     { label: 'A', name: 'Lateral do cone (geratriz)', meters: slant, description: 'Do vértice à borda larga do cone, ao longo da superfície.' },
@@ -104,8 +114,10 @@ export function calc(params: DisconeParams): CalcResult {
     {
       level: 'warning',
       message:
-        `A folga de ${formatNumber(gap * 1000, 1)} mm segue a proporção do exemplo do artigo (11 mm para um cone de 270 mm); ` +
-        'o artigo não dá regra geral para ela. TODO(fonte). Ajuste medindo a ROE.',
+        (userGap > 0
+          ? `A folga de ${formatNumber(gap * 1000, 1)} mm é a que você informou. `
+          : `A folga de ${formatNumber(gap * 1000, 1)} mm segue a proporção do exemplo do artigo (11 mm para um cone de 270 mm). `) +
+        'O artigo não dá regra geral para ela, e A e E não a incluem (R + L = λ/2 vale para as hastes). TODO(fonte). Ajuste medindo a ROE.',
     },
     {
       level: 'info',

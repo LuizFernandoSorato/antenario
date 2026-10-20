@@ -56,7 +56,7 @@ o disco e o cone mudar, a ROE muda: ela é o ajuste fino.
 
 1. Meça a ROE de ponta a ponta da banda de interesse (NanoVNA em varredura).
 2. A ROE terá vales e picos. Procure posicionar os vales nas frequências em que você mais usa.
-3. Variar a folga **F** e o diâmetro do disco desloca os vales. Com hastes, inclinar as hastes do cone
+3. A folga **F** pode ser informada (0 = automática, pela proporção do exemplo de Stearns); ela NÃO entra dentro de **A** e **E**. Variar a folga **F** e o diâmetro do disco desloca os vales. Com hastes, inclinar as hastes do cone
    para dentro ou para fora também muda a impedância (é uma vantagem das hastes sobre a chapa).
 4. Para transmitir, use só as frequências com ROE baixa.
 

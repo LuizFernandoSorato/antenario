@@ -75,3 +75,20 @@ describe('discone: lista de corte', () => {
     expect(items.map((i) => [i.label, i.quantity])).toEqual([['A', 12], ['E', 12]]);
   });
 });
+
+describe('discone: folga disco–cone informada', () => {
+  const f = (r: ReturnType<typeof calc>, label: string) => r.measurements.find((x) => x.label === label)!.meters;
+
+  it('0 usa a proporção automática; um valor informado vira a cota F e não muda A, B, C, D, E', () => {
+    const auto = calc(defaultParams);
+    expect(f(auto, 'F')).toBeCloseTo(f(auto, 'A') * (11 / 270), 12);
+    const r = calc({ ...defaultParams, centerGap: 0.02 });
+    expect(f(r, 'F')).toBeCloseTo(0.02, 12);
+    for (const label of ['A', 'B', 'C', 'D', 'E']) expect(f(r, label)).toBeCloseTo(f(auto, label), 12);
+  });
+
+  it('rejeita folga negativa ou maior que o raio do disco', () => {
+    expect(() => calc({ ...defaultParams, centerGap: -0.01 })).toThrow(RangeError);
+    expect(() => calc({ ...defaultParams, centerGap: 5 })).toThrow(RangeError);
+  });
+});

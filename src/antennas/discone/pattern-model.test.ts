@@ -63,6 +63,12 @@ describe('discone: padrão por momentos', () => {
     expect(ripple(16)).toBeLessThan(ripple(8));
   }, 30000);
 
+  it('a folga informada chega ao modelo: folga maior muda a impedância de entrada', () => {
+    const maior = solveDiscone(calc({ ...defaultParams, centerGap: 0.15 }), 8, 0.004, 100).inputImpedance;
+    const base = solveDiscone(result, 8, 0.004, 100).inputImpedance;
+    expect(Math.hypot(maior.re - base.re, maior.im - base.im)).toBeGreaterThan(1);
+  });
+
   it('limita o número de hastes do modelo', () => {
     expect(solveDiscone(result, 40, 0.004, 100).rodCount).toBe(MAX_MODEL_RODS);
     expect(solveDiscone(result, 8, 0.004, 100).rodCount).toBe(8);

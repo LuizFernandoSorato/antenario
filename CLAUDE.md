@@ -158,7 +158,7 @@ Cada guia segue o mesmo modelo:
 
 ### Estado atual (atualizado em 2026-10-17)
 
-Para retomar: `git log --oneline` mostra o que foi feito. 588 testes passando e build ok em 2026-10-19 (depois da cross Yagi e dos padrões por momentos, inclusive QFH e discone;
+Para retomar: `git log --oneline` mostra o que foi feito. 603 testes passando e build ok em 2026-10-19 (depois da cross Yagi e dos padrões por momentos, inclusive QFH e discone;
 o último commit está em `git log`).
 
 **Navegação (`src/main.ts`, `src/ui/`):** roteamento por hash. Vazio = página inicial com cartões
@@ -219,6 +219,16 @@ elementos vêm da Yagi (NBS ou DL6WU), para qualquer frequência. Alimentação:
 impedância igual à do Yagi; junção em Z/2 e transformador **T** só se não der 50 Ω. Fonte: LY3H (https://www.ly3h.net/uhf-9v-9h-hand-cross-yagi-for-satellite/),
 que dá 436,5 MHz, Yagis de 100 Ω e 113 mm de linha (teste: VF 0,66), mas NÃO as medidas dos elementos. Divergência não resolvida na página: um
 comentário cita RG-62 com VF 0,83 e 142 mm. A impedância de cada Yagi é entrada do usuário (default 100 Ω). Padrão por momentos.
+
+**Diâmetro do condutor e gap central (2026-10-20):** REGRA: o comprimento de um elemento partido ao meio é SEMPRE de ponta a ponta e já inclui o
+espaço central (como no dipolo); cada braço mede (total − espaço)/2; o espaço é uma entrada em mm com padrão 0 e só vale para o elemento excitado
+(refletor e diretores seguem inteiros). Onde há entrada: dipolo (`conductorDiameter`, `centerGap`: A total, B braço, C espaço); turnstile (`conductorDiameter`,
+`centerGap`; B braço, E espaço); Yagi e cross Yagi (`elementDiameter`, `boomDiameter`, `drivenGap`; DE total, DB braço, DG espaço; cross Yagi: 4 braços na folha de
+corte); quadra cúbica (`wireDiameter`, `feedGap`: H perímetro, J fio a cortar = H − espaço, K espaço); QFH (`wireDiameter`: só no padrão, as medidas são as de 4,1 mm); discone
+(`rodDiameter`, `centerGap`: folga F, 0 = proporção do exemplo de Stearns; EXCEÇÃO à regra: a folga fica ENTRE as hastes e não entra em A nem E, porque R + L = λ/2 é das hastes).
+Sem gap: ground plane, J-pole, helicoidal, loop magnética, colinear de coaxial, QFH (alimentação no topo, arranjo real sem fonte). O diâmetro só muda as cotas na Yagi (correção
+NBS/DL6WU) e na impedância do stub do J-pole; no dipolo, turnstile e quadra ele é informativo (K e perímetros são para fio fino; curva do ARRL: TODO(fonte)).
+A regra "gap dentro do comprimento total" é a convenção usual de comprimento ponta a ponta, não foi conferida em livro (ARRL Antenna Book e NBS TN 688 não consultados).
 
 ### Pendências
 

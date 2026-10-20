@@ -45,5 +45,16 @@ export const meta: AntennaMeta = {
       help: 'Cone e disco podem ser de chapa ou de hastes. Com hastes: 8 é comum, 16 melhora um pouco.',
     },
     { key: 'rodDiameter', label: 'Diâmetro das hastes', unit: 'mm', defaultValue: 4, toSi: 0.001, min: 0 },
+    {
+      key: 'centerGap',
+      label: 'Folga disco–cone (0 = automática)',
+      unit: 'mm',
+      defaultValue: 0,
+      toSi: 0.001,
+      min: 0,
+      help:
+        'Espaço isolante entre o disco e o vértice do cone, onde liga o coaxial. 0 usa a proporção do exemplo de Stearns (11 mm para um cone de 270 mm). ' +
+        'Aqui a folga NÃO entra dentro de A e E: R + L = λ/2 vale para as hastes, e a folga fica entre elas.',
+    },
   ],
 };
