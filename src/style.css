@@ -179,9 +179,26 @@ small {
 .choice-field label,
 .check-field {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+/* O texto da opção fica ao lado do botão e quebra dentro da própria coluna (não desce para a linha de baixo). */
+.choice-field label > span,
+.check-field > span {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.choice-field input,
+.check-field input {
+  margin-top: 0.25rem;
+}
+
+/* A ajuda ocupa a linha inteira, abaixo do botão e do texto. */
+.check-field > small {
+  flex-basis: 100%;
 }
 
 .choice-field input,
