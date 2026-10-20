@@ -33,6 +33,20 @@ const ICONS: Readonly<Record<string, string>> = {
   // Antena genérica (mastro com ondas), usada se faltar um ícone específico.
   generic: '<path d="M24 44V20M24 20l-8-12M24 20l8-12M12 14a14 14 0 0 0 0 12M36 14a14 14 0 0 1 0 12"/>',
   // Ferramentas.
+  // Corte do coaxial (capa, dielétrico e condutor central) e barras de sinal que diminuem.
+  'cable-loss': '<circle cx="15" cy="24" r="12"/><circle cx="15" cy="24" r="7"/><circle cx="15" cy="24" r="2" fill="currentColor"/><path d="M32 34V14M38 34V20M44 34V27"/>',
+  // Um quarto de onda (de zero ao pico) com a cota λ/4 embaixo.
+  'quarter-wave': '<path d="M6 32C14 32 22 10 38 10M38 10v22M6 29v6M38 29v6M6 32h32"/><text x="22" y="47" font-size="10" text-anchor="middle" fill="currentColor" stroke="none" font-family="system-ui, sans-serif">λ/4</text>',
+  // Rede L: indutor em série no fio de cima e capacitor em paralelo, até o fio de baixo.
+  'l-network': '<path d="M4 14h6a4 4 0 0 1 8 0a4 4 0 0 1 8 0h18M34 14v10M26 24h16M26 30h16M34 30v10M4 40h40"/><circle cx="34" cy="14" r="2" fill="currentColor"/>',
+  // Linha principal e um stub em paralelo, em curto na ponta.
+  'single-stub': '<path d="M4 36h40M28 36V10M22 10h12"/><circle cx="28" cy="36" r="2" fill="currentColor"/>',
+  // Laço de cabo de meia onda entre dois terminais.
+  'coax-balun': '<path d="M4 28h10M34 28h10M14 28a10 10 0 0 1 20 0"/><circle cx="14" cy="28" r="2.5"/><circle cx="34" cy="28" r="2.5"/><text x="24" y="43" font-size="10" text-anchor="middle" fill="currentColor" stroke="none" font-family="system-ui, sans-serif">4:1</text>',
+  // Elemento excitado partido ao meio, grampo de dois fios e barra de curto.
+  hairpin: '<path d="M4 12h14M30 12h14M18 12v26M30 12v26M15 38h18"/><circle cx="18" cy="12" r="2.5"/><circle cx="30" cy="12" r="2.5"/>',
+  // Fonte irradiando para uma pessoa.
+  'rf-exposure': '<circle cx="9" cy="24" r="3" fill="currentColor"/><path d="M16 17a10 10 0 0 1 0 14M22 11a18 18 0 0 1 0 26M28 6a26 26 0 0 1 0 36"/><circle cx="41" cy="16" r="3"/><path d="M41 21v12M41 33l-4 8M41 33l4 8M36 25h10"/>',
   smith: '<circle cx="24" cy="24" r="18"/><circle cx="31" cy="24" r="11"/><circle cx="37" cy="24" r="5"/><path d="M6 24h36"/>',
   tool: '<path d="M8 36a18 18 0 0 1 32 0"/><path d="M24 34l9-14"/><circle cx="24" cy="34" r="2"/>',
 };
