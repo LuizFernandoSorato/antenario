@@ -158,7 +158,7 @@ Cada guia segue o mesmo modelo:
 
 ### Estado atual (atualizado em 2026-10-17)
 
-Para retomar: `git log --oneline` mostra o que foi feito. 603 testes passando e build ok em 2026-10-19 (depois da cross Yagi e dos padrões por momentos, inclusive QFH e discone;
+Para retomar: `git log --oneline` mostra o que foi feito. 637 testes passando e build ok em 2026-10-20 (depois do sentido de polarização circular em cross Yagi, turnstile, QFH e helicoidal;
 o último commit está em `git log`).
 
 **Navegação (`src/main.ts`, `src/ui/`):** roteamento por hash. Vazio = página inicial com cartões
@@ -200,9 +200,7 @@ eles não: continua `TODO(fonte)`.
   (correntes de módulos iguais e 90°, obtidas por superposição de duas soluções), porque a quadratura real depende da junção e do coaxial, que não constam das fontes.
   Resultado: cardioide, 4,8 dBi no zênite, −6 a −7 dB no horizonte, ≈ −16 dB para baixo, razão axial < 1 dB no zênite e simetria em torno do eixo dentro de ~1 dB
   (faixa de 3 a 5 dBic e rejeição > 15 dB abaixo do horizonte: rfessentials.com, fonte secundária; protótipo de 2,22 GHz com 5,19 dB: BRIN 2019). Só ficou o máximo para cima
-  quando a espira MENOR adianta a maior (maior indutiva, menor capacitiva); com a troca de sinal o feixe vai para baixo. **O sentido (RHCP/LHCP) NÃO foi afirmado**: com enrolamento
-  à direita e a convenção de fase da cross Yagi (Ey atrasado 90° = RHCP), o modelo daria LHCP no zênite, o que contraria a afirmação comum de que a QFH enrolada à direita
-  dá RHCP. Não resolvido: pode ser convenção de fase (conferir no `mom.ts`) ou a regra de qual espira adianta. TODO(fonte).
+  quando a espira MENOR adianta a maior (maior indutiva, menor capacitiva); com a troca de sinal o feixe vai para baixo. **Sentido**: pelo modelo (convenção IEEE de `core/polarization.ts`), enrolamento à direita dá LHCP no zênite e à esquerda dá RHCP; concorda com a patente US 10511099 (fonte secundária, não lida na íntegra). TODO(fonte): confirmar com um passe real.
 - **Discone** (`discone/pattern-model.ts`), por momentos, em 1×, 2× e 4× a menor frequência: cada par haste do disco + folga + haste do cone é UM fio (sem junções), com a fonte
   de 1 V no meio da folga e todos os pares em paralelo; usa o número e o diâmetro das hastes do cálculo (até 16; λ/12 por trecho). Verificações: limite de baixa frequência
   (dipolo curto, D ≈ 1,6 dBi), convergência com a discretização (≤ 0,2 dB) e ROE mínima do projeto de 50 Ω (≈ 1,5; Stearns cita ≈ 1,4). Resultado: em 1× um "donut" largo; em 2× e 4×
@@ -230,6 +228,12 @@ Sem gap: ground plane, J-pole, helicoidal, loop magnética, colinear de coaxial,
 NBS/DL6WU) e na impedância do stub do J-pole; no dipolo, turnstile e quadra ele é informativo (K e perímetros são para fio fino; curva do ARRL: TODO(fonte)).
 A regra "gap dentro do comprimento total" é a convenção usual de comprimento ponta a ponta, não foi conferida em livro (ARRL Antenna Book e NBS TN 688 não consultados).
 
+**Polarização circular (2026-10-20):** cross Yagi, turnstile, QFH e helicoidal têm o campo `circularSense` (RHCP/LHCP, botões de opção; `antennas/circular.ts`)
+e devolvem `CalcResult.assembly` (seção "Montagem" na tela) e, nas cruzadas, o diagrama de polaridade dos braços. `core/polarization.ts` (`circularSense`) define a convenção
+(IEEE 145; Ey atrasado 90° = RHCP) e o teste valida a fase do solver. Regras: pares cruzados, o vivo do elemento atrasado fica 90° no sentido horário (RHCP) ou
+anti-horário (LHCP) do vivo do direto, olhando na direção do feixe; QFH direita→LHCP, esquerda→RHCP; helicoidal direita→RHCP (Kraus). Na interface, campo `kind: 'boolean'`
+(checkbox) e `kind: 'choice'` (radio) em `ParamSpec`: o `calc` recebe números, a tela nunca mostra 0/1.
+
 ### Pendências
 
 **Falta fonte (não implementar de memória). O usuário precisa fornecer o livro/PDF:**
@@ -247,15 +251,15 @@ A regra "gap dentro do comprimento total" é a convenção usual de comprimento 
 projeto). A página do YO5OSF com saída do AntMaker não bate com o DL6WU.BAS (outra versão).
 
 **`TODO(fonte)` nas antenas existentes:**
-- Cross Yagi: impedância real de cada Yagi com dipolo simples ou dobrado; efeito do cruzamento (acoplamento) e razão axial; sentido RHCP/LHCP
-  foi derivado (Ey atrasado 90°), não tirado de fonte; confirmar com um passe de satélite.
+- Cross Yagi: impedância real de cada Yagi com dipolo simples ou dobrado; efeito do cruzamento (acoplamento) e razão axial; regra de montagem do sentido RHCP/LHCP
+  foi derivada (Ey atrasado 90°), não tirada de fonte; confirmar com um passe de satélite.
 - Yagi: divergência entre a tabela e a curva do NBS TN 688 no projeto de 0,4λ. DL6WU: os artigos originais do Hoch não
   foram consultados e não há comparação com dados medidos.
 - Quadra cúbica: ganho é estimativa aditiva sem fonte.
 - Discone: regra do gap e ganho.
 - Colinear de coaxial: tabela de ganho vem de fonte de radioamador; impedância da seção de baixo não consta.
 - Loop magnética: regra do loop de acoplamento (diâmetro ≈ 1/5) sem fonte.
-- QFH: medidas são a saída da calculadora de Coppens a 137,5 MHz, escaladas; faltam as equações (Kilgus). Os "separadores" foram reconstruídos (ver os padrões). Falta o arranjo real de alimentação (qual espira adianta, junção) e o sentido de polarização.
+- QFH: medidas são a saída da calculadora de Coppens a 137,5 MHz, escaladas; faltam as equações (Kilgus). Os "separadores" foram reconstruídos (ver os padrões). Falta o arranjo real de alimentação (qual espira adianta, junção); o sentido vem do modelo.
 - Turnstile: tamanho do refletor, impedância com refletor e ganho absoluto sem fonte. O padrão com refletor ideal
   indica diretividade bem acima do "+3 dB" da Wikipedia usado no texto (ver `turnstile/calc.ts`); não reconciliado.
 - Hairpin: sem efeito de cantos e barra de curto; faixa de uso (25 a 35 Ω) vem de relatos de radioamadores.
