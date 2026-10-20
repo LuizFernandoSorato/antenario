@@ -1,10 +1,13 @@
 import { formatLength, formatNumber, lengthResolutionForFrequency } from '../../core/units';
 import { quarterWaveTransformer } from '../../matching/quarter-wave';
 import { type Tool, cableAssumptions, cableField, getCable, num } from './types';
+import { quarterWaveDiagrams } from './diagrams';
+import quarterWaveGuide from './guides/quarter-wave.md?raw';
 
 export const quarterWaveTool: Tool = {
   id: 'quarter-wave',
   name: 'Transformador de 1/4 de onda',
+  guide: quarterWaveGuide,
   description:
     'Um pedaço de cabo de λ/4 com impedância Z_t = √(Z0·R) casa uma carga resistiva R com Z0. ' +
     'Ex.: 50 Ω → 100 Ω pede 70,7 Ω, e um cabo de 75 Ω fica bem perto.',
@@ -44,6 +47,7 @@ export const quarterWaveTool: Tool = {
           : 'Toda a faixa: o descasamento nunca passa do limite';
 
     return {
+      diagrams: quarterWaveDiagrams({ z0, loadOhms, idealOhms: ideal.idealLineOhms, cableName: cable.name, cableOhms: cable.impedanceOhms, singleLengthM: single.physicalLengthM, pairLengthM: pair.physicalLengthM, res }),
       sections: [
         {
           title: 'Transformador ideal',

@@ -5,6 +5,7 @@
  * ferramenta só traduz a entrada do formulário e formata a saída.
  */
 
+import type { Diagram } from '../../antennas/diagram-kit';
 import type { Assumption, CalcWarning } from '../../antennas/types';
 import type { CoaxCable } from '../../data/coax-cables';
 import { coaxCables } from '../../data/coax-cables';
@@ -45,6 +46,8 @@ export interface ToolOutput {
   sections: ToolSection[];
   assumptions: Assumption[];
   warnings: CalcWarning[];
+  /** Desenhos esquemáticos (SVG gerado por código) mostrados depois do resultado. */
+  diagrams?: Diagram[];
 }
 
 export interface Tool {
@@ -53,6 +56,8 @@ export interface Tool {
   description: string;
   fields: FieldSpec[];
   run: (values: ToolValues) => ToolOutput;
+  /** Dicas de montagem e ajuste, em Markdown (cartão próprio, como o guia das antenas). */
+  guide?: string;
 }
 
 export function num(values: ToolValues, key: string): number {

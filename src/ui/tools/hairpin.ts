@@ -2,10 +2,13 @@ import { complex } from '../../core/complex';
 import { formatLength, formatNumber, lengthResolutionForFrequency } from '../../core/units';
 import { designHairpin } from '../../matching/hairpin';
 import { type Tool, num } from './types';
+import { hairpinDiagram } from './diagrams';
+import hairpinGuide from './guides/hairpin.md?raw';
 
 export const hairpinTool: Tool = {
   id: 'hairpin',
   name: 'Hairpin (casamento de Yagi)',
+  guide: hairpinGuide,
   description:
     'Um grampo de dois fios em curto, ligado nos terminais do elemento excitado, vale uma indutância em paralelo. Ela cancela a ' +
     'reatância capacitiva de um elemento propositalmente curto. Informe a impedância medida do elemento (NanoVNA).',
@@ -43,6 +46,7 @@ export const hairpinTool: Tool = {
       wireDiameterM: num(values, 'wireMm') / 1000,
     });
     return {
+      diagrams: [hairpinDiagram({ legLengthM: r.legLengthM, spacingMm: num(values, 'spacingMm'), res })],
       sections: [
         {
           title: 'Grampo',

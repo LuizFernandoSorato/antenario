@@ -49,3 +49,35 @@ describe('ferramentas', () => {
     expect(out.sections.some((s) => s.rows.some((r) => /Indutor|Capacitor/.test(r.value)))).toBe(true);
   });
 });
+
+describe('diagramas e dicas das ferramentas', () => {
+  for (const tool of tools) {
+    it(`${tool.id}: tem guia e diagramas SVG bem formados, sem TODO nem NaN`, () => {
+      expect(tool.guide?.trim().length ?? 0).toBeGreaterThan(200);
+      expect(tool.guide).not.toMatch(/TODO/);
+      const out = tool.run(defaults(tool));
+      expect(out.diagrams?.length ?? 0).toBeGreaterThan(0);
+      const ids = out.diagrams!.map((d) => d.id);
+      expect(new Set(ids).size).toBe(ids.length);
+      for (const d of out.diagrams!) {
+        expect(d.svg.startsWith('<svg')).toBe(true);
+        expect(d.svg.endsWith('</svg>')).toBe(true);
+        expect(d.svg).not.toMatch(/NaN|undefined|Infinity/);
+        expect(d.caption.length).toBeGreaterThan(20);
+      }
+    });
+  }
+
+  it('transformador de 1/4 de onda: o desenho dos dois cabos mostra o comprimento de cada um', () => {
+    const tool = tools.find((t) => t.id === 'quarter-wave')!;
+    const out = tool.run(defaults(tool));
+    const pair = out.diagrams!.find((d) => d.id === 'qw-pair')!;
+    expect(pair.svg).toMatch(/cada cabo = \d/);
+  });
+
+  it('rede L: um diagrama por solução', () => {
+    const tool = tools.find((t) => t.id === 'l-network')!;
+    const out = tool.run(defaults(tool));
+    expect(out.diagrams!.length).toBe(out.sections.length);
+  });
+});

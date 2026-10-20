@@ -413,6 +413,19 @@ input[aria-invalid='true'] {
   stroke-width: 2;
 }
 
+.dg-conductor-fill {
+  fill: var(--dg-conductor);
+}
+
+.dg-danger-line {
+  stroke: var(--dg-danger);
+  stroke-width: 2;
+}
+
+.dg-danger-fill {
+  fill: var(--dg-danger);
+}
+
 .dg-ferrite {
   fill: var(--dg-ferrite);
 }
@@ -716,4 +729,16 @@ svg.smith {
 .pick-name {
   font-size: 0.9rem;
   line-height: 1.25;
+}
+
+/* Textos longos (URLs das fontes, nomes de cabo) quebram dentro do card em vez de vazar. */
+.assumptions dd,
+.assumptions small,
+.measures td,
+.measures small,
+.alert,
+.note,
+.card p,
+.card li {
+  overflow-wrap: anywhere;
 }

@@ -3,6 +3,8 @@ import { formatEngineering, formatNumber } from '../../core/units';
 import { type ReactiveComponent, designLNetwork } from '../../matching/l-network';
 import type { CalcWarning } from '../../antennas/types';
 import { type Tool, type ToolRow, type ToolSection, num } from './types';
+import { lNetworkDiagram } from './diagrams';
+import lNetworkGuide from './guides/l-network.md?raw';
 
 const TOPOLOGY_TEXT = {
   'shunt-at-load': {
@@ -41,6 +43,7 @@ function componentRows(label: string, c: ReactiveComponent | null, withPower: bo
 export const lNetworkTool: Tool = {
   id: 'l-network',
   name: 'Rede L (casamento com L e C)',
+  guide: lNetworkGuide,
   description:
     'Dois componentes, um indutor e/ou um capacitor, casam qualquer impedância com parte resistiva ' +
     'com o cabo de 50 Ω. É o princípio de muitos acopladores de antena.',
@@ -106,6 +109,16 @@ export const lNetworkTool: Tool = {
     });
 
     return {
+      diagrams: solutions.map((s, i) =>
+        lNetworkDiagram({
+          index: i,
+          topology: s.topology,
+          series: s.series,
+          shunt: s.shunt,
+          zLoadText: `${formatNumber(zLoad.re, 1)} ${zLoad.im < 0 ? '−' : '+'} j${formatNumber(Math.abs(zLoad.im), 1)} Ω`,
+          z0,
+        }),
+      ),
       sections,
       assumptions: [
         { name: 'Carga', value: `${formatNumber(zLoad.re, 1)} ${zLoad.im < 0 ? '−' : '+'} j${formatNumber(Math.abs(zLoad.im), 1)} Ω` },

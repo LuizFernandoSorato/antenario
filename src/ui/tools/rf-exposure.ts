@@ -9,6 +9,8 @@ import { formatNumber } from '../../core/units';
 import { EXPOSURE_LIMITS_SOURCE, type ExposureScenario, powerDensityLimit } from '../../data/rf-exposure-limits';
 import type { CalcWarning } from '../../antennas/types';
 import { type Tool, num, str } from './types';
+import { exposureDiagram } from './diagrams';
+import exposureGuide from './guides/rf-exposure.md?raw';
 
 function meters(m: number): string {
   return m < 1 ? `${formatNumber(m * 100, 0)} cm` : `${formatNumber(m, 2)} m`;
@@ -17,6 +19,7 @@ function meters(m: number): string {
 export const rfExposureTool: Tool = {
   id: 'rf-exposure',
   name: 'Exposição a RF: distância de segurança',
+  guide: exposureGuide,
   description:
     'Estimativa da densidade de potência S = P·G / (4π·r²) em campo distante e da distância mínima para ficar abaixo ' +
     'do limite de referência da ICNIRP. É uma estimativa: serve para ter ordem de grandeza, não para atestar conformidade.',
@@ -140,6 +143,7 @@ export const rfExposureTool: Tool = {
     );
 
     return {
+      diagrams: [exposureDiagram({ distanceM: d, safeM: safe, farFieldM: far, ok })],
       sections: [
         {
           title: scenario === 'public' ? 'Público em geral' : 'Ocupacional',

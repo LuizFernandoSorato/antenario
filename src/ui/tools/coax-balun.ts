@@ -1,10 +1,13 @@
 import { formatLength, formatNumber, lengthResolutionForFrequency } from '../../core/units';
 import { halfWaveBalun } from '../../matching/coax-balun';
 import { type Tool, cableAssumptions, cableField, getCable, num } from './types';
+import { coaxBalunDiagram } from './diagrams';
+import balunGuide from './guides/coax-balun.md?raw';
 
 export const coaxBalunTool: Tool = {
   id: 'coax-balun',
   name: 'Balun 4:1 de coaxial',
+  guide: balunGuide,
   description:
     'Um laço de coaxial de meia onda (elétrica) liga uma carga balanceada de 200 Ω, como um dipolo ' +
     'dobrado, a um cabo de 50 Ω. Usado em VHF/UHF, onde o laço fica curto.',
@@ -19,6 +22,7 @@ export const coaxBalunTool: Tool = {
     const r = halfWaveBalun({ fMHz, unbalancedOhms: num(values, 'z0'), velocityFactor: cable.velocityFactor });
 
     return {
+      diagrams: [coaxBalunDiagram({ loopLengthM: r.loopLengthM, feederOhms: num(values, 'z0'), balancedOhms: r.balancedOhms, res: lengthResolutionForFrequency(fMHz) })],
       sections: [
         {
           title: 'Balun',

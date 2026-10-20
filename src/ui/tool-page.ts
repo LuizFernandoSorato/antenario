@@ -4,7 +4,7 @@
  */
 
 import { formatNumber, parseDecimal } from '../core/units';
-import { decimalsOf, escapeHtml, renderAssumptions, renderError, renderWarnings } from './render';
+import { decimalsOf, escapeHtml, renderAssumptions, renderDiagrams, renderError, renderGuide, renderWarnings } from './render';
 import type { FieldSpec, Tool, ToolOutput, ToolValues } from './tools/types';
 
 function renderField(f: FieldSpec): string {
@@ -33,6 +33,7 @@ function renderField(f: FieldSpec): string {
 
 function renderOutput(out: ToolOutput): string {
   return `
+    ${out.diagrams && out.diagrams.length > 0 ? renderDiagrams(out.diagrams) : ''}
     ${renderWarnings(out.warnings)}
     ${out.sections
       .map(
@@ -65,7 +66,8 @@ export function mountToolPage(container: HTMLElement, tool: Tool): void {
         ${tool.fields.map(renderField).join('')}
       </form>
       <div class="result" aria-live="polite"></div>
-    </section>`;
+    </section>
+    ${tool.guide ? `<section class="card">${renderGuide(tool.guide, 'Dicas de montagem e ajuste')}</section>` : ''}`;
 
   const form = container.querySelector<HTMLFormElement>('form')!;
   const output = container.querySelector<HTMLDivElement>('.result')!;

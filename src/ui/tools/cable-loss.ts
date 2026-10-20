@@ -2,6 +2,8 @@ import { formatNumber, formatLength, lengthResolutionForFrequency } from '../../
 import { wavelengthInLine } from '../../core/wave';
 import { analyzeFeedline } from '../../lines/coax';
 import { type Tool, cableAssumptions, cableField, getCable, num } from './types';
+import { cableFlowDiagram, coaxCrossSectionDiagram } from './diagrams';
+import cableGuide from './guides/cable-loss.md?raw';
 
 function db(value: number | null): string {
   return value === null ? '—' : `${formatNumber(value, 2)} dB`;
@@ -14,6 +16,7 @@ function swr(value: number | null): string {
 export const cableLossTool: Tool = {
   id: 'cable-loss',
   name: 'Perdas no cabo coaxial',
+  guide: cableGuide,
   description:
     'Quanto do sinal se perde no cabo, como a ROE da antena aparece no rádio e se o cabo aguenta a ' +
     'potência de transmissão. Dados de atenuação e potência vêm do datasheet de cada cabo.',
@@ -118,6 +121,10 @@ export const cableLossTool: Tool = {
     ];
 
     return {
+      diagrams: [
+        cableFlowDiagram({ powerW, powerAtLoadW: r.powerAtLoadW, lossDb: r.totalLossDb, lossFraction: r.lossFraction, lengthM, cableName: cable.name }),
+        coaxCrossSectionDiagram({ cableName: cable.name, outerDiameterMm: cable.outerDiameterMm, dielectric: cable.dielectric, impedanceOhms: cable.impedanceOhms }),
+      ],
       sections,
       assumptions: [
         ...cableAssumptions(cable),

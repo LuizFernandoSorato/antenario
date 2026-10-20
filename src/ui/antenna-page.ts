@@ -4,8 +4,7 @@
  * e avisos. O guia de construção fica numa seção própria.
  */
 
-import { marked } from 'marked';
-import type { AntennaModule, Diagram } from '../antennas';
+import type { AntennaModule } from '../antennas';
 import { DEFAULT_MARGIN_PERCENT, cutLength, totalMaterial } from '../antennas/cutlist';
 import type { AssemblyGuide, CalcResult, CutItem, Estimate, ParamSpec } from '../antennas/types';
 import {
@@ -15,7 +14,7 @@ import {
   parseDecimal,
   trimZeros,
 } from '../core/units';
-import { decimalsOf, escapeHtml, renderAssumptions, renderError, renderWarnings } from './render';
+import { decimalsOf, escapeHtml, renderAssumptions, renderDiagrams, renderError, renderGuide, renderWarnings } from './render';
 
 function formatEstimate(e: Estimate): string {
   const parts: string[] = [];
@@ -31,33 +30,6 @@ function formatEstimate(e: Estimate): string {
     <strong>${escapeHtml(parts.join(' · ') || '—')}</strong>
     <p>${escapeHtml(e.note)}</p>
     <p class="source">Fonte: ${escapeHtml(e.source)}</p>`;
-}
-
-function renderDiagrams(diagrams: readonly Diagram[]): string {
-  return `
-    <h3>Diagramas</h3>
-    <div class="diagrams">
-      ${diagrams
-        .map(
-          (d) => `<figure class="diagram">
-            <figcaption><strong>${escapeHtml(d.title)}</strong></figcaption>
-            ${d.svg}
-            <p class="note">${escapeHtml(d.caption)}</p>
-          </figure>`,
-        )
-        .join('')}
-    </div>`;
-}
-
-/** Guia em Markdown → HTML. O título (# ...) é omitido: a página já mostra o nome da antena. */
-function renderGuide(markdown: string): string {
-  const body = markdown.replace(/^# .*\n+/, '');
-  const html = marked.parse(body, { async: false });
-  return `
-    <details class="guide" open>
-      <summary>Guia de construção</summary>
-      ${html}
-    </details>`;
 }
 
 /** Linhas da tabela de corte (as que mudam quando a sobra muda). */

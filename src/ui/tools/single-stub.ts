@@ -2,10 +2,13 @@ import { complex } from '../../core/complex';
 import { formatLength, formatNumber, lengthResolutionForFrequency } from '../../core/units';
 import { type StubTermination, designSingleStub } from '../../matching/single-stub';
 import { type Tool, cableAssumptions, cableField, getCable, num, str } from './types';
+import { stubDiagram } from './diagrams';
+import stubGuide from './guides/single-stub.md?raw';
 
 export const singleStubTool: Tool = {
   id: 'single-stub',
   name: 'Casamento com stub',
+  guide: stubGuide,
   description:
     'Um pedaço de cabo (o stub) ligado em paralelo com a linha, a uma distância certa da antena, ' +
     'cancela a reatância e casa a impedância. Não precisa de componentes: só cabo.',
@@ -44,6 +47,7 @@ export const singleStubTool: Tool = {
     });
 
     return {
+      diagrams: solutions.map((s, i) => stubDiagram({ index: i, distanceM: s.distanceM, stubM: s.stubM, termination, res })),
       sections: solutions.map((s, i) => ({
         title: `Solução ${i + 1}`,
         rows: [
