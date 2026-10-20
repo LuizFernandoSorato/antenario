@@ -90,7 +90,7 @@ function loops(result: CalcResult, params: QfhParams): Diagram {
  * diferença. O padrão é quase simétrico em torno do eixo; os dois cortes mostram a pequena diferença entre o plano de uma espira e o diagonal.
  */
 function patterns(result: CalcResult, params: QfhParams): Diagram[] {
-  const model = solveQfh(result, params.frequencyMHz);
+  const model = solveQfh(result, params.frequencyMHz, params.wireDiameter);
   const planes: { id: string; title: string; label: string; dir: (a: number) => Vec3 }[] = [
     { id: 'qfh-pattern-a', title: 'Padrão no plano de uma espira', label: 'plano de uma espira', dir: (a) => [Math.cos(a), 0, Math.sin(a)] },
     { id: 'qfh-pattern-d', title: 'Padrão no plano diagonal (45° entre as espiras)', label: 'plano diagonal', dir: (a) => [Math.cos(a) * Math.SQRT1_2, Math.cos(a) * Math.SQRT1_2, Math.sin(a)] },
@@ -108,7 +108,8 @@ function patterns(result: CalcResult, params: QfhParams): Diagram[] {
   const axial = 20 * Math.log10((plus + minus) / Math.max(1e-9, Math.abs(plus - minus)));
   const note =
     ` Diretividade calculada ${formatNumber(dDb, 1)} dBi (soma das duas polarizações); razão axial no zênite ${formatNumber(axial, 1)} dB. ` +
-    'Calculado por método dos momentos com fio de 4,1 mm, no espaço livre, sem o cilindro de suporte nem o coaxial, com as duas espiras alimentadas no topo ' +
+    `Calculado por método dos momentos com fio de ${formatNumber(params.wireDiameter * 1000, 1)} mm, no espaço livre, ` +
+    'sem o cilindro de suporte nem o coaxial, com as duas espiras alimentadas no topo ' +
     'em amplitude igual e 90° de diferença (a QFH real obtém isso da diferença de comprimento das espiras; aqui é suposto ideal). ' +
     'Num coaxial real que desce pelo centro, o padrão para baixo e a ROE mudam. O sentido da polarização (direita ou esquerda) não é afirmado: ' +
     'depende do sentido de enrolamento e de qual espira adianta. TODO(fonte).';

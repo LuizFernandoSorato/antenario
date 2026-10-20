@@ -94,7 +94,7 @@ describe('QFH: padrão por momentos a 137,5 MHz', () => {
   });
 
   it('a diretividade em outra frequência de projeto fica perto (geometria escalada, fio fixo em 4,1 mm)', () => {
-    const m2 = solveQfh(calc({ frequencyMHz: 275 }), 275);
+    const m2 = solveQfh(calc({ ...defaultParams, frequencyMHz: 275 }), 275);
     expect(Math.abs(db(m2.directivity) - db(m.directivity))).toBeLessThan(1);
   });
 });

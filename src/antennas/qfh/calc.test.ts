@@ -24,7 +24,7 @@ describe('QFH: calc', () => {
 
   it('escala inversamente com a frequência', () => {
     const a = calc(defaultParams);
-    const b = calc({ frequencyMHz: 275 });
+    const b = calc({ ...defaultParams, frequencyMHz: 275 });
     expect(mm(b, 'A')).toBeCloseTo(mm(a, 'A') / 2, 9);
     expect(mm(b, 'B')).toBeCloseTo(mm(a, 'B') / 2, 9);
   });
@@ -39,7 +39,7 @@ describe('QFH: calc', () => {
   });
 
   it('entrada inválida', () => {
-    expect(() => calc({ frequencyMHz: 0 })).toThrow(RangeError);
+    expect(() => calc({ ...defaultParams, frequencyMHz: 0 })).toThrow(RangeError);
   });
 
   it('avisa que as medidas são escaladas', () => {
@@ -50,5 +50,16 @@ describe('QFH: calc', () => {
 describe('QFH: lista de corte', () => {
   it('duas espiras ajustáveis', () => {
     expect(cutList(defaultParams).map((i) => i.label)).toEqual(['A', 'E']);
+  });
+});
+
+describe('QFH: diâmetro do condutor', () => {
+  it('não muda as medidas (só o padrão usa), avisa quando difere de 4,1 mm e recusa não positivo', () => {
+    const a = calc(defaultParams);
+    const b = calc({ ...defaultParams, wireDiameter: 0.007 });
+    expect(b.measurements.map((x) => x.meters)).toEqual(a.measurements.map((x) => x.meters));
+    expect(b.warnings.some((w) => w.message.includes('Condutor de 7,0 mm'))).toBe(true);
+    expect(a.warnings.some((w) => w.message.includes('Condutor de'))).toBe(false);
+    expect(() => calc({ ...defaultParams, wireDiameter: 0 })).toThrow(RangeError);
   });
 });

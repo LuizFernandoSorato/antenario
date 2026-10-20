@@ -21,7 +21,7 @@
 import { type Complex3, type MomSolution, type Vec3, type Wire, combinedPower, directivityOf, solveWires } from '../../core/mom';
 import type { CalcResult } from '../types';
 
-/** Diâmetro do condutor de referência da calculadora de Coppens, em metros (ver `calc.ts`). */
+/** Diâmetro do condutor de referência da calculadora de Coppens, em metros (ver `calc.ts`); padrão do modelo. */
 export const WIRE_DIAMETER = 0.0041;
 
 /** Trechos por braço horizontal e por braço helicoidal (par, para o gap cair num nó): ~λ/25 por trecho no braço helicoidal. */
@@ -68,15 +68,15 @@ export interface QfhModel {
 }
 
 /** Resolve a QFH por momentos a partir das cotas do cálculo (B, C: espira maior; F, G: espira menor). */
-export function solveQfh(result: CalcResult, frequencyMHz: number): QfhModel {
+export function solveQfh(result: CalcResult, frequencyMHz: number, wireDiameter: number = WIRE_DIAMETER): QfhModel {
   const get = (label: string): number => {
     const m = result.measurements.find((x) => x.label === label);
     if (!m) throw new Error(`Cota ${label} não encontrada.`);
     return m.meters;
   };
-  const wireRadius = WIRE_DIAMETER / 2;
-  const rBig = (get('C') + WIRE_DIAMETER) / 2;
-  const rSmall = (get('G') + WIRE_DIAMETER) / 2;
+  const wireRadius = wireDiameter / 2;
+  const rBig = (get('C') + wireDiameter) / 2;
+  const rSmall = (get('G') + wireDiameter) / 2;
   // Alimentação no topo (z = 0), comum às duas espiras; a base de cada uma fica abaixo, à sua altura.
   const wires = [qfhLoop(get('B'), rBig, wireRadius, false, -get('B')), qfhLoop(get('F'), rSmall, wireRadius, true, -get('F'))];
   // Resposta a cada fonte sozinha; o campo e as correntes são lineares nas tensões.

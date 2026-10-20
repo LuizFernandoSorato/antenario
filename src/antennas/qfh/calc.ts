@@ -12,16 +12,21 @@
  * TODO(fonte): Kilgus (1969, IEEE AP-17; 1970, Microwave Journal) e as equações da calculadora.
  */
 
-import { assertFrequencyMHz, formatNumber, formatEngineering } from '../../core/units';
+import { assertFrequencyMHz, assertPositive, formatNumber, formatEngineering } from '../../core/units';
 import { wavelength } from '../../core/wave';
 import { type CalcResult, type CalcWarning, type Measurement, rangeWarning } from '../types';
 import { meta } from './meta';
 
 export interface QfhParams {
   frequencyMHz: number;
+  /** Diâmetro do condutor, em metros (só entra no modelo de padrão; as medidas são as de 4,1 mm). */
+  wireDiameter: number;
 }
 
-export const defaultParams: QfhParams = { frequencyMHz: 137.5 };
+/** Diâmetro do condutor da saída de referência da calculadora de Coppens, em metros. */
+export const REFERENCE_WIRE_DIAMETER = 0.0041;
+
+export const defaultParams: QfhParams = { frequencyMHz: 137.5, wireDiameter: REFERENCE_WIRE_DIAMETER };
 
 /** Frequência de referência dos dados, MHz. */
 export const REFERENCE_FREQUENCY_MHZ = 137.5;
@@ -74,8 +79,9 @@ export function scaleFromReference(mm: number, fMHz: number): number {
 }
 
 export function calc(params: QfhParams): CalcResult {
-  const { frequencyMHz: f } = params;
+  const { frequencyMHz: f, wireDiameter: wd } = params;
   assertFrequencyMHz(f);
+  assertPositive(wd, 'O diâmetro do condutor');
   const s = (mm: number) => scaleFromReference(mm, f);
   const { large, small } = REFERENCE_MM;
   const lambda = wavelength(f);
@@ -96,6 +102,14 @@ export function calc(params: QfhParams): CalcResult {
   const warnings: CalcWarning[] = [];
   const outOfRange = rangeWarning(meta, f);
   if (outOfRange) warnings.push(outOfRange);
+  if (Math.abs(wd - REFERENCE_WIRE_DIAMETER) > 0.0001) {
+    warnings.push({
+      level: 'info',
+      message:
+        `Condutor de ${formatNumber(wd * 1000, 1)} mm: as medidas continuam as da referência (4,1 mm). Só o padrão de irradiação usa o seu diâmetro. ` +
+        'Entre 4,1 mm e 7 mm a calculadora de Coppens muda as medidas em menos de 1 %; fora dessa faixa não há dado.',
+    });
+  }
   warnings.push(
     {
       level: 'warning',
@@ -133,6 +147,7 @@ export function calc(params: QfhParams): CalcResult {
       { name: 'Escala aplicada', value: `× ${formatNumber(REFERENCE_FREQUENCY_MHZ / f, 4)} (tudo ∝ 1/f)` },
       { name: 'Hélice', value: '2 espiras (maior e menor), 0,5 volta de torção, 1 λ de comprimento de espira', source: 'Coppens, via IK1HGI' },
       { name: 'Condutor de referência', value: '4,1 mm, raio de curvatura 13 mm, razão largura/altura 0,44', source: 'Coppens, via IK1HGI' },
+      { name: 'Diâmetro do condutor informado', value: `${formatNumber(wd * 1000, 2)} mm (só no padrão de irradiação)` },
       { name: 'Sensibilidade ao condutor (4,1 → 7 mm)', value: `até ${formatNumber(worst * 100, 1)} % nas medidas`, source: 'Coppens, via rfwireless-world.com' },
       { name: 'Comprimento de onda de referência', value: `${formatEngineering(REFERENCE_MM.wavelength / 1000, 'm')} (a 137,5 MHz, c = 3×10⁸ m/s)`, source: 'Coppens: usa c = 3×10⁸ m/s' },
     ],

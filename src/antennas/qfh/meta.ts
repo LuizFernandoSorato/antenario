@@ -17,5 +17,18 @@ export const meta: AntennaMeta = {
   // O projeto de referência é de recepção. Não há fonte aqui para TX (potência, tensões, casamento).
   usage: { rx: true, tx: false },
   outdoor: true,
-  params: [{ key: 'frequencyMHz', label: 'Frequência de projeto', unit: 'MHz', defaultValue: 137.5, toSi: 1, min: 0 }],
+  params: [
+    { key: 'frequencyMHz', label: 'Frequência de projeto', unit: 'MHz', defaultValue: 137.5, toSi: 1, min: 0 },
+    {
+      key: 'wireDiameter',
+      label: 'Diâmetro do condutor',
+      unit: 'mm',
+      defaultValue: 4.1,
+      toSi: 0.001,
+      min: 0,
+      help:
+        'As medidas da calculadora de Coppens valem para 4,1 mm e NÃO mudam com este campo (entre 4,1 e 7 mm variam menos de 1 %). ' +
+        'Ele entra só no padrão de irradiação (modelo por momentos). Não há gap central: a alimentação é no topo, sem fonte para o arranjo real.',
+    },
+  ],
 };
