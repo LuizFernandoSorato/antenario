@@ -197,7 +197,8 @@ export function calc(params: HelicalParams): CalcResult {
         max: z * 1.2,
         unit: 'Ω',
         note: 'Resistiva, na alimentação pela borda da hélice (≈ 140·C/λ). A faixa de ±20 % é uma margem desta ferramenta. Meça.',
-        source: 'Kraus & Marhefka, Antennas for All Applications, 3ª ed., cap. 7. TODO(fonte): tolerância medida na literatura.',
+        // TODO(fonte): tolerância medida na literatura.
+        source: 'Kraus & Marhefka, Antennas for All Applications, 3ª ed., cap. 7.',
       },
       gain: {
         typical: gainDbi,
@@ -219,3 +220,5 @@ export function calc(params: HelicalParams): CalcResult {
     assembly: assemblyFor(sense, winding),
   };
 }
+
+// TODO(fonte) [guide.md]: medidas exatas dessa fita.

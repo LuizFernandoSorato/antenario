@@ -88,7 +88,8 @@ function patterns(params: CoaxCollinearParams): Diagram[] {
   const gain = 10 * Math.log10(revolutionDirectivity((t) => collinearField(t, n, 0.5)));
   const note =
     'Modelo de arranjo ideal (N dipolos de meia onda em fase, espaçados de λ/2), não do coaxial real: o mastro, o cabo e o solo mudam o padrão. ' +
-    'O ideal tem lóbulos laterais na elevação e nulos entre eles. TODO(fonte): corrente real do colinear de coaxial.';
+    // TODO(fonte): corrente real do colinear de coaxial.
+    'O ideal tem lóbulos laterais na elevação e nulos entre eles.';
   return [
     polarPlot({
       id: 'coaxcol-pattern-v',

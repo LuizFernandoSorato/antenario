@@ -9,8 +9,8 @@ Dois dipolos de meia onda **cruzados a 90°** e alimentados com **defasagem de 9
 - **Sem refletor** (modo normal, mastro vertical): diagrama quase omnidirecional na horizontal, com polarização linear horizontal.
 
 - **Uso:** recepção e transmissão.
-- **Ganho:** o refletor a 1/4 de onda soma 3 dB ao turnstile sem refletor (Wikipedia, citando Milligan). Não há valor absoluto com fonte nesta ferramenta (TODO).
-- **Aviso importante:** esta ferramenta calcula os dipolos, a linha de fase e a distância ao refletor. O **tamanho do refletor** e a impedância com o refletor não constam das fontes consultadas (TODO). Meça e ajuste.
+- **Ganho:** o refletor a 1/4 de onda soma 3 dB ao turnstile sem refletor (Wikipedia, citando Milligan). Não há valor absoluto com fonte nesta ferramenta.
+- **Aviso importante:** esta ferramenta calcula os dipolos, a linha de fase e a distância ao refletor. O **tamanho do refletor** e a impedância com o refletor não constam das fontes consultadas. Meça e ajuste.
 
 ## 2. Materiais
 
@@ -48,7 +48,7 @@ ou seja, ROE ≈ 1,4:1 em 50 Ω sem refletor. Com o refletor o valor muda: **me�
 (na direção do feixe, com o eixo apontado para o céu), se o braço vivo (condutor central) do dipolo atrasado está 90° no sentido **horário** do braço vivo
 do dipolo direto, a polarização é circular à **direita** (RHCP, convenção IEEE); no sentido **anti-horário**, circular à **esquerda** (LHCP). Visto de cima é o inverso.
 Para trocar de um para o outro, inverta vivo e malha do dipolo atrasado ou troque qual dipolo recebe a linha de fase. A ferramenta mostra o método e o desenho
-para o sentido que você escolher. Esta regra é derivada do atraso de fase, não de uma fonte escrita (TODO(fonte)): confirme com um passe real. A forma exata de ligar vivo e malha de cada dipolo (balun) depende da montagem: use choke de corrente.
+para o sentido que você escolher. Esta regra é derivada do atraso de fase, não de uma fonte escrita: confirme com um passe real. A forma exata de ligar vivo e malha de cada dipolo (balun) depende da montagem: use choke de corrente.
 
 ## 6. Ajuste
 

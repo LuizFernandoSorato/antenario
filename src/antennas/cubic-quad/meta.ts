@@ -44,7 +44,8 @@ export const meta: AntennaMeta = {
       defaultValue: 2,
       toSi: 0.001,
       min: 0,
-      help: 'Não altera os perímetros (as fórmulas são para fio fino; o efeito do diâmetro é TODO(fonte)); entra só no padrão de irradiação e na impedância do modelo por momentos.',
+      // TODO(fonte): fonte pendente para o texto abaixo.
+      help: 'Não altera os perímetros (as fórmulas são para fio fino; o efeito do diâmetro não tem fonte aqui); entra só no padrão de irradiação e na impedância do modelo por momentos.',
     },
     {
       key: 'feedGap',

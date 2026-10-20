@@ -86,4 +86,4 @@ para baixo, desce. O **choke** na entrada é obrigatório: sem ele o cabo até o
 - N1HFX, "Build a 9 dB 70 cm Collinear Antenna from Coax" (repeater-builder.com), citado pelo dmrhub.ru e não consultado diretamente.
 - Anatel: regulamentação do Serviço de Radioamador (versão vigente).
 - LABRE: plano de bandas (versão vigente).
-- Padrão de irradiação: arranjo colinear ideal de N dipolos de meia onda em fase (Balanis, *Antenna Theory*, §6.4), que reproduz a tabela de ganho da ferramenta; não é o modelo do coaxial real (TODO).
+- Padrão de irradiação: arranjo colinear ideal de N dipolos de meia onda em fase (Balanis, *Antenna Theory*, §6.4), que reproduz a tabela de ganho da ferramenta; não é o modelo do coaxial real.

@@ -57,7 +57,8 @@ export function calc(params: DipoleParams): CalcResult {
       message:
         'K foi informado manualmente. Ele depende da razão comprimento/diâmetro do condutor ' +
         '(curva no ARRL Antenna Book); o cálculo automático de K a partir do diâmetro ainda não ' +
-        'foi implementado. TODO(fonte): digitalizar a curva com a fonte citada.',
+        // TODO(fonte): digitalizar a curva com a fonte citada.
+        'foi implementado.',
     },
     {
       level: 'warning',

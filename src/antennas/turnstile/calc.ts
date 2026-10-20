@@ -121,15 +121,19 @@ export function calc(params: TurnstileParams): CalcResult {
         unit: 'dBic',
         note:
           'O refletor a 1/4 de onda soma 3 dB ao ganho do turnstile sem refletor (fonte: Wikipedia, citando Milligan). Não há valor absoluto ' +
-          'com fonte aqui. TODO(fonte): ganho em dBic.',
-        source: 'Wikipedia, "Turnstile antenna" (Milligan, 2005). TODO(fonte)',
+          // TODO(fonte): ganho em dBic.
+          'com fonte aqui.',
+        // TODO(fonte): fonte pendente para o texto abaixo.
+        source: 'Wikipedia, "Turnstile antenna" (Milligan, 2005).',
       }
     : {
         unit: 'dBi',
         note:
           'Sem refletor, o diagrama horizontal é quase omnidirecional (desvio de ±5 % segundo Kraus, via Wikipedia). Não há valor de ganho ' +
-          'com fonte aqui. TODO(fonte).',
-        source: 'Wikipedia, "Turnstile antenna" (Kraus, 1988). TODO(fonte)',
+          // TODO(fonte): fonte pendente para o texto abaixo.
+          'com fonte aqui.',
+        // TODO(fonte): fonte pendente para o texto abaixo.
+        source: 'Wikipedia, "Turnstile antenna" (Kraus, 1988).',
       };
 
   const warnings: CalcWarning[] = [];
@@ -157,7 +161,8 @@ export function calc(params: TurnstileParams): CalcResult {
         `Impedância no ponto de alimentação ≈ ${formatNumber(zFeed, 1)} Ω (dois dipolos de ${DIPOLE_RESISTANCE_OHMS} Ω em paralelo), ` +
         `ROE ≈ ${formatNumber(swr50, 2)}:1 em 50 Ω, sem refletor. ` +
         (withReflector
-          ? 'Com o refletor a 1/4 de onda a resistência de cada dipolo muda e este valor não vale; meça. TODO(fonte): valor com o refletor.'
+          // TODO(fonte): valor com o refletor.
+          ? 'Com o refletor a 1/4 de onda a resistência de cada dipolo muda e este valor não vale; meça.'
           : 'Meça: o solo e os objetos próximos alteram esse valor.'),
     },
     {
@@ -182,7 +187,8 @@ export function calc(params: TurnstileParams): CalcResult {
     {
       level: 'info',
       message:
-        'Dimensões do refletor (tamanho, tela ou hastes) não constam das fontes consultadas. TODO(fonte). Um refletor maior que os dipolos é o ponto ' +
+        // TODO(fonte): fonte pendente para o texto abaixo.
+        'Dimensões do refletor (tamanho, tela ou hastes) não constam das fontes consultadas. Um refletor maior que os dipolos é o ponto ' +
         'de partida lógico; modele ou meça.',
     },
     {
@@ -214,7 +220,8 @@ export function calc(params: TurnstileParams): CalcResult {
         note:
           `Dois dipolos de ${DIPOLE_RESISTANCE_OHMS} Ω em paralelo (um pela linha de 1/4 de onda de ${DIPOLE_RESISTANCE_OHMS} Ω), sem refletor` +
           (withReflector ? '. Com refletor o valor muda: meça.' : '.'),
-        source: 'Derivação de linhas (Pozar) com R de Balanis; TODO(fonte): valor medido ou modelado',
+        // TODO(fonte): valor medido ou modelado.
+        source: 'Derivação de linhas (Pozar) com R de Balanis',
       },
       gain,
       bandwidth: null,
@@ -236,7 +243,12 @@ function assemblyFor(sense: Sense): AssemblyGuide {
       `Visto de CIMA para baixo, é o inverso: o braço vivo do dipolo 2 fica 90° no sentido ${right ? 'ANTI-HORÁRIO' : 'HORÁRIO'} do vivo do dipolo 1.`,
       `Por quê: o campo gira do dipolo adiantado (1) para o atrasado (2); girando no sentido ${right ? 'horário' : 'anti-horário'} visto na direção do feixe, a onda é ${right ? 'RHCP' : 'LHCP'} (IEEE Std 145).`,
       `Para trocar para ${right ? 'LHCP' : 'RHCP'} sem refazer a montagem: inverta vivo e malha do dipolo 2 (ou troque qual dipolo recebe a linha C).`,
-      'Confirme com um passe real: o sentido contrário perde muito sinal. Esta derivação não foi conferida com medida (TODO(fonte)).',
+      // TODO(fonte): fonte pendente para o texto abaixo.
+      'Confirme com um passe real: o sentido contrário perde muito sinal. Esta derivação não foi conferida com medida.',
     ],
   };
 }
+
+// TODO(fonte) [guide.md]: fonte pendente: «- **Ganho:** o refletor a 1/4 de onda soma 3 dB ao turnstile sem refletor (Wikipedia, cita…»
+// TODO(fonte) [guide.md]: fonte pendente: «- **Aviso importante:** esta ferramenta calcula os dipolos, a linha de fase e a distância …»
+// TODO(fonte) [guide.md]: fonte pendente: «para o sentido que você escolher. Esta regra é derivada do atraso de fase, não de uma font…»

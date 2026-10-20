@@ -122,7 +122,8 @@ function patterns(result: CalcResult, params: QfhParams): Diagram[] {
     'sem o cilindro de suporte nem o coaxial, com as duas espiras alimentadas no topo ' +
     'em amplitude igual e 90° de diferença (a QFH real obtém isso da diferença de comprimento das espiras; aqui é suposto ideal). ' +
     'Num coaxial real que desce pelo centro, o padrão para baixo e a ROE mudam. ' +
-    `Com enrolamento à ${winding === 'left' ? 'esquerda' : 'direita'} e a espira menor adiantada, o modelo dá ${SENSE_NAME[model.zenith.sense]} no zênite. TODO(fonte).`;
+    // TODO(fonte): fonte pendente para o texto abaixo.
+    `Com enrolamento à ${winding === 'left' ? 'esquerda' : 'direita'} e a espira menor adiantada, o modelo dá ${SENSE_NAME[model.zenith.sense]} no zênite.`;
   return planes.map((p) => {
     const field = (a: number) => Math.sqrt(model.power(p.dir(a)) / peak);
     return polarPlot({

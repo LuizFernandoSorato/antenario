@@ -114,7 +114,8 @@ export function calc(params: MagneticLoopParams): CalcResult {
   const measurements: Measurement[] = [
     { label: 'A', name: 'Diâmetro da espira', meters: dLoop, description: 'Centro a centro do tubo.' },
     { label: 'B', name: 'Comprimento do condutor', meters: circumference, description: 'Perímetro da espira: comprimento de tubo (ou coaxial) a cortar.' },
-    { label: 'C', name: 'Loop de acoplamento (diâmetro)', meters: dLoop / 5, description: 'Regra prática de ≈ 1/5 do diâmetro da espira principal. TODO(fonte): ajustar medindo a ROE.' },
+    // TODO(fonte): ajustar medindo a ROE.
+    { label: 'C', name: 'Loop de acoplamento (diâmetro)', meters: dLoop / 5, description: 'Regra prática de ≈ 1/5 do diâmetro da espira principal.' },
   ];
 
   const warnings: CalcWarning[] = [];
@@ -207,3 +208,5 @@ export function calc(params: MagneticLoopParams): CalcResult {
     warnings,
   };
 }
+
+// TODO(fonte) [guide.md]: fonte pendente: «Gamma match e acoplamento direto ainda não têm equações com fonte aqui (TODO).…»

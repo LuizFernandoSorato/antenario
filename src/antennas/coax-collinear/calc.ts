@@ -89,7 +89,8 @@ export function calc(params: CoaxCollinearParams): CalcResult {
     note:
       `Faixa citada para ${n} seções${gain.interpolated ? ' (interpolada entre as linhas da tabela da fonte)' : ''}. O ganho real costuma ser menor, ` +
       'porque as perdas do cabo nas seções consomem parte dele. Mais seções estreitam o lóbulo vertical.',
-    source: 'dmrhub.ru, guia de colinear de 70 cm (fonte de radioamador). TODO(fonte): referência de engenharia.',
+    // TODO(fonte): referência de engenharia.
+    source: 'dmrhub.ru, guia de colinear de 70 cm (fonte de radioamador).',
   };
 
   const warnings: CalcWarning[] = [];
@@ -114,7 +115,8 @@ export function calc(params: CoaxCollinearParams): CalcResult {
       level: 'warning',
       message:
         'A impedância na base sobe com o número de seções e costuma ficar acima de 50 Ω. A seção de baixo de 1/4 de onda ' +
-        'a transforma, mas a fonte não dá o valor para o cálculo. TODO(fonte). Deslocar o ponto de alimentação alguns ' +
+        // TODO(fonte): fonte pendente para o texto abaixo.
+        'a transforma, mas a fonte não dá o valor para o cálculo. Deslocar o ponto de alimentação alguns ' +
         'centímetros para cima ou para baixo ajusta a impedância. Meça com NanoVNA e ajuste.',
     },
     {
@@ -147,7 +149,8 @@ export function calc(params: CoaxCollinearParams): CalcResult {
         note:
           'A impedância na base sobe com o número de seções e costuma passar de 50 Ω; a seção de baixo e o ponto de alimentação ' +
           'a ajustam. Seções curtas (2 a 4) podem chegar perto de 50 Ω sozinhas. Meça.',
-        source: 'dmrhub.ru, guia de colinear de 70 cm. TODO(fonte)',
+        // TODO(fonte): fonte pendente para o texto abaixo.
+        source: 'dmrhub.ru, guia de colinear de 70 cm.',
       },
       gain: gainEstimate,
       bandwidth: null,
@@ -155,3 +158,5 @@ export function calc(params: CoaxCollinearParams): CalcResult {
     warnings,
   };
 }
+
+// TODO(fonte) [guide.md]: fonte pendente: «- Padrão de irradiação: arranjo colinear ideal de N dipolos de meia onda em fase (Balanis,…»

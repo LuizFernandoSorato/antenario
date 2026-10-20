@@ -182,7 +182,8 @@ export function analyzeFeedline(input: FeedlineInput): FeedlineAnalysis {
         level: 'danger',
         message:
           'O datasheet deste cabo não informa potência máxima. Não use para transmissão sem ' +
-          'consultar o fabricante. TODO(fonte).',
+          // TODO(fonte): fonte pendente para o texto abaixo.
+          'consultar o fabricante.',
       });
     } else if (ratedPowerW === null) {
       warnings.push({
@@ -204,7 +205,8 @@ export function analyzeFeedline(input: FeedlineInput): FeedlineAnalysis {
           message:
             'O limite de potência do datasheet vale para ROE 1:1. Com ROE maior aparecem pontos de ' +
             'corrente e tensão mais altos ao longo do cabo, que aquecem mais. O fabricante não ' +
-            'publica fator de redução; TODO(fonte). Deixe margem.',
+            // TODO(fonte): fonte pendente para o texto abaixo.
+            'publica fator de redução. Deixe margem.',
         });
       }
     }

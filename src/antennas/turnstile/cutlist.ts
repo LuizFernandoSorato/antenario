@@ -28,7 +28,8 @@ export function cutList(params: TurnstileParams): CutItem[] {
       quantity: 1,
       meters: m['D'],
       adjustable: true,
-      note: 'Distância de montagem (espaçadores), não uma peça. TODO(fonte): refine medindo a ROE.',
+      // TODO(fonte): refine medindo a ROE.
+      note: 'Distância de montagem (espaçadores), não uma peça.',
     });
   }
   return items;

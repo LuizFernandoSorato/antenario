@@ -124,8 +124,8 @@ export function calc(params: CubicQuadParams): CalcResult {
     {
       level: 'warning',
       message:
-        'O ganho mostrado é uma soma aproximada, de fonte secundária, com incerteza de vários dB. ' +
-        'TODO(fonte): ARRL Antenna Book, com o ganho de quads de 2, 3 e 4 elementos.',
+        'O ganho mostrado é uma soma aproximada, de fonte secundária, com incerteza de vários dB.',
+      // TODO(fonte): ARRL Antenna Book, com o ganho de quads de 2, 3 e 4 elementos.
     },
     {
       level: 'info',
@@ -151,7 +151,8 @@ export function calc(params: CubicQuadParams): CalcResult {
       { name: 'Perímetro do diretor', value: `${formatNumber(director / lambda, 4)}λ (${formatNumber((director / driven - 1) * 100, 1)} %)`, source: 'N6VNG: 975/f (ft, MHz)' },
       { name: 'Elementos', value: `${elements}: refletor, excitado e ${nDir} diretor${nDir === 1 ? '' : 'es'}` },
       { name: 'Espaçamento', value: `${formatNumber(s, 3)}λ (${formatNumber(metersToInches(spacing), 1)} pol)`, source: 'Electronics Notes: 0,15λ a 0,2λ → ≈ 50 Ω' },
-      { name: 'Diâmetro do fio', value: `${formatNumber(wd * 1000, 2)} mm: entra só no padrão e na impedância do modelo por momentos; os perímetros são para fio fino`, source: 'TODO(fonte): efeito do diâmetro nos perímetros' },
+      // TODO(fonte): efeito do diâmetro nos perímetros.
+      { name: 'Diâmetro do fio', value: `${formatNumber(wd * 1000, 2)} mm: entra só no padrão e na impedância do modelo por momentos; os perímetros são para fio fino`, source: 'Sem fonte citada' },
       { name: 'Espaço de alimentação', value: `${formatNumber(gap * 1000, 1)} mm (dentro do perímetro H)`, source: 'Dado do usuário; comprimento total, como no dipolo' },
     ],
     expected: {
@@ -161,7 +162,8 @@ export function calc(params: CubicQuadParams): CalcResult {
         note:
           'Cerca de 50 Ω para espaçamento de 0,15λ a 0,2λ em quad de 2 elementos; sobe para ≈ 75 Ω com pouco mais de 0,25λ. ' +
           'Meça.',
-        source: 'Electronics Notes, "Cubical Quad Beam Antenna: Reflector & Director" (fonte secundária). TODO(fonte): ARRL Antenna Book.',
+        // TODO(fonte): ARRL Antenna Book.
+        source: 'Electronics Notes, "Cubical Quad Beam Antenna: Reflector & Director" (fonte secundária).',
       },
       gain: {
         typical: gainDbd + 2.15,
@@ -169,10 +171,14 @@ export function calc(params: CubicQuadParams): CalcResult {
         note:
           `Soma aproximada: ${formatNumber(gainDbd, 0)} dB sobre o dipolo (+ 2,15 dB para dBi). A espira sozinha dá ≈ 2 dB, o refletor ≈ 5, ` +
           'o 1º diretor ≈ 2 e cada diretor a mais ≈ 1. Estimativa com incerteza de vários dB.',
-        source: 'Electronics Notes (fonte secundária). TODO(fonte): ARRL Antenna Book.',
+        // TODO(fonte): ARRL Antenna Book.
+        source: 'Electronics Notes (fonte secundária).',
       },
       bandwidth: null,
     },
     warnings,
   };
 }
+
+// TODO(fonte) [guide.md]: fonte pendente: «ferramenta "Transformador de 1/4 de onda"). Para casar, veja as ferramentas de rede L e de…»
+// TODO(fonte) [guide.md]: conferir razões e ganho.

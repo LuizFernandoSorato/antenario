@@ -51,7 +51,7 @@ alicate, NanoVNA ou medidor de ROE e um bom medidor de capacitância.
 O **loop de acoplamento** transforma a resistência minúscula da espira (alguns décimos de ohm) em 50 Ω:
 ele funciona como transformador. Ajuste o diâmetro **C** e a distância ao tubo da espira até a ROE no
 centro da banda ficar baixa. A regra de diâmetro ≈ 1/5 da espira principal é uma boa partida.
-Gamma match e acoplamento direto ainda não têm equações com fonte aqui (TODO).
+Gamma match e acoplamento direto ainda não têm equações com fonte aqui.
 
 ## 6. Ajuste
 

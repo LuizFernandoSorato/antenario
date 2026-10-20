@@ -59,7 +59,7 @@ A impedância na borda da hélice, ≈ 140·C/λ, é bem acima dos 50 Ω do coax
   ferramenta "Transformador de 1/4 de onda" (o comprimento físico leva em conta o fator de velocidade).
   Um trecho de coaxial de 75 Ω de λ/4 elétrico é uma aproximação comum, porque 75 Ω fica perto do ideal.
 - Kraus descreve também uma fita de cobre que reduz a impedância sob a primeira volta (casamento
-  por fita cônica). TODO(fonte): medidas exatas dessa fita.
+  por fita cônica).
 - Instale um choke de corrente no coaxial perto da antena para a malha não irradiar.
 
 ## 6. Ajuste

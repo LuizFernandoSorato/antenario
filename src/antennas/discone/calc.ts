@@ -117,7 +117,8 @@ export function calc(params: DisconeParams): CalcResult {
         (userGap > 0
           ? `A folga de ${formatNumber(gap * 1000, 1)} mm é a que você informou. `
           : `A folga de ${formatNumber(gap * 1000, 1)} mm segue a proporção do exemplo do artigo (11 mm para um cone de 270 mm). `) +
-        'O artigo não dá regra geral para ela, e A e E não a incluem (R + L = λ/2 vale para as hastes). TODO(fonte). Ajuste medindo a ROE.',
+        // TODO(fonte): fonte pendente para o texto abaixo.
+        'O artigo não dá regra geral para ela, e A e E não a incluem (R + L = λ/2 vale para as hastes). Ajuste medindo a ROE.',
     },
     {
       level: 'info',
@@ -154,8 +155,10 @@ export function calc(params: DisconeParams): CalcResult {
       },
       gain: {
         unit: 'dBi',
-        note: 'Omnidirecional no plano horizontal. O ganho varia com a frequência e não há valor típico com fonte aqui. TODO(fonte).',
-        source: 'TODO(fonte)',
+        // TODO(fonte): fonte pendente para o texto abaixo.
+        note: 'Omnidirecional no plano horizontal. O ganho varia com a frequência e não há valor típico com fonte aqui.',
+        // TODO(fonte): fonte pendente para o texto abaixo.
+        source: 'Sem fonte citada',
       },
       bandwidth: {
         min: fLow,

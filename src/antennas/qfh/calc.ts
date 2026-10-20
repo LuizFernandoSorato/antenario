@@ -135,7 +135,8 @@ export function calc(params: QfhParams): CalcResult {
         'Estas medidas são as da calculadora de Coppens a 137,5 MHz, ESCALADAS pela frequência. A calculadora não publica ' +
         'as equações; o diâmetro do condutor e o raio de curvatura não escalam com a frequência. Entre condutores de 4,1 mm e ' +
         `7 mm a 137,5 MHz as medidas variam no máximo ${formatNumber(worst * 100, 1)} %. Longe de 137,5 MHz (por exemplo GPS), ` +
-        'o erro por não escalar o condutor pode ser maior. Meça a ROE e ajuste. TODO(fonte): equações do Kilgus.',
+        // TODO(fonte): equações do Kilgus.
+        'o erro por não escalar o condutor pode ser maior. Meça a ROE e ajuste.',
     },
     {
       level: 'warning',
@@ -175,12 +176,15 @@ export function calc(params: QfhParams): CalcResult {
         typical: 50,
         unit: 'Ω',
         note: 'Projeto para alimentar com coaxial de 50 Ω, segundo as fontes de montagem. Meça a ROE e ajuste o comprimento das espiras.',
-        source: 'IK1HGI (montagem); TODO(fonte): Kilgus',
+        // TODO(fonte): Kilgus.
+        source: 'IK1HGI (montagem)',
       },
       gain: {
         unit: 'dBi',
-        note: 'Diagrama quase hemisférico de polarização circular. Não há valor de ganho com fonte aqui. TODO(fonte).',
-        source: 'TODO(fonte)',
+        // TODO(fonte): fonte pendente para o texto abaixo.
+        note: 'Diagrama quase hemisférico de polarização circular. Não há valor de ganho com fonte aqui.',
+        // TODO(fonte): fonte pendente para o texto abaixo.
+        source: 'Sem fonte citada',
       },
       bandwidth: null,
     },
@@ -200,7 +204,11 @@ function assemblyFor(sense: Sense, winding: Winding): AssemblyGuide {
       'Alimentação no topo: o coaxial sobe pelo centro até o topo, onde ligam as duas espiras; as pontas de baixo de cada espira ficam unidas por um braço contínuo.',
       'A espira maior (mais longa, indutiva) é a que atrasa; a menor (capacitiva) é a que adianta. Não troque os comprimentos.',
       `Montar com o enrolamento oposto (à ${left ? 'direita' : 'esquerda'}) dá ${left ? 'LHCP' : 'RHCP'}: confira antes de fixar as hélices.`,
-      'Esta regra vem do modelo por momentos e concorda com uma patente (fonte secundária, não lida na íntegra); o arranjo real de ligação das pontas não consta das fontes consultadas. Confirme com um passe real (TODO(fonte)).',
+      // TODO(fonte): fonte pendente para o texto abaixo.
+      'Esta regra vem do modelo por momentos e concorda com uma patente (fonte secundária, não lida na íntegra); o arranjo real de ligação das pontas não consta das fontes consultadas. Confirme com um passe real.',
     ],
   };
 }
+
+// TODO(fonte) [guide.md]: fonte pendente: «- **Ganho:** o modelo por momentos (ver as referências) dá ≈ 4,8 dBi no zênite, com −6 a −…»
+// TODO(fonte) [guide.md]: consulte a página de montagem de origem.

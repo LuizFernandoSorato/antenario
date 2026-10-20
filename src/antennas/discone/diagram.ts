@@ -137,7 +137,8 @@ function patterns(result: CalcResult, params: DisconeParams): Diagram[] {
         `Calculado por método dos momentos com ${model.rodCount} hastes no disco e no cone de ${formatNumber(params.rodDiameter * 1000, 1)} mm, no espaço livre, ` +
         'sem o coaxial nem o mastro' + (params.rodCount > MAX_MODEL_RODS ? `; o modelo limita as hastes a ${MAX_MODEL_RODS}` : '') +
         '. O padrão do discone muda muito com a frequência e, com hastes, ondula em azimute nas frequências altas, quando o vão entre as hastes cresce em relação ao ' +
-        'comprimento de onda (chapa, sem vãos, não foi modelada). O coaxial real e a corrente na malha deformam o padrão. TODO(fonte): comparar com padrões medidos ou do artigo de Stearns.',
+        // TODO(fonte): comparar com padrões medidos ou do artigo de Stearns.
+        'comprimento de onda (chapa, sem vãos, não foi modelada). O coaxial real e a corrente na malha deformam o padrão.',
       desc: 'Gráfico polar do corte vertical do discone, com o eixo da antena para cima.',
       axisLabels: { right: 'horizonte', up: 'zênite', left: 'horizonte', down: 'abaixo' },
       field: (a) => Math.sqrt(power(a) / peak),

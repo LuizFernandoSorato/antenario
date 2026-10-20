@@ -58,7 +58,8 @@ export function calc(params: JPoleParams): CalcResult {
       level: 'warning',
       message:
         'Ponto de alimentação: não calculado. A posição do tap de 50 Ω depende da impedância da ' +
-        'ponta do radiador, que varia com o diâmetro e a montagem. TODO(fonte): fórmula ou tabela ' +
+        // TODO(fonte): fórmula ou tabela.
+        'ponta do radiador, que varia com o diâmetro e a montagem.' +
         'de posição inicial com fonte citada. Por enquanto, encontre o ponto deslizando as ' +
         'conexões ao longo da seção de casamento e medindo a ROE (ver guia).',
     },
@@ -121,3 +122,5 @@ export function calc(params: JPoleParams): CalcResult {
     warnings,
   };
 }
+
+// TODO(fonte) [guide.md]: incluir fórmula ou tabela com fonte citada.

@@ -44,10 +44,10 @@ describe('J-pole: calc', () => {
     expect(r.assumptions.some((a) => a.value.startsWith(Math.round(z0).toString()))).toBe(true);
   });
 
-  it('não inventa o ponto de alimentação: avisa com TODO(fonte)', () => {
+  it('não inventa o ponto de alimentação: avisa que não foi calculado', () => {
     const r = calc(defaultParams);
     expect(r.measurements.some((m) => /alimentação/i.test(m.name))).toBe(false);
-    expect(r.warnings.some((w) => /TODO\(fonte\)/.test(w.message) && /alimentação/.test(w.message))).toBe(true);
+    expect(r.warnings.some((w) => /não calculado/i.test(w.message) && /alimentação/.test(w.message))).toBe(true);
   });
 
   it('avisa sobre corrente de modo comum (choke obrigatório)', () => {

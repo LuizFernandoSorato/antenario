@@ -47,7 +47,8 @@ export const NBS_DESIGNS: readonly NbsDesign[] = [
     curve: 'A',
     note:
       'A Tabela 1 do NBS traz 0,424λ para o diretor deste projeto, mas a curva A da Fig. 9 dá 0,443λ. ' +
-      'Usamos o valor da curva. TODO(fonte): conferir numa segunda referência.',
+      // TODO(fonte): conferir numa segunda referência.
+      'Usamos o valor da curva.',
   },
   { lengthLambda: 0.8, directorCount: 3, reflector: 0.482, directors: [0.428, 0.424, 0.428], spacing: 0.2, gainDbd: 9.2, curve: 'C' },
   { lengthLambda: 1.2, directorCount: 4, reflector: 0.482, directors: [0.428, 0.42, 0.42, 0.428], spacing: 0.25, gainDbd: 10.2, curve: 'C' },

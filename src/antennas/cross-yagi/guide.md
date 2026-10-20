@@ -60,8 +60,7 @@ fica difícil conferir a defasagem e a impedância dos Yagis).
 - **Sentido da polarização (RHCP ou LHCP):** o campo gira do Yagi adiantado (A, direto) para o atrasado (B, pela linha **F**). Olhando de trás da antena (do lado dos
   refletores) para a frente, na direção do feixe, se o braço vivo (condutor central) do excitado do Yagi B está 90° no sentido **horário** do braço vivo do excitado do A, a
   polarização é circular à **direita** (RHCP, convenção IEEE); no sentido **anti-horário**, circular à **esquerda** (LHCP). Para trocar, inverta vivo e malha do excitado do B
-  ou troque qual Yagi recebe a linha. A ferramenta mostra o método e o desenho para o sentido que você escolher. A regra é derivada do atraso de fase, não de fonte escrita
-  (TODO(fonte)). Satélites meteorológicos de 137 MHz usam RHCP; confirme o sentido do seu satélite e, no ar, num passe real.
+  ou troque qual Yagi recebe a linha. A ferramenta mostra o método e o desenho para o sentido que você escolher. A regra é derivada do atraso de fase, não de fonte escrita. Satélites meteorológicos de 137 MHz usam RHCP; confirme o sentido do seu satélite e, no ar, num passe real.
 
 ## 6. Ajuste
 

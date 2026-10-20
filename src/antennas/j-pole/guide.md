@@ -58,7 +58,7 @@ alto (na ponta aberta). Ao subir o ponto de ligação, a impedância vista pelo 
 
 > **Ainda não calculado:** a ferramenta não indica uma altura inicial para o ponto de
 > alimentação, porque ela depende da impedância da ponta do radiador, que varia com o
-> diâmetro e a montagem. TODO(fonte): incluir fórmula ou tabela com fonte citada.
+> diâmetro e a montagem.
 
 ## 6. Ajuste
 

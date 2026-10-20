@@ -172,7 +172,8 @@ export function calc(params: CrossYagiParams): CalcResult {
       ...(needsTransformer
         ? [{ name: 'Transformador de 1/4 de onda', value: `${formatNumber(zTransformer, 1)} Ω, ${formatNumber(quarter * 1000, 1)} mm`, source: 'Zt = √(Z0·Zj) (CLAUDE.md; Pozar)' }]
         : []),
-      { name: 'Acoplamento entre os Yagis', value: 'Desprezado (elementos ortogonais)', source: 'Premissa; TODO(fonte): efeito real do cruzamento' },
+      // TODO(fonte): efeito real do cruzamento.
+      { name: 'Acoplamento entre os Yagis', value: 'Desprezado (elementos ortogonais)', source: 'Premissa' },
     ],
     expected: {
       impedance: {
@@ -210,7 +211,10 @@ function assemblyFor(sense: Sense): AssemblyGuide {
       `Olhando de TRÁS da antena (do lado dos refletores) para a FRENTE, na direção do feixe, gire o Yagi B 90° em torno do boom até que o braço vivo do excitado dele fique ${right ? 'à DIREITA (3 horas), no sentido HORÁRIO' : 'à ESQUERDA (9 horas), no sentido ANTI-HORÁRIO'} do braço vivo do A.`,
       `Por quê: o campo gira do Yagi adiantado (A) para o atrasado (B); girando no sentido ${right ? 'horário' : 'anti-horário'} visto na direção do feixe, a onda é ${right ? 'RHCP' : 'LHCP'} (IEEE Std 145).`,
       `Para trocar para ${right ? 'LHCP' : 'RHCP'} sem refazer a montagem: inverta vivo e malha do excitado do Yagi B (ou troque qual Yagi recebe a linha F).`,
-      'Confirme com um passe real: o sentido contrário perde muito sinal. Esta derivação não foi conferida com medida (TODO(fonte)).',
+      // TODO(fonte): fonte pendente para o texto abaixo.
+      'Confirme com um passe real: o sentido contrário perde muito sinal. Esta derivação não foi conferida com medida.',
     ],
   };
 }
+
+// TODO(fonte) [guide.md]: fonte pendente: «(TODO(fonte)). Satélites meteorológicos de 137 MHz usam RHCP; confirme o sentido do seu sa…»

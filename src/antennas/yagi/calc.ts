@@ -213,7 +213,8 @@ function calcNbs(params: YagiParams): CalcResult {
       level: 'warning',
       message:
         'O NBS não dá a medida do elemento excitado: ele depende do casamento escolhido. O valor mostrado é ' +
-        'λ/2 × K como ponto de partida. Corte comprido e ajuste medindo a ROE. Para o hairpin, use a ferramenta "Hairpin". Gamma match ainda não tem equações com fonte aqui (TODO).',
+        // TODO(fonte): fonte pendente para o texto abaixo.
+        'λ/2 × K como ponto de partida. Corte comprido e ajuste medindo a ROE. Para o hairpin, use a ferramenta "Hairpin". Gamma match ainda não tem equações com fonte aqui.',
     },
     {
       level: 'info',
@@ -273,3 +274,5 @@ function calcNbs(params: YagiParams): CalcResult {
     warnings,
   };
 }
+
+// TODO(fonte) [guide.md]: fonte pendente: «- **Hairpin**: use a ferramenta "Hairpin (casamento de Yagi)" com a impedância medida do e…»

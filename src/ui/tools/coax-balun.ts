@@ -46,7 +46,8 @@ export const coaxBalunTool: Tool = {
           level: 'info',
           message:
             'Chokes de ferrite e de espiras de coaxial (baluns de corrente 1:1) ainda não estão na ' +
-            'ferramenta: o cálculo depende de dados de núcleo e de medições. TODO(fonte).',
+            // TODO(fonte): fonte pendente para o texto abaixo.
+            'ferramenta: o cálculo depende de dados de núcleo e de medições.',
         },
       ],
     };

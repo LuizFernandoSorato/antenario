@@ -66,7 +66,8 @@ function side(result: CalcResult, params: TurnstileParams): Diagram | null {
   parts.push(line(cx - half, top, cx + half, top, 'dg-conductor'));
   parts.push(circle(cx, top, 4, 'dg-connector'));
   parts.push(rect(cx - half - 20, yRef, 2 * half + 40, 6, 'dg-mast', 1));
-  parts.push(text(cx + half + 28, yRef + 6, 'refletor (TODO: tamanho)', 'dg-note'));
+  // TODO(fonte): tamanho.
+  parts.push(text(cx + half + 28, yRef + 6, 'refletor', 'dg-note'));
   parts.push(text(cx + half + 12, top + 4, 'dipolos (vistos de lado)', 'dg-note'));
   parts.push(line(cx, top - 38, cx, top, 'dg-ext'));
   parts.push(text(cx + 8, top - 28, '↑ eixo: polarização circular para cima', 'dg-note'));
@@ -137,7 +138,8 @@ function patterns(result: CalcResult, params: TurnstileParams): Diagram[] {
   const ideal =
     'Dipolos ideais, sem acoplamento mútuo. ' +
     (reflector
-      ? 'O refletor é um plano condutor perfeito e infinito a λ/4: um refletor real, finito, tem diagrama e ganho diferentes (o tamanho dele é TODO(fonte)).'
+      // TODO(fonte): fonte pendente para o texto abaixo.
+      ? 'O refletor é um plano condutor perfeito e infinito a λ/4: um refletor real, finito, tem diagrama e ganho diferentes (o tamanho dele não consta das fontes).'
       : 'Espaço livre, sem refletor.');
   const gainText = reflector
     ? ''

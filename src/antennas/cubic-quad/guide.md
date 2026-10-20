@@ -55,7 +55,7 @@ Trena, serra, furadeira, estilete, ferro de solda, alicate e NanoVNA ou medidor 
 Com espaçamento de 0,15λ a 0,2λ a impedância da espira excitada fica perto de 50 Ω, o que permite ligar o
 coaxial direto, **com choke/balun de corrente** para a malha do cabo não irradiar. Com espaçamento pouco
 acima de 0,25λ a impedância sobe para perto de 75 Ω, e um transformador de 1/4 de onda pode servir (use a
-ferramenta "Transformador de 1/4 de onda"). Para casar, veja as ferramentas de rede L e de stub. Gamma match ainda não tem equações com fonte aqui (TODO).
+ferramenta "Transformador de 1/4 de onda"). Para casar, veja as ferramentas de rede L e de stub. Gamma match ainda não tem equações com fonte aqui.
 
 ## 6. Ajuste
 
@@ -93,7 +93,7 @@ ferramenta "Transformador de 1/4 de onda"). Para casar, veja as ferramentas de r
 - Carl O. Jelinek (N6VNG), tabela de projeto de quad cúbica (fórmulas 1030/f, 1005/f, 975/f, em pés):
   https://www.qsl.net/ta1dx/amator/cubical_quad_antenna_design.htm (consultada em 2026-10-16).
 - Electronics Notes, "Cubical Quad Beam Antenna: Reflector & Director" (espaçamento, impedância e ganho).
-- ARRL Antenna Book (capítulo de quads). TODO(fonte): conferir razões e ganho.
+- ARRL Antenna Book (capítulo de quads).
 - Anatel: regulamentação do Serviço de Radioamador (versão vigente).
 - LABRE: plano de bandas (versão vigente).
 - Padrão de irradiação: método dos momentos (Harrington, 1968) sobre espiras quadradas com o diâmetro de fio informado (padrão 2 mm, premissa do modelo; o diâmetro não altera os perímetros). O solver foi validado no dipolo, em arranjos e no Yagi do NBS; a quadra em si não tem comparação com medidas neste repositório. A relação frente–costas do modelo é sensível ao tamanho do refletor.

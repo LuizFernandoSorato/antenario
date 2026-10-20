@@ -65,7 +65,8 @@ function patterns(result: CalcResult, params: MagneticLoopParams): Diagram[] {
     `Modelo de loop pequena (corrente uniforme, espaço livre). Esta espira tem circunferência de ${formatNumber(circumferenceLambda, 3)}λ` +
     (small
       ? ', dentro do limite de λ/10 do modelo. '
-      : ', ACIMA do limite de λ/10 do modelo: a corrente deixa de ser uniforme e o padrão real se afasta deste. TODO(fonte): loop não pequena. ') +
+      // TODO(fonte): loop não pequena.
+      : ', ACIMA do limite de λ/10 do modelo: a corrente deixa de ser uniforme e o padrão real se afasta deste. ') +
     'O solo e a altura mudam muito o padrão real.';
   return [
     polarPlot({

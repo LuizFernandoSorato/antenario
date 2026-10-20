@@ -41,3 +41,5 @@ export function calc(params: AdsbParams): CalcResult {
     ],
   };
 }
+
+// TODO(fonte) [guide.md]: ganho e alcance típicos de ADS-B caseira não têm fonte citada aqui; não os assumimos.

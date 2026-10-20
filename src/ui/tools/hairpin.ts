@@ -68,14 +68,16 @@ export const hairpinTool: Tool = {
       ],
       assumptions: [
         { name: 'Modelo', value: 'Indutor ideal em paralelo (linha de dois fios em curto, no ar)', source: 'Teoria de linhas; Z = 276·log10(2D/d) (ARRL/Kraus)' },
-        { name: 'Ignorado', value: 'Efeito dos cantos, da barra de curto e da proximidade do boom', source: 'TODO(fonte)' },
+        // TODO(fonte): fonte pendente para o texto abaixo.
+        { name: 'Ignorado', value: 'Efeito dos cantos, da barra de curto e da proximidade do boom', source: 'Sem fonte citada' },
       ],
       warnings: [
         {
           level: 'warning',
           message:
-            'O casamento é sensível: quanto menor a impedância do elemento, mais crítico o ajuste (relato de radioamadores; ' +
-            'TODO(fonte): referência de engenharia). Ajuste medindo com NanoVNA.',
+            'O casamento é sensível: quanto menor a impedância do elemento, mais crítico o ajuste (relato de radioamadores). ' +
+            // TODO(fonte): referência de engenharia para a faixa de uso.
+            'Ajuste medindo com NanoVNA.',
         },
         {
           level: 'info',

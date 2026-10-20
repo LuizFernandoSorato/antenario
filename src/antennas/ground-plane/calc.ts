@@ -99,8 +99,9 @@ export function calc(params: GroundPlaneParams): CalcResult {
         'A impedância depende da inclinação e do número de radiais. Radiais horizontais dão ' +
         'impedância bem abaixo de 50 Ω; inclinando-os para baixo ela sobe e chega perto de ' +
         '50 Ω a ≈ 45°. O valor mostrado é uma interpolação indicativa entre pontos de referência ' +
-        '(36,5 Ω a 0°, 50 Ω a 45°, 73 Ω a 90°). TODO(fonte): não há tabela publicada com valores ' +
-        'intermediários. Ajuste a inclinação medindo a ROE.',
+        // TODO(fonte): não há tabela publicada com valores.
+        '(36,5 Ω a 0°, 50 Ω a 45°, 73 Ω a 90°). ' +
+        'Ajuste a inclinação medindo a ROE.',
     },
     {
       level: 'warning',

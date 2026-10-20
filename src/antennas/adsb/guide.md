@@ -69,4 +69,3 @@ Sem instrumento, confie na medida calculada: em RX o resultado costuma ser bom.
 - ICAO Anexo 10, vol. IV, e RTCA DO-260B: o ADS-B usa 1090 MHz (Mode S Extended Squitter).
 - C. A. Balanis, *Antenna Theory: Analysis and Design*, 4ª ed., §4.7 (monopolo e teoria das imagens).
 - ARRL Antenna Book: verticais e ground planes.
-- TODO(fonte): ganho e alcance típicos de ADS-B caseira não têm fonte citada aqui; não os assumimos.
