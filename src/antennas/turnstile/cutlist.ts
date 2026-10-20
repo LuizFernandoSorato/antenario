@@ -1,5 +1,6 @@
 import type { CutItem } from '../types';
 import { type TurnstileParams, calc } from './calc';
+import { REFLECTOR_TUBES } from './reflector-model';
 
 export function cutList(params: TurnstileParams): CutItem[] {
   const m = Object.fromEntries(calc(params).measurements.map((x) => [x.label, x.meters])) as Record<string, number>;
@@ -33,13 +34,16 @@ export function cutList(params: TurnstileParams): CutItem[] {
     });
   }
   if (m['G'] !== undefined) {
+    const tubes = params.reflectorKind === REFLECTOR_TUBES;
     items.push({
       label: 'G',
-      name: 'Refletor: tela metálica quadrada (lado)',
-      quantity: 1,
+      name: tubes ? 'Refletor: tubo (comprimento)' : 'Refletor: tela metálica quadrada (lado)',
+      quantity: tubes ? 2 : 1,
       meters: m['G'],
-      adjustable: false,
-      note: 'Lado do quadrado; a tela tem vãos de até H. Pode ser chapa inteira ou disco do mesmo diâmetro.',
+      adjustable: tubes,
+      note: tubes
+        ? 'Um tubo sob cada dipolo, paralelo a ele. Corte com sobra e ajuste medindo; menos de ≈ 0,45λ não reflete.'
+        : 'Lado do quadrado; a tela tem vãos de até H. Pode ser chapa inteira ou disco do mesmo diâmetro.',
     });
   }
   return items;

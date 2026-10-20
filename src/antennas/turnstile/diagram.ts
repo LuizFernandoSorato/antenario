@@ -11,6 +11,7 @@ import { polarPlot } from '../pattern-kit';
 import type { CalcResult } from '../types';
 import { armPolarityDiagram, senseOf } from '../circular';
 import type { TurnstileParams } from './calc';
+import { REFLECTOR_TUBES } from './reflector-model';
 
 function crossed(result: CalcResult, params: TurnstileParams): Diagram {
   const id = 'ts-crossed';
@@ -69,7 +70,17 @@ function side(result: CalcResult, params: TurnstileParams): Diagram | null {
   parts.push(rect(cx - reflectorHalf, yRef, 2 * reflectorHalf, 6, 'dg-mast', 1));
   parts.push(text(cx + reflectorHalf - 4, yRef - 8, 'refletor', 'dg-note', 'end'));
   parts.push(text(cx + half + 12, top + 4, 'dipolos (vistos de lado)', 'dg-note'));
-  parts.push(text(cx, yRef + 58, `tela com vãos de até ${dimLabel(result, 'H', res)}`, 'dg-note', 'middle'));
+  parts.push(
+    text(
+      cx,
+      yRef + 58,
+      params.reflectorKind === REFLECTOR_TUBES
+        ? 'tubo paralelo a cada dipolo (os dois em camadas separadas)'
+        : `tela com vãos de até ${dimLabel(result, 'H', res)}`,
+      'dg-note',
+      'middle',
+    ),
+  );
   parts.push(dimension(id, cx - reflectorHalf, yRef + 6, cx + reflectorHalf, yRef + 6, 26, dimLabel(result, 'G', res)));
   parts.push(line(cx, top - 38, cx, top, 'dg-ext'));
   parts.push(text(cx + 8, top - 28, '↑ eixo: polarização circular para cima', 'dg-note'));
@@ -78,7 +89,10 @@ function side(result: CalcResult, params: TurnstileParams): Diagram | null {
   return {
     id,
     title: 'Dipolos sobre o refletor (vista de lado)',
-    caption: 'Os dipolos ficam a 1/4 de onda (D) do refletor, uma tela quadrada de lado G (fora de escala na vertical). O ganho aponta para cima, no eixo.',
+    caption:
+      params.reflectorKind === REFLECTOR_TUBES
+        ? 'Os dipolos ficam a 1/4 de onda (D) do refletor: um tubo de comprimento G sob cada dipolo, paralelo a ele (fora de escala na vertical). O ganho aponta para cima, no eixo.'
+        : 'Os dipolos ficam a 1/4 de onda (D) do refletor, uma tela quadrada de lado G (fora de escala na vertical). O ganho aponta para cima, no eixo.',
     svg: svgDoc(
       id,
       640,
@@ -141,7 +155,8 @@ function patterns(result: CalcResult, params: TurnstileParams): Diagram[] {
     'Dipolos ideais, sem acoplamento mútuo. ' +
     (reflector
       // TODO(fonte): fonte pendente para o texto abaixo.
-      ? 'O refletor é um plano condutor perfeito e infinito a λ/4: um refletor real, finito, tem diagrama e ganho diferentes (o ganho e a relação frente–costas do refletor de lado G vêm de um modelo por momentos: ver a nota de tamanho).'
+      ? 'O refletor é um plano condutor perfeito e infinito a λ/4: um refletor real, finito, tem diagrama e ganho diferentes (os valores do refletor escolhido vêm de um modelo por momentos: ver a nota de tamanho).' +
+        (params.reflectorKind === REFLECTOR_TUBES ? ' Com tubos o refletor está bem longe do ideal: sobra irradiação para trás e o ganho é menor que o do desenho.' : '')
       : 'Espaço livre, sem refletor.');
   const gainText = reflector
     ? ''

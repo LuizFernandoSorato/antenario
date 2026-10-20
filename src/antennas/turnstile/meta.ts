@@ -1,4 +1,5 @@
 import { circularSenseParam } from '../circular';
+import { REFLECTOR_PLATE, REFLECTOR_TUBES } from './reflector-model';
 import type { AntennaMeta } from '../types';
 
 export const meta: AntennaMeta = {
@@ -68,6 +69,19 @@ export const meta: AntennaMeta = {
       min: 0,
       max: 1,
       help: 'Marcado: refletor a 1/4 de onda atrás dos dipolos (circular para cima). Desmarcado: omnidirecional na horizontal.',
+    },
+    {
+      key: 'reflectorKind',
+      kind: 'choice',
+      label: 'Tipo de refletor',
+      unit: '',
+      defaultValue: REFLECTOR_PLATE,
+      toSi: 1,
+      options: [
+        { value: REFLECTOR_PLATE, label: 'Chapa ou tela quadrada (melhor)' },
+        { value: REFLECTOR_TUBES, label: 'Um tubo alinhado com cada dipolo (cruz)' },
+      ],
+      help: 'Só vale com refletor. A cruz de tubos é mais simples de montar, mas irradia bem mais para trás e perde ganho (valores no aviso do resultado).',
     },
     circularSenseParam(),
   ],

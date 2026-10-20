@@ -260,7 +260,7 @@ projeto). A página do YO5OSF com saída do AntMaker não bate com o DL6WU.BAS (
 - Colinear de coaxial: tabela de ganho vem de fonte de radioamador; impedância da seção de baixo não consta.
 - Loop magnética: regra do loop de acoplamento (diâmetro ≈ 1/5) sem fonte.
 - QFH: medidas são a saída da calculadora de Coppens a 137,5 MHz, escaladas; faltam as equações (Kilgus). Os "separadores" foram reconstruídos (ver os padrões). Falta o arranjo real de alimentação (qual espira adianta, junção); o sentido vem do modelo.
-- Turnstile: impedância com refletor e ganho absoluto sem fonte. O TAMANHO do refletor (tela quadrada de 1λ, vãos ≤ 0,05λ, mínimo 0,75λ) vem de um estudo por momentos (`turnstile/reflector-model.ts`, sem medida nem regra publicada: TODO(fonte)); a pesquisa na web só achou relatos de espaçamento (0,2 a 0,37λ muda o diagrama vertical) e nenhuma dimensão de refletor. O padrão com refletor ideal
+- Turnstile: impedância com refletor e ganho absoluto sem fonte. O TAMANHO do refletor (tela quadrada de 1λ, vãos ≤ 0,05λ, mínimo 0,75λ; opção `reflectorKind`: um tubo de 0,5λ alinhado com cada dipolo, F/B ≈ 9 dB contra ≈ 18 dB da tela, e crítico: ≤ 0,45λ vira diretor) vem de um estudo por momentos (`turnstile/reflector-model.ts`, sem medida nem regra publicada: TODO(fonte)); a pesquisa na web só achou relatos de espaçamento (0,2 a 0,37λ muda o diagrama vertical) e nenhuma dimensão de refletor. O padrão com refletor ideal
   indica diretividade bem acima do "+3 dB" da Wikipedia usado no texto (ver `turnstile/calc.ts`); não reconciliado.
 - Hairpin: sem efeito de cantos e barra de curto; faixa de uso (25 a 35 Ω) vem de relatos de radioamadores.
 - Ground plane: curva ângulo × impedância (ver acima). ADS-B: ganho e alcance típicos.

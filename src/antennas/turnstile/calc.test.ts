@@ -117,3 +117,35 @@ describe('turnstile: sentido da polarização e montagem', () => {
     expect(() => calc({ ...defaultParams, circularSense: 3 })).toThrow(RangeError);
   });
 });
+
+describe('turnstile: tipo de refletor (chapa/tela ou tubos)', () => {
+  const lambda = 299.792458 / defaultParams.frequencyMHz;
+  const get = (r: ReturnType<typeof calc>, l: string) => r.measurements.find((m) => m.label === l);
+
+  it('padrão é chapa/tela: lado de 1λ e vão de 0,05λ', () => {
+    expect(defaultParams.reflectorKind).toBe(1);
+    const r = calc(defaultParams);
+    expect(get(r, 'G')!.meters).toBeCloseTo(lambda, 9);
+    expect(get(r, 'H')!.meters).toBeCloseTo(0.05 * lambda, 9);
+  });
+
+  it('com tubos: G é o comprimento de cada tubo (0,5λ), sem vão H, e a folha de corte tem 2 tubos', () => {
+    const p = { ...defaultParams, reflectorKind: 2 };
+    const r = calc(p);
+    expect(get(r, 'G')!.meters).toBeCloseTo(0.5 * lambda, 9);
+    expect(get(r, 'H')).toBeUndefined();
+    const g = cutList(p).find((i) => i.label === 'G')!;
+    expect(g.quantity).toBe(2);
+    expect(g.adjustable).toBe(true);
+    expect(r.warnings.some((w) => /Refletor de tubos/.test(w.message))).toBe(true);
+  });
+
+  it('sem refletor não há G nem H, qualquer que seja o tipo', () => {
+    const r = calc({ ...defaultParams, reflector: 0, reflectorKind: 2 });
+    expect(get(r, 'G')).toBeUndefined();
+  });
+
+  it('tipo de refletor inválido é recusado', () => {
+    expect(() => calc({ ...defaultParams, reflectorKind: 3 })).toThrow(RangeError);
+  });
+});

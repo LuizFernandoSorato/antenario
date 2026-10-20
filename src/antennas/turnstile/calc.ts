@@ -27,7 +27,16 @@ import { assertFactor, physicalLength, wavelength } from '../../core/wave';
 import { type AssemblyGuide, type CalcResult, type CalcWarning, type Estimate, type Measurement, rangeWarning } from '../types';
 import { RHCP, SENSE_NAME, type Sense, senseOf } from '../circular';
 import { meta } from './meta';
-import { MESH_OPENING_LAMBDA, REFLECTOR_MIN_SIDE_LAMBDA, REFLECTOR_SIDE_LAMBDA, REFLECTOR_STUDY } from './reflector-model';
+import {
+  MESH_OPENING_LAMBDA,
+  REFLECTOR_MIN_SIDE_LAMBDA,
+  REFLECTOR_PLATE,
+  REFLECTOR_SIDE_LAMBDA,
+  REFLECTOR_STUDY,
+  REFLECTOR_TUBES,
+  TUBE_LENGTH_LAMBDA,
+  TUBE_STUDY,
+} from './reflector-model';
 
 export interface TurnstileParams {
   frequencyMHz: number;
@@ -41,6 +50,8 @@ export interface TurnstileParams {
   velocityFactor: number;
   /** 1 = com refletor a 1/4 de onda; 0 = sem refletor (a tela mostra uma caixa de seleção). */
   reflector: number;
+  /** Tipo de refletor (só com refletor): chapa ou tela (1), ou um tubo alinhado com cada dipolo (2). */
+  reflectorKind: number;
   /** Sentido da polarização circular: RHCP ou LHCP (ver `circular.ts`). */
   circularSense: number;
 }
@@ -52,6 +63,7 @@ export const defaultParams: TurnstileParams = {
   centerGap: 0,
   velocityFactor: 0.66,
   reflector: 1,
+  reflectorKind: REFLECTOR_PLATE,
   circularSense: RHCP,
 };
 
@@ -90,7 +102,11 @@ export function calc(params: TurnstileParams): CalcResult {
   if (params.reflector !== 0 && params.reflector !== 1) {
     throw new RangeError('O parâmetro "com refletor" deve ser 0 ou 1.');
   }
+  if (params.reflectorKind !== REFLECTOR_PLATE && params.reflectorKind !== REFLECTOR_TUBES) {
+    throw new RangeError('O tipo de refletor deve ser chapa/tela ou tubos.');
+  }
   const withReflector = params.reflector === 1;
+  const tubes = params.reflectorKind === REFLECTOR_TUBES;
   const sense = senseOf(params.circularSense);
 
   const lambda = wavelength(f);
@@ -109,18 +125,29 @@ export function calc(params: TurnstileParams): CalcResult {
   ];
   if (withReflector) {
     measurements.push({ label: 'D', name: 'Distância ao refletor', meters: spacing, description: 'Do plano dos dipolos até o refletor, 1/4 de onda no ar.' });
-    measurements.push({
-      label: 'G',
-      name: 'Refletor: lado da tela quadrada',
-      meters: REFLECTOR_SIDE_LAMBDA * lambda,
-      description: `Tela metálica quadrada de 1λ de lado (mínimo ${formatNumber(REFLECTOR_MIN_SIDE_LAMBDA, 2)}λ = ${formatNumber(REFLECTOR_MIN_SIDE_LAMBDA * lambda * 100, 0)} cm). Centrada sob os dipolos. Também serve um disco de mesmo diâmetro.`,
-    });
-    measurements.push({
-      label: 'H',
-      name: 'Refletor: vão máximo da tela',
-      meters: MESH_OPENING_LAMBDA * lambda,
-      description: 'Distância máxima entre fios ou hastes da tela (centro a centro). Chapa inteira também serve; vãos maiores pioram a relação frente–costas.',
-    });
+    if (tubes) {
+      measurements.push({
+        label: 'G',
+        name: 'Refletor: comprimento de cada tubo',
+        meters: TUBE_LENGTH_LAMBDA * lambda,
+        description:
+          'Dois tubos de mesmo comprimento, um paralelo a cada dipolo, centrados sob ele e cruzados em camadas separadas (sem se tocar). ' +
+          'Menos que ≈ 0,45λ o tubo deixa de refletir; mais que ≈ 0,55λ piora. Ajuste medindo.',
+      });
+    } else {
+      measurements.push({
+        label: 'G',
+        name: 'Refletor: lado da tela quadrada',
+        meters: REFLECTOR_SIDE_LAMBDA * lambda,
+        description: `Tela metálica quadrada de 1λ de lado (mínimo ${formatNumber(REFLECTOR_MIN_SIDE_LAMBDA, 2)}λ = ${formatNumber(REFLECTOR_MIN_SIDE_LAMBDA * lambda * 100, 0)} cm). Centrada sob os dipolos. Também serve um disco de mesmo diâmetro.`,
+      });
+      measurements.push({
+        label: 'H',
+        name: 'Refletor: vão máximo da tela',
+        meters: MESH_OPENING_LAMBDA * lambda,
+        description: 'Distância máxima entre fios ou hastes da tela (centro a centro). Chapa inteira também serve; vãos maiores pioram a relação frente–costas.',
+      });
+    }
   }
 
   if (gap > 0) {
@@ -203,10 +230,14 @@ export function calc(params: TurnstileParams): CalcResult {
       ? [
           {
             level: 'info' as const,
-            message:
-              'Tamanho do refletor: não consta das fontes consultadas; o valor vem de um modelo por momentos desta ferramenta (tela de hastes, sem medida). ' +
-              `No modelo, lado de 0,5λ dá relação frente–costas de ≈ ${formatNumber(REFLECTOR_STUDY[0]!.frontToBackDb, 0)} dB, 0,75λ de ≈ ${formatNumber(REFLECTOR_STUDY[1]!.frontToBackDb, 0)} dB e 1λ de ≈ ${formatNumber(REFLECTOR_STUDY[2]!.frontToBackDb, 0)} dB, ` +
-              `com ganho de ≈ ${formatNumber(REFLECTOR_STUDY[2]!.directivityDbi, 1)} dBi em 1λ; acima disso não houve melhora estável. Confirme medindo.`,
+            message: tubes
+              ? 'Refletor de tubos (um alinhado com cada dipolo): o valor vem de um modelo por momentos desta ferramenta (sem medida). ' +
+                `Com tubos de 0,5λ: ganho ≈ ${formatNumber(TUBE_STUDY[1]!.directivityDbi, 1)} dBi e relação frente–costas ≈ ${formatNumber(TUBE_STUDY[1]!.frontToBackDb, 0)} dB; ` +
+                `com 0,45λ o tubo vira diretor (F/B ≈ ${formatNumber(TUBE_STUDY[0]!.frontToBackDb, 0)} dB) e com 0,55λ cai para ≈ ${formatNumber(TUBE_STUDY[3]!.frontToBackDb, 0)} dB. ` +
+                `A chapa ou tela de 1λ dá ≈ ${formatNumber(REFLECTOR_STUDY[2]!.directivityDbi, 1)} dBi e ≈ ${formatNumber(REFLECTOR_STUDY[2]!.frontToBackDb, 0)} dB.`
+              : 'Tamanho do refletor: não consta das fontes consultadas; o valor vem de um modelo por momentos desta ferramenta (tela de hastes, sem medida). ' +
+                `No modelo, lado de 0,5λ dá relação frente–costas de ≈ ${formatNumber(REFLECTOR_STUDY[0]!.frontToBackDb, 0)} dB, 0,75λ de ≈ ${formatNumber(REFLECTOR_STUDY[1]!.frontToBackDb, 0)} dB e 1λ de ≈ ${formatNumber(REFLECTOR_STUDY[2]!.frontToBackDb, 0)} dB, ` +
+                `com ganho de ≈ ${formatNumber(REFLECTOR_STUDY[2]!.directivityDbi, 1)} dBi em 1λ; acima disso não houve melhora estável. Confirme medindo.`,
           },
         ]
       : []),
