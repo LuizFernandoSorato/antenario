@@ -740,5 +740,12 @@ svg.smith {
 .note,
 .card p,
 .card li {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+}
+
+/* Valores longos (texto, não número) quebram em linhas em vez de estourar a tabela. */
+.measures .value.wrap {
+  white-space: normal;
+  text-align: left;
+  font-weight: 400;
 }

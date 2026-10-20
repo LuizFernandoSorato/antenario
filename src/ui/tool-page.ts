@@ -46,7 +46,7 @@ function renderOutput(out: ToolOutput): string {
               .map(
                 (r) => `<tr>
                   <td>${escapeHtml(r.label)}${r.note ? `<small>${escapeHtml(r.note)}</small>` : ''}</td>
-                  <td class="value">${escapeHtml(r.value)}</td>
+                  <td class="value${r.value.length > 24 ? " wrap" : ""}">${escapeHtml(r.value)}</td>
                 </tr>`,
               )
               .join('')}
