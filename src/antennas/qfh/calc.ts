@@ -14,11 +14,27 @@
 
 import { assertFrequencyMHz, assertPositive, formatNumber, formatEngineering } from '../../core/units';
 import { wavelength } from '../../core/wave';
-import { type CalcResult, type CalcWarning, type Measurement, rangeWarning } from '../types';
+import { type AssemblyGuide, type CalcResult, type CalcWarning, type Measurement, rangeWarning } from '../types';
+import { RHCP, SENSE_NAME, type Sense, senseOf } from '../circular';
 import { meta } from './meta';
+
+/** Sentido de enrolamento das hélices: à direita (como uma rosca comum) ou à esquerda. */
+export type Winding = 'right' | 'left';
+
+/**
+ * Enrolamento que dá cada sentido de polarização no zênite, com a espira MENOR adiantada de 90° (a maior, mais longa e indutiva, atrasa) e o
+ * feixe para cima, alimentação no topo. Resultado do modelo por momentos (ver pattern-model.test.ts): enrolamento à direita dá LHCP e à
+ * esquerda dá RHCP. Concorda com uma fonte secundária (patente US 10511099, via busca: "left hand twist ... right hand circularly polarized"),
+ * que não foi lida na íntegra. TODO(fonte): medida com um passe de satélite.
+ */
+export function windingFor(sense: Sense): Winding {
+  return sense === 'rhcp' ? 'left' : 'right';
+}
 
 export interface QfhParams {
   frequencyMHz: number;
+  /** Sentido da polarização circular: RHCP ou LHCP (ver `circular.ts`). O enrolamento sai de `windingFor`. */
+  circularSense: number;
   /** Diâmetro do condutor, em metros (só entra no modelo de padrão; as medidas são as de 4,1 mm). */
   wireDiameter: number;
 }
@@ -26,7 +42,7 @@ export interface QfhParams {
 /** Diâmetro do condutor da saída de referência da calculadora de Coppens, em metros. */
 export const REFERENCE_WIRE_DIAMETER = 0.0041;
 
-export const defaultParams: QfhParams = { frequencyMHz: 137.5, wireDiameter: REFERENCE_WIRE_DIAMETER };
+export const defaultParams: QfhParams = { frequencyMHz: 137.5, wireDiameter: REFERENCE_WIRE_DIAMETER, circularSense: RHCP };
 
 /** Frequência de referência dos dados, MHz. */
 export const REFERENCE_FREQUENCY_MHZ = 137.5;
@@ -80,6 +96,8 @@ export function scaleFromReference(mm: number, fMHz: number): number {
 
 export function calc(params: QfhParams): CalcResult {
   const { frequencyMHz: f, wireDiameter: wd } = params;
+  const sense = senseOf(params.circularSense);
+  const winding = windingFor(sense);
   assertFrequencyMHz(f);
   assertPositive(wd, 'O diâmetro do condutor');
   const s = (mm: number) => scaleFromReference(mm, f);
@@ -129,8 +147,8 @@ export function calc(params: QfhParams): CalcResult {
     {
       level: 'info',
       message:
-        'O sentido de enrolamento define a polarização (circular à direita ou à esquerda). Satélites meteorológicos de 137 MHz ' +
-        'usam polarização circular à direita. Confirme o sentido para o satélite que você quer receber.',
+        `Para ${SENSE_NAME[sense]}, enrole as hélices ${winding === 'left' ? 'À ESQUERDA' : 'À DIREITA'}: veja o método de montagem. ` +
+        'Satélites meteorológicos de 137 MHz usam polarização circular à direita (RHCP). Confirme o sentido para o satélite que você quer receber.',
     },
     {
       level: 'info',
@@ -147,6 +165,7 @@ export function calc(params: QfhParams): CalcResult {
       { name: 'Escala aplicada', value: `× ${formatNumber(REFERENCE_FREQUENCY_MHZ / f, 4)} (tudo ∝ 1/f)` },
       { name: 'Hélice', value: '2 espiras (maior e menor), 0,5 volta de torção, 1 λ de comprimento de espira', source: 'Coppens, via IK1HGI' },
       { name: 'Condutor de referência', value: '4,1 mm, raio de curvatura 13 mm, razão largura/altura 0,44', source: 'Coppens, via IK1HGI' },
+      { name: 'Sentido da polarização', value: `${SENSE_NAME[sense]}: hélices enroladas ${winding === 'left' ? 'à esquerda' : 'à direita'}`, source: 'Modelo por momentos (feixe para cima, espira menor adiantada); patente US 10511099 concorda (fonte secundária)' },
       { name: 'Diâmetro do condutor informado', value: `${formatNumber(wd * 1000, 2)} mm (só no padrão de irradiação)` },
       { name: 'Sensibilidade ao condutor (4,1 → 7 mm)', value: `até ${formatNumber(worst * 100, 1)} % nas medidas`, source: 'Coppens, via rfwireless-world.com' },
       { name: 'Comprimento de onda de referência', value: `${formatEngineering(REFERENCE_MM.wavelength / 1000, 'm')} (a 137,5 MHz, c = 3×10⁸ m/s)`, source: 'Coppens: usa c = 3×10⁸ m/s' },
@@ -166,5 +185,22 @@ export function calc(params: QfhParams): CalcResult {
       bandwidth: null,
     },
     warnings,
+    assembly: assemblyFor(sense, winding),
+  };
+}
+
+/** Método de montagem para o sentido pedido: sentido de enrolamento das duas hélices e como reconhecê-lo. */
+function assemblyFor(sense: Sense, winding: Winding): AssemblyGuide {
+  const left = winding === 'left';
+  return {
+    title: `Montagem para ${SENSE_NAME[sense]}: enrolamento à ${left ? 'esquerda' : 'direita'}`,
+    steps: [
+      `Enrole as duas espiras (a maior e a menor) À ${left ? 'ESQUERDA' : 'DIREITA'}, as duas com o MESMO sentido de enrolamento.`,
+      `Como reconhecer: subindo pelo fio, ele gira no sentido ${left ? 'HORÁRIO' : 'ANTI-HORÁRIO'} visto de cima (rosca ${left ? 'à esquerda' : 'comum, à direita'}). Visto de lado, os braços da frente sobem da ${left ? 'direita para a esquerda ("\\")' : 'esquerda para a direita ("/")'}.`,
+      'Alimentação no topo: o coaxial sobe pelo centro até o topo, onde ligam as duas espiras; as pontas de baixo de cada espira ficam unidas por um braço contínuo.',
+      'A espira maior (mais longa, indutiva) é a que atrasa; a menor (capacitiva) é a que adianta. Não troque os comprimentos.',
+      `Montar com o enrolamento oposto (à ${left ? 'direita' : 'esquerda'}) dá ${left ? 'LHCP' : 'RHCP'}: confira antes de fixar as hélices.`,
+      'Esta regra vem do modelo por momentos e concorda com uma patente (fonte secundária, não lida na íntegra); o arranjo real de ligação das pontas não consta das fontes consultadas. Confirme com um passe real (TODO(fonte)).',
+    ],
   };
 }

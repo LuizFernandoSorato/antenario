@@ -9,16 +9,22 @@ import { formatNumber, lengthResolutionForFrequency } from '../../core/units';
 import { type Diagram, dimLabel, dimension, line, measure, path, svgDoc, text } from '../diagram-kit';
 import { polarPlot } from '../pattern-kit';
 import type { CalcResult } from '../types';
-import type { QfhParams } from './calc';
+import { type QfhParams, type Winding, windingFor } from './calc';
+import { SENSE_NAME, senseOf } from '../circular';
 import { solveQfh } from './pattern-model';
 
-function helix(cx: number, top: number, h: number, d: number): string {
+function helix(cx: number, top: number, h: number, d: number, winding: Winding): string {
   const l = cx - d / 2;
   const r = cx + d / 2;
-  // Duas pernas que se cruzam (meia volta) entre o topo e a base.
+  // Duas pernas que se cruzam (meia volta) entre o topo e a base. A da FRENTE (cheia) mostra o sentido de enrolamento: à direita sobe da
+  // esquerda para a direita ("/"), à esquerda é o contrário; a de trás (tracejada) tem a inclinação oposta.
+  const down = `M ${l} ${top} C ${l} ${top + h * 0.4}, ${r} ${top + h * 0.6}, ${r} ${top + h}`; // "\\"
+  const up = `M ${l} ${top + h} C ${l} ${top + h * 0.6}, ${r} ${top + h * 0.4}, ${r} ${top}`; // "/"
+  const front = winding === 'right' ? up : down;
+  const back = winding === 'right' ? down : up;
   return (
-    path(`M ${l} ${top} C ${l} ${top + h * 0.4}, ${r} ${top + h * 0.6}, ${r} ${top + h}`, 'dg-conductor') +
-    path(`M ${r} ${top} C ${r} ${top + h * 0.4}, ${l} ${top + h * 0.6}, ${l} ${top + h}`, 'dg-conductor') +
+    path(front, 'dg-conductor') +
+    `<path d="${back}" class="dg-conductor" stroke-dasharray="6 4"/>` +
     line(l, top, r, top, 'dg-conductor') +
     line(l, top + h, r, top + h, 'dg-conductor')
   );
@@ -38,8 +44,9 @@ function loops(result: CalcResult, params: QfhParams): Diagram {
   const bottom = top + hBig * scale;
   const bottomSmall = top + hSmall * scale;
   const parts: string[] = [];
-  parts.push(helix(cx1, top, hBig * scale, dBig * scale));
-  parts.push(helix(cx2, top, hSmall * scale, dSmall * scale));
+  const winding = windingFor(senseOf(params.circularSense));
+  parts.push(helix(cx1, top, hBig * scale, dBig * scale, winding));
+  parts.push(helix(cx2, top, hSmall * scale, dSmall * scale, winding));
   parts.push(text(cx1, top - 20, 'espira maior', 'dg-label', 'middle'));
   parts.push(text(cx2, top - 20, 'espira menor', 'dg-label', 'middle'));
   parts.push(
@@ -73,6 +80,8 @@ function loops(result: CalcResult, params: QfhParams): Diagram {
     title: 'As duas espiras (esquema)',
     caption:
       'Duas hélices de meia volta: a maior (altura B, diâmetro interno C) e a menor (F e G), cruzadas a 90° em torno do mesmo cilindro. ' +
+      `Para ${SENSE_NAME[senseOf(params.circularSense)]} o enrolamento é à ${winding === 'left' ? 'esquerda' : 'direita'}: o braço da frente (linha cheia) sobe da ` +
+      `${winding === 'left' ? 'direita para a esquerda' : 'esquerda para a direita'}; o de trás (tracejado) tem a inclinação oposta. ` +
       'Esquema: a curva da torção é só ilustrativa; alturas e diâmetros guardam a proporção.',
     svg: svgDoc(
       id,
@@ -90,7 +99,8 @@ function loops(result: CalcResult, params: QfhParams): Diagram {
  * diferença. O padrão é quase simétrico em torno do eixo; os dois cortes mostram a pequena diferença entre o plano de uma espira e o diagonal.
  */
 function patterns(result: CalcResult, params: QfhParams): Diagram[] {
-  const model = solveQfh(result, params.frequencyMHz, params.wireDiameter);
+  const winding = windingFor(senseOf(params.circularSense));
+  const model = solveQfh(result, params.frequencyMHz, params.wireDiameter, winding);
   const planes: { id: string; title: string; label: string; dir: (a: number) => Vec3 }[] = [
     { id: 'qfh-pattern-a', title: 'Padrão no plano de uma espira', label: 'plano de uma espira', dir: (a) => [Math.cos(a), 0, Math.sin(a)] },
     { id: 'qfh-pattern-d', title: 'Padrão no plano diagonal (45° entre as espiras)', label: 'plano diagonal', dir: (a) => [Math.cos(a) * Math.SQRT1_2, Math.cos(a) * Math.SQRT1_2, Math.sin(a)] },
@@ -111,8 +121,8 @@ function patterns(result: CalcResult, params: QfhParams): Diagram[] {
     `Calculado por método dos momentos com fio de ${formatNumber(params.wireDiameter * 1000, 1)} mm, no espaço livre, ` +
     'sem o cilindro de suporte nem o coaxial, com as duas espiras alimentadas no topo ' +
     'em amplitude igual e 90° de diferença (a QFH real obtém isso da diferença de comprimento das espiras; aqui é suposto ideal). ' +
-    'Num coaxial real que desce pelo centro, o padrão para baixo e a ROE mudam. O sentido da polarização (direita ou esquerda) não é afirmado: ' +
-    'depende do sentido de enrolamento e de qual espira adianta. TODO(fonte).';
+    'Num coaxial real que desce pelo centro, o padrão para baixo e a ROE mudam. ' +
+    `Com enrolamento à ${winding === 'left' ? 'esquerda' : 'direita'} e a espira menor adiantada, o modelo dá ${SENSE_NAME[model.zenith.sense]} no zênite. TODO(fonte).`;
   return planes.map((p) => {
     const field = (a: number) => Math.sqrt(model.power(p.dir(a)) / peak);
     return polarPlot({

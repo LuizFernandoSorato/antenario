@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { calc, defaultParams, diameterSensitivity } from './calc';
+import { LHCP, RHCP } from '../circular';
 import { cutList } from './cutlist';
 
 // Referência: saída da calculadora de Coppens a 137,5 MHz, reproduzida em
@@ -61,5 +62,24 @@ describe('QFH: diâmetro do condutor', () => {
     expect(b.warnings.some((w) => w.message.includes('Condutor de 7,0 mm'))).toBe(true);
     expect(a.warnings.some((w) => w.message.includes('Condutor de'))).toBe(false);
     expect(() => calc({ ...defaultParams, wireDiameter: 0 })).toThrow(RangeError);
+  });
+});
+
+describe('QFH: sentido da polarização e montagem', () => {
+  it('RHCP pede enrolamento à esquerda e LHCP à direita, com as mesmas cotas', () => {
+    const rh = calc({ ...defaultParams, circularSense: RHCP });
+    const lh = calc({ ...defaultParams, circularSense: LHCP });
+    expect(rh.measurements).toEqual(lh.measurements);
+    expect(rh.assembly!.title).toContain('RHCP');
+    expect(rh.assembly!.title).toContain('esquerda');
+    expect(lh.assembly!.title).toContain('LHCP');
+    expect(lh.assembly!.title).toContain('direita');
+    expect(rh.assembly!.steps.join(' ')).toContain('À ESQUERDA');
+    expect(lh.assembly!.steps.join(' ')).toContain('À DIREITA');
+  });
+
+  it('o padrão é RHCP e sentido inválido é recusado', () => {
+    expect(defaultParams.circularSense).toBe(RHCP);
+    expect(() => calc({ ...defaultParams, circularSense: 0 })).toThrow(RangeError);
   });
 });

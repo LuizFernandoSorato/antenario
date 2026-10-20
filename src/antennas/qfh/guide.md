@@ -7,7 +7,7 @@ A diferença de tamanho cria um defasamento de 90° entre as duas, e isso dá **
 quase hemisférico, então a antena recebe satélites de órbita baixa sem rastreamento.
 
 - **Uso:** recepção (satélites meteorológicos de 137 MHz, por exemplo). Esta ferramenta não traz dados de transmissão para a QFH.
-- **Polarização:** circular. O sentido de enrolamento define direita ou esquerda; satélites de 137 MHz usam circular à direita.
+- **Polarização:** circular. O sentido de **enrolamento** das hélices define se é direita (RHCP) ou esquerda (LHCP): escolha o sentido na ferramenta e siga o método de montagem mostrado. Pelo modelo (e por uma patente, fonte secundária), enrolamento **à esquerda** dá RHCP e **à direita** dá LHCP. Satélites de 137 MHz usam RHCP.
 - **Ganho:** o modelo por momentos (ver as referências) dá ≈ 4,8 dBi no zênite, com −6 a −7 dB no horizonte e ≈ −16 dB para baixo; a faixa de 3 a 5 dBic vem de uma fonte secundária. Não há medida com fonte aqui (TODO). O que importa na prática é o diagrama largo.
 - **Aviso importante:** as medidas são as de uma calculadora publicada para 137,5 MHz, **escaladas** pela frequência. Meça e ajuste.
 
@@ -29,12 +29,12 @@ Trena, paquímetro, serra, gabarito ou fita para marcar a torção, ferro de sol
 
 1. Calcule as medidas com a sua frequência. **A** e **E** são o fio de cada espira; **B**/**F** são as alturas e **C**/**G** os diâmetros internos.
 2. Corte a espira maior com **A** e a menor com **E**, com sobra para ajuste.
-3. Dobre cada espira em retângulo, depois torça meia volta (180°) sobre o cilindro, com a altura final **B** (maior) e **F** (menor).
+3. Dobre cada espira em retângulo, depois torça meia volta (180°) sobre o cilindro, com a altura final **B** (maior) e **F** (menor). **Sentido da torção:** o mesmo nas duas espiras; para RHCP, enrolamento à ESQUERDA (subindo pelo fio, ele gira no sentido horário visto de cima; visto de lado, o braço da frente sobe da direita para a esquerda); para LHCP, à DIREITA (anti-horário visto de cima; sobe da esquerda para a direita, como uma rosca comum).
 4. Fixe as duas espiras no cilindro cruzadas a 90°, uma sobre a outra, no mesmo eixo.
 5. Faça as ligações na caixa, conforme a seção 5.
 6. Vede e instale na vertical, com visão livre do céu.
 
-Os separadores (**D** na maior, **H** na menor) são valores da calculadora de origem; a função construtiva exata deles não consta da fonte. TODO(fonte).
+Os separadores horizontais (**D** na maior, **H** na menor) são valores da calculadora de origem e coincidem com o diâmetro entre os centros do fio (diâmetro interno + diâmetro do condutor); o separador vertical é o comprimento do braço helicoidal. Isso foi conferido contra os dados da calculadora, não contra uma fonte escrita.
 
 ## 5. Alimentação e casamento
 
@@ -51,7 +51,7 @@ balun/choke) **não consta das fontes consultadas** para esta ferramenta. TODO(f
 ## 7. Erros comuns
 
 - Fazer as duas espiras do mesmo tamanho: a polarização circular desaparece.
-- Torcer no sentido errado: a polarização fica invertida e perde-se sinal.
+- Torcer no sentido errado (ou torcer as duas espiras em sentidos diferentes): a polarização fica invertida ou deixa de ser circular, e perde-se sinal. Confira o desenho do enrolamento da ferramenta antes de fixar.
 - Espiras fora de 90° ou fora do eixo.
 - Esquecer o choke.
 - Água dentro do suporte.

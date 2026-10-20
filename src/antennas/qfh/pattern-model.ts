@@ -19,7 +19,9 @@
  */
 
 import { type Complex3, type MomSolution, type Vec3, type Wire, combinedPower, directivityOf, solveWires } from '../../core/mom';
+import { circularSense, type CircularSense } from '../../core/polarization';
 import type { CalcResult } from '../types';
+import type { Winding } from './calc';
 
 /** Diâmetro do condutor de referência da calculadora de Coppens, em metros (ver `calc.ts`); padrão do modelo. */
 export const WIRE_DIAMETER = 0.0041;
@@ -30,8 +32,12 @@ const HELIX_SEGMENTS = 12;
 /** Nó do meio do braço horizontal de cima, onde fica a alimentação. */
 const FEED_NODE = HORIZONTAL_SEGMENTS + HELIX_SEGMENTS + HORIZONTAL_SEGMENTS / 2;
 
-/** Espira fechada: base em z = z0, topo em z = z0 + h, raio r da linha central do fio. `rotated` gira a espira 90° em torno do eixo. */
-export function qfhLoop(h: number, r: number, wireRadius: number, rotated: boolean, z0 = 0): Wire {
+/**
+ * Espira fechada: base em z = z0, topo em z = z0 + h, raio r da linha central do fio. `rotated` gira a espira 90° em torno do eixo.
+ * Enrolamento à DIREITA (padrão): subindo pelo fio, ele gira no sentido anti-horário visto de cima (como uma rosca comum); os braços da
+ * frente, vistos de lado, sobem da esquerda para a direita ("/"). À esquerda é a imagem no espelho.
+ */
+export function qfhLoop(h: number, r: number, wireRadius: number, rotated: boolean, z0 = 0, winding: Winding = 'right'): Wire {
   const pts: Vec3[] = [];
   const at = (angle: number, z: number): Vec3 =>
     rotated ? [-r * Math.sin(angle), r * Math.cos(angle), z] : [r * Math.cos(angle), r * Math.sin(angle), z];
@@ -55,7 +61,9 @@ export function qfhLoop(h: number, r: number, wireRadius: number, rotated: boole
     const u = i / HELIX_SEGMENTS;
     pts.push(at(Math.PI * (1 - u), z0 + h * (1 - u)));
   }
-  return { points: pts, radius: wireRadius, closed: true };
+  // Enrolamento à esquerda = imagem no espelho (plano x–z) do enrolamento à direita: y → −y.
+  const points = winding === 'left' ? pts.map(([x, y, z]): Vec3 => [x, -y, z]) : pts;
+  return { points, radius: wireRadius, closed: true };
 }
 
 export interface QfhModel {
@@ -65,10 +73,17 @@ export interface QfhModel {
   directivity: number;
   /** Campo distante no zênite, para medir a razão axial. */
   zenithField: Complex3;
+  /** Sentido da polarização circular no zênite e razão axial, pela convenção IEEE (ver `core/polarization.ts`). */
+  zenith: CircularSense;
 }
 
 /** Resolve a QFH por momentos a partir das cotas do cálculo (B, C: espira maior; F, G: espira menor). */
-export function solveQfh(result: CalcResult, frequencyMHz: number, wireDiameter: number = WIRE_DIAMETER): QfhModel {
+export function solveQfh(
+  result: CalcResult,
+  frequencyMHz: number,
+  wireDiameter: number = WIRE_DIAMETER,
+  winding: Winding = 'right',
+): QfhModel {
   const get = (label: string): number => {
     const m = result.measurements.find((x) => x.label === label);
     if (!m) throw new Error(`Cota ${label} não encontrada.`);
@@ -78,7 +93,10 @@ export function solveQfh(result: CalcResult, frequencyMHz: number, wireDiameter:
   const rBig = (get('C') + wireDiameter) / 2;
   const rSmall = (get('G') + wireDiameter) / 2;
   // Alimentação no topo (z = 0), comum às duas espiras; a base de cada uma fica abaixo, à sua altura.
-  const wires = [qfhLoop(get('B'), rBig, wireRadius, false, -get('B')), qfhLoop(get('F'), rSmall, wireRadius, true, -get('F'))];
+  const wires = [
+    qfhLoop(get('B'), rBig, wireRadius, false, -get('B'), winding),
+    qfhLoop(get('F'), rSmall, wireRadius, true, -get('F'), winding),
+  ];
   // Resposta a cada fonte sozinha; o campo e as correntes são lineares nas tensões.
   const alone = [0, 1].map((k) =>
     solveWires(wires, frequencyMHz, [{ wire: k, node: FEED_NODE, volts: { re: 1, im: 0 } }]),
@@ -97,7 +115,8 @@ export function solveQfh(result: CalcResult, frequencyMHz: number, wireDiameter:
   const power = combinedPower(parts);
   const zenith: Vec3 = [0, 0, 1];
   const zenithField = combinedField(parts, zenith);
-  return { power, directivity: directivityOf(power, zenith), zenithField };
+  const zenithSense = circularSense({ re: zenithField.re[0], im: zenithField.im[0] }, { re: zenithField.re[1], im: zenithField.im[1] });
+  return { power, directivity: directivityOf(power, zenith), zenithField, zenith: zenithSense };
 }
 
 type C = { re: number; im: number };

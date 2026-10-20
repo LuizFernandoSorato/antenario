@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { REFERENCE_MM, calc, defaultParams } from './calc';
+import { REFERENCE_MM, calc, defaultParams, windingFor } from './calc';
 import { WIRE_DIAMETER, qfhLoop, solveQfh } from './pattern-model';
 
 // Referências: a calculadora de Coppens (via IK1HGI) a 137,5 MHz (ver calc.ts). Para o padrão, não há medida com fonte aqui; os testes
@@ -96,5 +96,48 @@ describe('QFH: padrão por momentos a 137,5 MHz', () => {
   it('a diretividade em outra frequência de projeto fica perto (geometria escalada, fio fixo em 4,1 mm)', () => {
     const m2 = solveQfh(calc({ ...defaultParams, frequencyMHz: 275 }), 275);
     expect(Math.abs(db(m2.directivity) - db(m.directivity))).toBeLessThan(1);
+  });
+});
+
+describe('QFH: sentido de enrolamento × sentido da polarização (modelo por momentos)', () => {
+  const result = calc(defaultParams);
+
+  it('enrolamento à direita dá LHCP e à esquerda dá RHCP no zênite (espira menor adiantada, feixe para cima)', () => {
+    const right = solveQfh(result, 137.5, undefined, 'right');
+    const left = solveQfh(result, 137.5, undefined, 'left');
+    expect(right.zenith.sense).toBe('lhcp');
+    expect(left.zenith.sense).toBe('rhcp');
+    expect(right.zenith.axialRatioDb).toBeLessThan(1);
+    expect(left.zenith.axialRatioDb).toBeLessThan(1);
+    // o outro sentido fica pelo menos 20 dB abaixo
+    expect(20 * Math.log10(right.zenith.lhcp / right.zenith.rhcp)).toBeGreaterThan(20);
+    expect(20 * Math.log10(left.zenith.rhcp / left.zenith.lhcp)).toBeGreaterThan(20);
+  });
+
+  it('a imagem no espelho tem o mesmo padrão de potência (só o sentido muda)', () => {
+    const right = solveQfh(result, 137.5, undefined, 'right');
+    const left = solveQfh(result, 137.5, undefined, 'left');
+    expect(left.directivity).toBeCloseTo(right.directivity, 6);
+    for (const [t, p] of [[30, 0], [60, 45], [120, 10]] as const) {
+      const d = dirAt(t, p);
+      const mirrored = dirAt(t, -p);
+      expect(left.power(mirrored) / right.power(d)).toBeCloseTo(1, 4);
+    }
+  });
+
+  it('windingFor concorda com o modelo e o enrolamento chega à geometria (braço da frente sobe para a direita ou para a esquerda)', () => {
+    expect(windingFor('rhcp')).toBe('left');
+    expect(windingFor('lhcp')).toBe('right');
+    // braço helicoidal 1, nós 6 a 18: à direita, y < 0 (lado da frente, olhando de −y) e x cresce com z
+    const w = qfhLoop(0.7, 0.16, 0.002, false, -0.7, 'right').points;
+    const l = qfhLoop(0.7, 0.16, 0.002, false, -0.7, 'left').points;
+    const mid = 12; // meio do braço 1: ângulo 3π/2 (y = −r) à direita
+    expect(w[mid]![1]).toBeLessThan(0);
+    expect(w[mid + 1]![0]).toBeGreaterThan(w[mid - 1]![0]); // x cresce com z: "/" visto de −y
+    // à esquerda, a imagem no espelho leva o braço 2 (nós 24 a 36, descendo) para o lado da frente (y < 0): x cresce enquanto z cai, ou seja "\\" visto de −y
+    const back = 30;
+    expect(l[back]![1]).toBeLessThan(0);
+    expect(l[back + 1]![0]).toBeGreaterThan(l[back - 1]![0]);
+    expect(l[back + 1]![2]).toBeLessThan(l[back - 1]![2]);
   });
 });
