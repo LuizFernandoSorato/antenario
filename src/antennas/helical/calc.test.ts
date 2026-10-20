@@ -6,8 +6,10 @@ import {
   directivity,
   halfPowerBeamwidthDeg,
   inputImpedance,
+  windingFor,
 } from './calc';
 import { cutList } from './cutlist';
+import { helixPoints } from './diagram';
 
 // Referências: fórmulas de Kraus & Marhefka, Antennas for All Applications, 3ª ed., cap. 7.
 // Os valores esperados abaixo são calculados à mão a partir delas:
@@ -83,5 +85,48 @@ describe('helicoidal: lista de corte', () => {
     const items = cutList(defaultParams);
     expect(items.map((i) => i.label)).toEqual(['E', 'F']);
     expect(items.every((i) => !i.adjustable)).toBe(true);
+  });
+});
+
+describe('helicoidal: sentido da polarização e montagem', () => {
+  // Kraus & Marhefka, cap. 7: hélice à direita = RHCP; à esquerda = LHCP.
+  it('padrão é RHCP, com hélice à direita', () => {
+    expect(defaultParams.circularSense).toBe(1);
+    const a = calc(defaultParams).assembly!;
+    expect(a.title).toContain('RHCP');
+    expect(a.title).toContain('direita');
+    expect(windingFor('rhcp')).toBe('right');
+  });
+
+  it('LHCP pede hélice à esquerda e a montagem diz isso', () => {
+    expect(windingFor('lhcp')).toBe('left');
+    const a = calc({ ...defaultParams, circularSense: 2 }).assembly!;
+    expect(a.title).toContain('LHCP');
+    expect(a.title).toContain('esquerda');
+    expect(a.steps.join(' ')).toContain('ESQUERDA');
+  });
+
+  it('o sentido não muda as medidas', () => {
+    const r = calc(defaultParams).measurements.map((m) => m.meters);
+    const l = calc({ ...defaultParams, circularSense: 2 }).measurements.map((m) => m.meters);
+    expect(l).toEqual(r);
+  });
+
+  it('sentido inválido é recusado', () => {
+    expect(() => calc({ ...defaultParams, circularSense: 0 })).toThrow(RangeError);
+  });
+
+  it('o fio da frente sobe "/" à direita e "\\" à esquerda', () => {
+    const slope = (w: 'right' | 'left') => {
+      const pts = helixPoints(4, 0, 0, 50, 100, w);
+      // trecho da frente: primeiro ponto da frente seguido de outro da frente, comparando x ao subir (y diminui)
+      for (let i = 1; i < pts.length; i++) {
+        if (pts[i - 1]!.front && pts[i]!.front && Math.abs(pts[i]!.x - pts[i - 1]!.x) > 1) return pts[i]!.x - pts[i - 1]!.x;
+      }
+      return 0;
+    };
+    // subindo no desenho (y diminui), "/" é x aumentando
+    expect(slope('right')).toBeGreaterThan(0);
+    expect(slope('left')).toBeLessThan(0);
   });
 });

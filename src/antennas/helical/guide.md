@@ -9,7 +9,8 @@ polarização circular.
 - **Uso:** recepção e transmissão. É a antena clássica para satélites de órbita baixa
   (UHF, 2,4 GHz) e para qualquer enlace em que a polarização do outro lado gira ou é desconhecida.
 - **Polarização:** circular. Hélice enrolada à direita (como um parafuso comum) dá polarização
-  circular à direita. Confira qual sentido o satélite ou a estação do outro lado usa.
+  circular à direita (RHCP); enrolada à esquerda, circular à esquerda (LHCP). Escolha o sentido no formulário:
+  a seção "Montagem" mostra o enrolamento certo. Confira qual sentido o satélite ou a estação do outro lado usa.
 - **Diagrama:** direcional, ao longo do eixo. Mais voltas dão mais ganho e feixe mais estreito.
 - **Impedância:** em torno de 140 Ω, resistiva, na alimentação pela borda. Precisa de casamento
   para o cabo de 50 Ω.
@@ -42,7 +43,7 @@ fita para marcar o passo (ou gabarito de papel) e NanoVNA ou medidor de ROE.
 4. Marque no tubo o caminho do fio: a cada volta, o fio sobe **C** (o passo). Um gabarito de papel
    enrolado no tubo, com a linha inclinada, ajuda. Um triângulo de base **A** e altura **C** dá o
    ângulo certo (diagrama "uma volta desenrolada").
-5. Enrole o fio de **E** mais uma sobra de ponta, **no mesmo sentido** em todas as voltas, preso
+5. Enrole o fio de **E** mais uma sobra de ponta, **no mesmo sentido** em todas as voltas (direita para RHCP, esquerda para LHCP, como na seção "Montagem"), preso
    com abraçadeiras ou ranhuras a cada volta.
 6. Fixe o tubo no centro do refletor, perpendicular a ele. A altura da hélice é **D**.
 7. Ligue o início do fio ao pino central do conector, pela borda da primeira volta. A

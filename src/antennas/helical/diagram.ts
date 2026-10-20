@@ -8,28 +8,48 @@ import { formatNumber, lengthResolutionForFrequency } from '../../core/units';
 import { polarPlot } from '../pattern-kit';
 import { type Diagram, circle, dimLabel, dimension, line, measure, path, rect, svgDoc, text } from '../diagram-kit';
 import type { CalcResult } from '../types';
-import type { HelicalParams } from './calc';
+import { type HelicalParams, type Winding, windingFor } from './calc';
+import { senseOf } from '../circular';
 
-/** Pontos (x, y) da hélice vista de lado, amostrados ao longo das N voltas. */
+/**
+ * Pontos (x, y) da hélice vista de lado, amostrados ao longo das N voltas, com a indicação de que o ponto está na frente (voltado para
+ * quem olha) ou atrás. À direita o fio da frente sobe da esquerda para a direita ("/"); à esquerda, o espelho.
+ */
 export function helixPoints(
   turns: number,
   cx: number,
   baseY: number,
   radiusPx: number,
   heightPx: number,
+  winding: Winding = 'right',
   samplesPerTurn = 24,
-): [number, number][] {
+): { x: number; y: number; front: boolean }[] {
   const total = Math.max(2, Math.round(turns * samplesPerTurn));
-  const points: [number, number][] = [];
+  const points: { x: number; y: number; front: boolean }[] = [];
   for (let i = 0; i <= total; i++) {
     const u = i / total; // 0 → 1 ao longo da hélice
     const angle = u * turns * 2 * Math.PI;
-    points.push([cx + radiusPx * Math.cos(angle), baseY - u * heightPx]);
+    // Hélice à direita: sentido anti-horário visto de cima, a profundidade (para o observador) é −sen; à esquerda, +sen.
+    const depth = (winding === 'right' ? -1 : 1) * Math.sin(angle);
+    points.push({ x: cx + radiusPx * Math.cos(angle), y: baseY - u * heightPx, front: depth >= 0 });
   }
   return points;
 }
 
-function sideView(result: CalcResult, params: HelicalParams): Diagram {
+/** Caminhos SVG da parte da frente (cheia) e da parte de trás (tracejada). */
+function helixPaths(points: { x: number; y: number; front: boolean }[]): { front: string; back: string } {
+  const out = { front: '', back: '' };
+  const fmt = (v: number) => Math.round(v * 10) / 10;
+  for (let i = 1; i < points.length; i++) {
+    const p0 = points[i - 1]!;
+    const p1 = points[i]!;
+    const key = p0.front && p1.front ? 'front' : !p0.front && !p1.front ? 'back' : (p0.front ? 'front' : 'back');
+    out[key] += `M${fmt(p0.x)} ${fmt(p0.y)} L${fmt(p1.x)} ${fmt(p1.y)} `;
+  }
+  return out;
+}
+
+function sideView(result: CalcResult, params: HelicalParams, winding: Winding): Diagram {
   const id = 'hx-side';
   const res = lengthResolutionForFrequency(params.frequencyMHz);
   const cx = 300;
@@ -37,8 +57,7 @@ function sideView(result: CalcResult, params: HelicalParams): Diagram {
   const groundHalf = 150;
   const radius = 55;
   const height = 230;
-  const pts = helixPoints(params.turns, cx, groundY - 14, radius, height);
-  const d = pts.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${Math.round(x * 10) / 10} ${Math.round(y * 10) / 10}`).join(' ');
+  const paths = helixPaths(helixPoints(params.turns, cx, groundY - 14, radius, height, winding));
   const topY = groundY - 14 - height;
 
   const body = [
@@ -48,14 +67,15 @@ function sideView(result: CalcResult, params: HelicalParams): Diagram {
     path(`M${cx} ${groundY + 20} L${cx} 400`, 'dg-coax'),
     text(cx + 18, 376, 'coaxial para o casamento (1/4 de onda)', 'dg-note'),
     // Hélice.
-    path(d, 'dg-conductor'),
+    path(paths.front, 'dg-conductor'),
+    `<path d="${paths.back}" class="dg-conductor" stroke-dasharray="6 4"/>`,
     line(cx + radius, groundY - 14, cx + radius, groundY - 4, 'dg-conductor'),
     text(cx - radius - 8, groundY - 20, 'alimentação: início do fio, na borda direita', 'dg-note', 'end'),
     // Cotas.
     dimension(id, cx + radius, topY, cx + radius, groundY - 14, -75, dimLabel(result, 'D', res), { anchor: 'start' }),
     dimension(id, cx - groundHalf, groundY + 30, cx + groundHalf, groundY + 30, 8, dimLabel(result, 'F', res), { labelDx: -90 }),
     dimension(id, cx - radius, topY - 6, cx + radius, topY - 6, -14, dimLabel(result, 'B', res)),
-    text(cx - groundHalf, 30, `${formatNumber(params.turns, 0)} voltas, enroladas no mesmo sentido`, 'dg-note'),
+    text(cx - groundHalf, 30, `${formatNumber(params.turns, 0)} voltas, enroladas à ${winding === 'left' ? 'esquerda' : 'direita'} (fio de trás tracejado)`, 'dg-note'),
   ].join('');
 
   return {
@@ -138,5 +158,5 @@ function patterns(params: HelicalParams): Diagram[] {
 }
 
 export function diagrams(result: CalcResult, params: HelicalParams): Diagram[] {
-  return [sideView(result, params), unrolledTurn(result, params), ...patterns(params)];
+  return [sideView(result, params, windingFor(senseOf(params.circularSense))), unrolledTurn(result, params), ...patterns(params)];
 }

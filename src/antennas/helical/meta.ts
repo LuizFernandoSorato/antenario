@@ -1,3 +1,4 @@
+import { circularSenseParam } from '../circular';
 import type { AntennaMeta } from '../types';
 
 export const meta: AntennaMeta = {
@@ -12,7 +13,7 @@ export const meta: AntennaMeta = {
   typicalRangeMHz: { min: 100, max: 2500 },
   // Impedância de entrada ≈ 140·C/λ (Kraus); 140 Ω com C = λ. Veja calc().expected.
   nominalImpedanceOhms: 140,
-  polarization: 'Circular (à direita se a hélice é enrolada à direita)',
+  polarization: 'Circular, à direita (RHCP) ou à esquerda (LHCP) conforme o enrolamento da hélice',
   // O ganho depende de N; o valor sai de calc().expected.gain.
   approxGainDbi: null,
   usage: { rx: true, tx: true },
@@ -47,5 +48,8 @@ export const meta: AntennaMeta = {
       help: 'Distância entre voltas. 0,25 corresponde a um ângulo de passo de 12° a 14° com C = λ.',
     },
     { key: 'conductorDiameter', label: 'Diâmetro do condutor', unit: 'mm', defaultValue: 3, toSi: 0.001, min: 0 },
+    circularSenseParam(
+      'Hélice enrolada à direita irradia RHCP; à esquerda, LHCP. A antena precisa ter o MESMO sentido do sinal: confirme o sentido do seu satélite.',
+    ),
   ],
 };

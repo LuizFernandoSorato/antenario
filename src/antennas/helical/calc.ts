@@ -11,7 +11,8 @@
 
 import { assertFrequencyMHz, assertPositive, formatNumber, powerRatioToDb } from '../../core/units';
 import { wavelength } from '../../core/wave';
-import { type CalcResult, type CalcWarning, type Measurement, rangeWarning } from '../types';
+import { type AssemblyGuide, type CalcResult, type CalcWarning, type Measurement, rangeWarning } from '../types';
+import { RHCP, SENSE_NAME, type Sense, senseOf } from '../circular';
 import { meta } from './meta';
 
 export interface HelicalParams {
@@ -24,6 +25,8 @@ export interface HelicalParams {
   pitchRatio: number;
   /** Diâmetro do condutor, em metros. */
   conductorDiameter: number;
+  /** Sentido da polarização circular (RHCP ou LHCP; ver `circular.ts`). */
+  circularSense: number;
 }
 
 export const defaultParams: HelicalParams = {
@@ -32,6 +35,7 @@ export const defaultParams: HelicalParams = {
   circumferenceRatio: 1,
   pitchRatio: 0.25,
   conductorDiameter: 0.003,
+  circularSense: RHCP,
 };
 
 /** Limites do modo axial (Kraus & Marhefka, cap. 7): 3/4 < C/λ < 4/3. */
@@ -63,12 +67,39 @@ export function axialRatio(turns: number): number {
   return (2 * turns + 1) / (2 * turns);
 }
 
+export type Winding = 'right' | 'left';
+
+/**
+ * Enrolamento para o sentido de polarização: no modo axial a hélice à direita irradia RHCP e a hélice à esquerda irradia LHCP
+ * (Kraus & Marhefka, cap. 7; fato padrão, na convenção IEEE em que RHCP gira no sentido horário olhando na direção do feixe).
+ */
+export function windingFor(sense: Sense): Winding {
+  return sense === 'rhcp' ? 'right' : 'left';
+}
+
+/** Método de montagem para o sentido pedido: sentido de enrolamento e como reconhecê-lo. */
+function assemblyFor(sense: Sense, winding: Winding): AssemblyGuide {
+  const left = winding === 'left';
+  return {
+    title: `Montagem para ${SENSE_NAME[sense]}: hélice enrolada à ${left ? 'esquerda' : 'direita'}`,
+    steps: [
+      `Enrole TODAS as voltas À ${left ? 'ESQUERDA' : 'DIREITA'}, sempre no mesmo sentido, a partir do ponto de alimentação junto ao refletor.`,
+      `Como reconhecer: subindo pelo fio, ele gira no sentido ${left ? 'HORÁRIO' : 'ANTI-HORÁRIO'} visto de cima (rosca ${left ? 'à esquerda, invertida' : 'comum, à direita'}). Visto de lado, o fio da frente sobe da ${left ? 'direita para a esquerda ("\\")' : 'esquerda para a direita ("/")'}.`,
+      'A mão do enrolamento não muda ao virar a hélice de ponta-cabeça ou ao olhar de outro lado. O que importa é o refletor ficar atrás e o feixe sair pela ponta livre.',
+      `Montar com o enrolamento oposto (à ${left ? 'direita' : 'esquerda'}) dá ${left ? 'RHCP' : 'LHCP'}: contra um sinal ${left ? 'LHCP' : 'RHCP'} a perda é grande. Confira antes de fixar o fio.`,
+      'A regra (hélice à direita = RHCP) é a de Kraus & Marhefka, cap. 7. Confirme com um passe real ou com uma antena de sentido conhecido.',
+    ],
+  };
+}
+
 export function calc(params: HelicalParams): CalcResult {
   const { frequencyMHz: f, turns: n, circumferenceRatio: c, pitchRatio: s, conductorDiameter: d } = params;
   assertFrequencyMHz(f);
   assertPositive(c, 'A razão C/λ');
   assertPositive(s, 'A razão S/λ');
   assertPositive(d, 'O diâmetro do condutor');
+  const sense = senseOf(params.circularSense);
+  const winding = windingFor(sense);
   if (!Number.isFinite(n) || n < 1) {
     throw new RangeError(`O número de voltas deve ser ≥ 1 (recebido: ${n}).`);
   }
@@ -149,6 +180,7 @@ export function calc(params: HelicalParams): CalcResult {
     measurements,
     assumptions: [
       { name: 'Comprimento de onda (λ)', value: `${formatNumber(lambda, 4)} m`, source: 'λ = 299,792458 / f(MHz)' },
+      { name: 'Sentido da polarização', value: `${SENSE_NAME[sense]}: hélice enrolada à ${winding === 'left' ? 'esquerda' : 'direita'}`, source: 'Kraus & Marhefka, cap. 7' },
       { name: 'Número de voltas (N)', value: formatNumber(n, 0) },
       { name: 'C/λ', value: formatNumber(c, 3), source: 'Kraus & Marhefka, cap. 7: 3/4 < C/λ < 4/3' },
       { name: 'S/λ', value: formatNumber(s, 3) },
@@ -184,5 +216,6 @@ export function calc(params: HelicalParams): CalcResult {
       },
     },
     warnings,
+    assembly: assemblyFor(sense, winding),
   };
 }
