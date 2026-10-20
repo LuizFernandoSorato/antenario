@@ -53,5 +53,14 @@ export const meta: AntennaMeta = {
       min: 0,
       max: 1,
     },
+    {
+      key: 'drivenGap',
+      label: 'Espaço central do excitado (isolador)',
+      unit: 'mm',
+      defaultValue: 0,
+      toSi: 0.001,
+      min: 0,
+      help: 'Distância entre os dois braços do excitado no ponto de alimentação. Conta dentro do comprimento DE (ponta a ponta); só o excitado é partido ao meio.',
+    },
   ],
 };

@@ -41,6 +41,8 @@ export interface YagiParams {
   boomDiameter: number;
   /** Fator de encurtamento do elemento excitado, em (0, 1]. */
   drivenFactor: number;
+  /** Espaço central (isolador) do elemento excitado, em metros; conta dentro do comprimento total DE. Omitido = 0. */
+  drivenGap?: number;
 }
 
 export const defaultParams: YagiParams = {
@@ -49,6 +51,7 @@ export const defaultParams: YagiParams = {
   elementDiameter: 0.006,
   boomDiameter: 0.02,
   drivenFactor: 0.95,
+  drivenGap: 0,
 };
 
 /** Números de elementos disponíveis (refletor + excitado + diretores), em ordem crescente. */
@@ -87,14 +90,39 @@ export function chooseMethod(elementCount: number): 1 | 2 {
   return hasNbsDesign && elementCount < DL6WU_MIN_ELEMENTS ? 1 : 2;
 }
 
+/**
+ * Espaço central do excitado: o comprimento DE é de ponta a ponta e já inclui o espaço, como no dipolo; cada braço mede (DE − espaço)/2.
+ * Só o excitado é partido ao meio: refletor e diretores seguem inteiros. Sem espaço informado, o resultado não muda.
+ */
+function withDrivenGap(result: CalcResult, gap: number | undefined): CalcResult {
+  const g = gap ?? 0;
+  if (!Number.isFinite(g) || g < 0) throw new RangeError(`O espaço central do excitado deve ser ≥ 0 (recebido: ${g}).`);
+  if (g === 0) return result;
+  const driven = result.measurements.find((m) => m.label === 'DE')!.meters;
+  if (g >= driven) throw new RangeError('O espaço central é maior que o comprimento do elemento excitado.');
+  const extra: Measurement[] = [
+    { label: 'DB', name: 'Excitado: cada braço', meters: (driven - g) / 2, description: 'Do terminal de alimentação até a ponta; são dois braços iguais, (DE − DG)/2.' },
+    { label: 'DG', name: 'Excitado: espaço central', meters: g, description: 'Entre os dois braços do excitado, no isolador central; já conta dentro de DE.' },
+  ];
+  const at = result.measurements.findIndex((m) => m.label === 'DE') + 1;
+  return {
+    ...result,
+    measurements: [...result.measurements.slice(0, at), ...extra, ...result.measurements.slice(at)],
+    assumptions: [
+      ...result.assumptions,
+      { name: 'Espaço central do excitado', value: `${formatNumber(g * 1000, 1)} mm (dentro do comprimento DE)`, source: 'Dado do usuário; comprimento de ponta a ponta, como no dipolo' },
+    ],
+  };
+}
+
 export function calc(params: YagiParams): CalcResult {
   const auto = params.method === undefined;
   const method = params.method ?? chooseMethod(params.elementCount);
-  if (method === 2) return withAutoNote(calcDl6wu(params), auto, 'DL6WU');
+  if (method === 2) return withDrivenGap(withAutoNote(calcDl6wu(params), auto, 'DL6WU'), params.drivenGap);
   if (method !== 1) {
     throw new RangeError(`O método deve ser 1 (NBS TN 688) ou 2 (DL6WU); recebido: ${params.method}.`);
   }
-  return withAutoNote(calcNbs(params), auto, 'NBS TN 688');
+  return withDrivenGap(withAutoNote(calcNbs(params), auto, 'NBS TN 688'), params.drivenGap);
 }
 
 /** Em modo automático, informa na tela qual método foi usado e por quê. */

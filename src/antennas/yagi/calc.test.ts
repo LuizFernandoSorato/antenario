@@ -228,3 +228,35 @@ describe('Yagi: método DL6WU (qualquer número de elementos)', () => {
     expect(items.map((i) => i.label)).toEqual(['R', ...Array.from({ length: 9 }, (_, i) => `D${i + 1}`), 'DE']);
   });
 });
+
+describe('Yagi: espaço central do excitado (dentro do comprimento DE)', () => {
+  const get = (r: ReturnType<typeof calc>, label: string) => r.measurements.find((x) => x.label === label)?.meters;
+
+  for (const elementCount of [5, 7, 20]) {
+    it(`${elementCount} elementos: DE não muda, DB = (DE − DG)/2 e só o excitado é afetado`, () => {
+      const base = calc({ ...defaultParams, elementCount });
+      const r = calc({ ...defaultParams, elementCount, drivenGap: 0.01 });
+      expect(get(r, 'DE')).toBeCloseTo(get(base, 'DE')!, 12);
+      expect(get(r, 'DG')).toBeCloseTo(0.01, 12);
+      expect(get(r, 'DB')).toBeCloseTo((get(base, 'DE')! - 0.01) / 2, 12);
+      for (const label of ['R', 'D1', 'L']) expect(get(r, label)).toBeCloseTo(get(base, label)!, 12);
+      expect(get(base, 'DB')).toBeUndefined();
+      expect(get(base, 'DG')).toBeUndefined();
+    });
+  }
+
+  it('a folha de corte troca o excitado por dois braços DB', () => {
+    const sem = cutList(defaultParams);
+    expect(sem.find((c) => c.label === 'DE')).toBeDefined();
+    const com = cutList({ ...defaultParams, drivenGap: 0.01 });
+    expect(com.find((c) => c.label === 'DE')).toBeUndefined();
+    const arm = com.find((c) => c.label === 'DB')!;
+    expect(arm.quantity).toBe(2);
+    expect(arm.meters).toBeCloseTo((get(calc(defaultParams), 'DE')! - 0.01) / 2, 12);
+  });
+
+  it('rejeita espaço negativo ou maior que o excitado', () => {
+    expect(() => calc({ ...defaultParams, drivenGap: -0.001 })).toThrow(RangeError);
+    expect(() => calc({ ...defaultParams, drivenGap: 5 })).toThrow(RangeError);
+  });
+});

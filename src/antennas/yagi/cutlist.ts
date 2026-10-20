@@ -5,6 +5,7 @@ export function cutList(params: YagiParams): CutItem[] {
   const result = calc(params);
   const byLabel = new Map(result.measurements.map((m) => [m.label, m.meters]));
   const parasitic = result.measurements.filter((m) => m.label === 'R' || /^D\d+$/.test(m.label));
+  const arm = byLabel.get('DB');
   return [
     ...parasitic.map((m) => ({
       label: m.label,
@@ -15,13 +16,22 @@ export function cutList(params: YagiParams): CutItem[] {
       adjustable: false,
       ...(m.label === 'R' ? { note: 'Na medida (tolerância de 0,003λ).' } : {}),
     })),
-    {
-      label: 'DE',
-      name: 'Elemento excitado',
-      quantity: 1,
-      meters: byLabel.get('DE')!,
-      adjustable: true,
-      note: 'Corte comprido e ajuste medindo a ROE.',
-    },
+    arm === undefined
+      ? {
+          label: 'DE',
+          name: 'Elemento excitado',
+          quantity: 1,
+          meters: byLabel.get('DE')!,
+          adjustable: true,
+          note: 'Corte comprido e ajuste medindo a ROE.',
+        }
+      : {
+          label: 'DB',
+          name: 'Excitado: braço',
+          quantity: 2,
+          meters: arm,
+          adjustable: true,
+          note: 'Dois braços iguais, com o espaço central entre eles. Corte comprido e ajuste medindo a ROE, os dois por igual.',
+        },
   ];
 }

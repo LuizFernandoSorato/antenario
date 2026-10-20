@@ -38,7 +38,8 @@ fica difícil conferir a defasagem e a impedância dos Yagis).
 
 1. Calcule as medidas com o diâmetro de elemento e de boom que você realmente vai usar. **R** é o refletor, **DE** o excitado,
    **D1**, **D2**, **D3**… os diretores; **E** a distância refletor→excitado, **S** o espaçamento dos diretores (ou as posições **P1**, **P2**…
-   no DL6WU) e **L** o comprimento do boom entre centros.
+   no DL6WU) e **L** o comprimento do boom entre centros. Com **espaço central do excitado** informado, **DE** segue de ponta a ponta
+   (incluindo o espaço) e aparecem **DB** (cada braço, `(DE − DG)/2`) e **DG**.
 2. Corte **dois** de cada elemento (um para cada Yagi), com tolerância de 0,003λ. Veja a folha de corte.
 3. Marque no boom as posições, medidas a partir do refletor, como na Yagi comum.
 4. Em cada posição, monte um elemento horizontal e um vertical **cruzados no centro**, no mesmo plano. Os dois ficam isolados um do

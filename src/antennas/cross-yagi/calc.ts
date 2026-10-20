@@ -55,6 +55,7 @@ function yagiParamsOf(p: CrossYagiParams): YagiParams {
     elementDiameter: p.elementDiameter,
     boomDiameter: p.boomDiameter,
     drivenFactor: p.drivenFactor,
+    ...(p.drivenGap !== undefined ? { drivenGap: p.drivenGap } : {}),
     ...(p.method !== undefined ? { method: p.method } : {}),
   };
 }

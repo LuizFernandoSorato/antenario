@@ -137,3 +137,16 @@ describe('cross Yagi: padrão por momentos', () => {
     expect(plus([0, 0, 1]) / minus([0, 0, 1])).toBeCloseTo(1, 9);
   });
 });
+
+describe('cross Yagi: espaço central do excitado', () => {
+  it('passa para os dois Yagis: DB nas cotas e quatro braços na folha de corte', () => {
+    const base = calc(defaultParams);
+    const r = calc({ ...defaultParams, drivenGap: 0.008 });
+    expect(m(r, 'DE')).toBeCloseTo(m(base, 'DE'), 12);
+    expect(m(r, 'DB')).toBeCloseTo((m(base, 'DE') - 0.008) / 2, 12);
+    expect(m(r, 'DG')).toBeCloseTo(0.008, 12);
+    const arms = cutList({ ...defaultParams, drivenGap: 0.008 }).find((c) => c.label === 'DB')!;
+    expect(arms.quantity).toBe(4);
+    expect(() => calc({ ...defaultParams, drivenGap: -1 })).toThrow(RangeError);
+  });
+});
