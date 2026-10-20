@@ -1,4 +1,4 @@
-# CLAUDE.md: Projeto "Antenário" (nome provisório)
+# CLAUDE.md: Projeto "Antenário"
 
 Ferramenta para **projetar, calcular e construir antenas** e sistemas de RF, para
 **recepção** (SDR, escuta, satélites, ADS-B) e **transmissão** (radioamadorismo).

@@ -4,7 +4,7 @@ Ferramenta para **projetar, calcular e construir antenas** e sistemas de RF, par
 
 Funciona **offline** e pode ser instalada no celular (PWA). Todo o cálculo roda no navegador: não há servidor nem coleta de dados.
 
-> O nome "Antenário" é provisório.
+**Acesse:** https://luizfernandosorato.github.io/antenario/
 
 ## O que tem
 
@@ -23,7 +23,7 @@ Cada ferramenta tem diagramas e dicas de montagem e ajuste.
 
 ## Como usar
 
-Acesse a página publicada (ver [GitHub Pages](#github-pages)) ou rode localmente:
+Use a [página publicada](https://luizfernandosorato.github.io/antenario/) ou rode localmente:
 
 ```
 npm install
@@ -73,7 +73,7 @@ O site é publicado por um workflow do GitHub Actions (`.github/workflows/pages.
 
 Configuração única no repositório: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 
-O app usa caminhos relativos e rotas por hash (`#turnstile`), então funciona em qualquer subpasta, como `https://usuario.github.io/nome-do-repositorio/`.
+O site fica em https://luizfernandosorato.github.io/antenario/. O app usa caminhos relativos e rotas por hash (`#turnstile`), então funciona em qualquer subpasta.
 
 Depois de uma nova publicação, quem já instalou o app recebe a versão nova ao recarregar a página.
 
