@@ -20,7 +20,7 @@
 
 import { type Complex, abs, complex } from '../../core/complex';
 import { reflectionCoefficient, swrFromGamma } from '../../core/reflection';
-import { assertFrequencyMHz, formatNumber } from '../../core/units';
+import { assertFrequencyMHz, assertPositive, formatNumber } from '../../core/units';
 import { assertFactor, physicalLength, wavelength } from '../../core/wave';
 import { type CalcResult, type CalcWarning, type Estimate, type Measurement, rangeWarning } from '../types';
 import { meta } from './meta';
@@ -29,6 +29,10 @@ export interface TurnstileParams {
   frequencyMHz: number;
   /** Fator de encurtamento K dos dipolos, em (0, 1]. */
   shorteningFactor: number;
+  /** Diâmetro do condutor dos dipolos, em metros (informativo: o K é manual). */
+  conductorDiameter: number;
+  /** Espaço central de cada dipolo, em metros; conta dentro do comprimento total. */
+  centerGap: number;
   /** Fator de velocidade do coaxial de fase, em (0, 1]. */
   velocityFactor: number;
   /** 1 = com refletor a 1/4 de onda; 0 = sem refletor. */
@@ -38,6 +42,8 @@ export interface TurnstileParams {
 export const defaultParams: TurnstileParams = {
   frequencyMHz: 137.5,
   shorteningFactor: 0.95,
+  conductorDiameter: 0.002,
+  centerGap: 0,
   velocityFactor: 0.66,
   reflector: 1,
 };
@@ -66,9 +72,13 @@ export function quadratureFeed(r: number, zLine: number): QuadratureFeed {
 }
 
 export function calc(params: TurnstileParams): CalcResult {
-  const { frequencyMHz: f, shorteningFactor: k, velocityFactor: vf } = params;
+  const { frequencyMHz: f, shorteningFactor: k, velocityFactor: vf, conductorDiameter: d, centerGap: gap } = params;
   assertFrequencyMHz(f);
   assertFactor(k, 'O fator de encurtamento K');
+  assertPositive(d, 'O diâmetro do condutor');
+  if (!Number.isFinite(gap) || gap < 0) {
+    throw new RangeError(`O espaço central deve ser ≥ 0 (recebido: ${gap}).`);
+  }
   assertFactor(vf, 'O fator de velocidade');
   if (params.reflector !== 0 && params.reflector !== 1) {
     throw new RangeError('O parâmetro "com refletor" deve ser 0 ou 1.');
@@ -77,16 +87,24 @@ export function calc(params: TurnstileParams): CalcResult {
 
   const lambda = wavelength(f);
   const total = physicalLength(0.5, f, k);
+  if (gap >= total) {
+    throw new RangeError('O espaço central é maior que o comprimento total do dipolo.');
+  }
+  const arm = (total - gap) / 2;
   const phasing = physicalLength(0.25, f, vf);
   const spacing = lambda / 4;
 
   const measurements: Measurement[] = [
-    { label: 'A', name: 'Comprimento total de cada dipolo', meters: total, description: 'Dois dipolos iguais, de ponta a ponta. Corte com sobra.' },
-    { label: 'B', name: 'Cada braço', meters: total / 2, description: 'Do terminal central até a ponta. São quatro braços iguais no total.' },
+    { label: 'A', name: 'Comprimento total de cada dipolo', meters: total, description: 'Dois dipolos iguais, de ponta a ponta, incluindo o espaço central. Corte com sobra.' },
+    { label: 'B', name: 'Cada braço', meters: arm, description: 'Do terminal central até a ponta. São quatro braços iguais no total.' },
     { label: 'C', name: 'Linha de fase (1/4 de onda de coaxial)', meters: phasing, description: 'Trecho de coaxial de 1/4 de onda com o VF do cabo, entre o ponto de alimentação e o segundo dipolo.' },
   ];
   if (withReflector) {
     measurements.push({ label: 'D', name: 'Distância ao refletor', meters: spacing, description: 'Do plano dos dipolos até o refletor, 1/4 de onda no ar.' });
+  }
+
+  if (gap > 0) {
+    measurements.push({ label: 'E', name: 'Espaço central de cada dipolo', meters: gap, description: 'Entre os dois braços de cada dipolo, no isolador central.' });
   }
 
   const feed = quadratureFeed(DIPOLE_RESISTANCE_OHMS, DIPOLE_RESISTANCE_OHMS);
@@ -174,6 +192,8 @@ export function calc(params: TurnstileParams): CalcResult {
     assumptions: [
       { name: 'Comprimento de onda (λ)', value: `${formatNumber(lambda, 4)} m`, source: 'λ = 299,792458 / f(MHz)' },
       { name: 'Fator de encurtamento dos dipolos (K)', value: formatNumber(k, 3), source: 'Como no dipolo; dado do usuário' },
+      { name: 'Diâmetro do condutor', value: `${formatNumber(d * 1000, 2)} mm`, source: 'Dado do usuário; não altera as cotas (o K é manual)' },
+      { name: 'Espaço central de cada dipolo', value: `${formatNumber(gap * 1000, 1)} mm (dentro do comprimento total)`, source: 'Dado do usuário; comprimento de ponta a ponta, como no dipolo' },
       { name: 'Fator de velocidade do coaxial de fase (VF)', value: formatNumber(vf, 3), source: 'Dado do usuário; datasheet do cabo' },
       { name: 'Resistência de cada dipolo', value: `${DIPOLE_RESISTANCE_OHMS} Ω (espaço livre)`, source: 'Balanis, Antenna Theory, §4.6' },
       { name: 'Impedância da linha de fase', value: `${DIPOLE_RESISTANCE_OHMS} Ω (igual à do dipolo)`, source: 'Teoria de linhas de 1/4 de onda (Pozar)' },

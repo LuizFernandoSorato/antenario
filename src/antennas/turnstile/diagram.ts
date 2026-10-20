@@ -19,6 +19,7 @@ function crossed(result: CalcResult, params: TurnstileParams): Diagram {
   const cx = 310;
   const cy = 200;
   const h = (total * scale) / 2;
+  const gapPx = ((result.measurements.find((m) => m.label === 'E')?.meters ?? 0) * scale) / 2;
   const parts: string[] = [];
   // Dipolo 1 (horizontal, "A") e dipolo 2 (vertical, "B"), vistos pelo eixo.
   parts.push(line(cx - h, cy, cx + h, cy, 'dg-conductor'), line(cx, cy - h, cx, cy + h, 'dg-conductor'));
@@ -28,7 +29,7 @@ function crossed(result: CalcResult, params: TurnstileParams): Diagram {
   parts.push(text(cx + 12, cy + 18, 'centro: isole um dipolo do outro', 'dg-note'));
   parts.push(
     dimension(id, cx - h, cy, cx + h, cy, 40, dimLabel(result, 'A', res)),
-    dimension(id, cx, cy, cx + h, cy, -40, dimLabel(result, 'B', res)),
+    dimension(id, cx + gapPx, cy, cx + h, cy, -40, dimLabel(result, 'B', res)),
   );
   parts.push(text(cx, cy + h + 50, `Linha de fase: ${dimLabel(result, 'C', res)} de coaxial`, 'dg-note', 'middle'));
 

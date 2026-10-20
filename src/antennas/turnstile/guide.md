@@ -29,7 +29,7 @@ Trena, paquímetro, serra, ferro de solda, estilete, descascador de coaxial, Nan
 
 ## 4. Passo a passo
 
-1. Calcule as medidas com o seu VF. **A** é o comprimento de cada dipolo, **B** o braço, **C** a linha de fase e **D** a distância ao refletor.
+1. Calcule as medidas com o seu VF. **A** é o comprimento de cada dipolo (de ponta a ponta, incluindo o espaço central), **B** o braço (`(A − E)/2`), **C** a linha de fase, **D** a distância ao refletor e **E** o espaço central de cada dipolo (só aparece se você informar um valor).
 2. Corte os quatro braços com **B** (com sobra para ajuste, por igual nos quatro).
 3. Monte os dois dipolos cruzados a 90° no suporte: um fica levemente acima do outro, isolados entre si.
 4. Corte a linha de fase com **C**, medindo o cabo **sem a capa** nas pontas.

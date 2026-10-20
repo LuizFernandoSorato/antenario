@@ -42,6 +42,22 @@ describe('turnstile: calc', () => {
     expect(calc(defaultParams).expected.impedance.typical).toBeCloseTo(36.5, 9);
   });
 
+  it('o espaço central conta dentro do comprimento total: A não muda, B = (A − gap)/2 e há cota E', () => {
+    const base = calc(defaultParams);
+    const r = calc({ ...defaultParams, centerGap: 0.02 });
+    expect(m(r, 'A')).toBeCloseTo(m(base, 'A'), 12);
+    expect(m(r, 'B')).toBeCloseTo((m(base, 'A') - 0.02) / 2, 12);
+    expect(m(r, 'E')).toBeCloseTo(0.02, 12);
+    expect(base.measurements.some((x) => x.label === 'E')).toBe(false);
+    expect(cutList({ ...defaultParams, centerGap: 0.02 }).find((c) => c.label === 'B')!.meters).toBeCloseTo(m(r, 'B'), 12);
+  });
+
+  it('rejeita espaço central negativo ou maior que o dipolo e diâmetro não positivo', () => {
+    expect(() => calc({ ...defaultParams, centerGap: -0.01 })).toThrow(RangeError);
+    expect(() => calc({ ...defaultParams, centerGap: 2 })).toThrow(RangeError);
+    expect(() => calc({ ...defaultParams, conductorDiameter: 0 })).toThrow(RangeError);
+  });
+
   it('entradas inválidas', () => {
     expect(() => calc({ ...defaultParams, frequencyMHz: 0 })).toThrow(RangeError);
     expect(() => calc({ ...defaultParams, velocityFactor: 0 })).toThrow(RangeError);
