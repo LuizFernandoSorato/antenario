@@ -8,10 +8,10 @@ export function cutList(params: CubicQuadParams): CutItem[] {
   return [
     { label: 'G', name: 'Fio do refletor', quantity: 1, meters: m['G']!, adjustable: false, note: 'Perímetro sem emendas; some o fio das voltas de fixação.' },
     {
-      label: 'H',
-      name: 'Fio da espira excitada',
+      label: m['J'] !== undefined ? 'J' : 'H',
+      name: m['J'] !== undefined ? 'Fio da espira excitada (sem o espaço de alimentação)' : 'Fio da espira excitada',
       quantity: 1,
-      meters: m['H']!,
+      meters: m['J'] ?? m['H']!,
       adjustable: true,
       note: 'Corte comprido e encurte aos poucos medindo a ROE.',
     },

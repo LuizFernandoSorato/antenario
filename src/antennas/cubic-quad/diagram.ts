@@ -3,7 +3,7 @@
  * em escala relativa) e vista lateral com o boom e o espaçamento.
  */
 
-import { formatLength, lengthResolutionForFrequency } from '../../core/units';
+import { formatLength, formatNumber, lengthResolutionForFrequency } from '../../core/units';
 import { type Diagram, circle, dimLabel, dimension, line, measure, rect, svgDoc, text } from '../diagram-kit';
 import { boomPatternPlots } from '../mom-kit';
 import type { CalcResult } from '../types';
@@ -101,16 +101,16 @@ export function diagrams(result: CalcResult, params: CubicQuadParams): Diagram[]
 
 /**
  * Padrões da quadra por método dos momentos (ver `pattern-model.ts`): as correntes induzidas nas espiras do refletor e dos
- * diretores saem do cálculo. Espiras de fio de 2 mm (premissa do modelo), espaço livre, sem varetas nem boom.
+ * diretores saem do cálculo. Espiras do diâmetro de fio informado, espaço livre, sem varetas nem boom.
  */
 function patterns(result: CalcResult, params: CubicQuadParams): Diagram[] {
-  const solution = solveQuad(result, params.frequencyMHz, params.directorCount);
+  const solution = solveQuad(result, params.frequencyMHz, params.directorCount, params.wireDiameter);
   return boomPatternPlots({
     idPrefix: 'quad',
     power: solution.power,
     directivity: solution.directivity([0, 0, 1]),
     modelNote:
-      'Calculado por método dos momentos com espiras de fio de 2 mm (premissa do modelo), no espaço livre, sem varetas nem boom. ' +
+      `Calculado por método dos momentos com espiras de fio de ${formatNumber(params.wireDiameter * 1000, 1)} mm, no espaço livre, sem varetas nem boom. ` +
       'A relação frente–costas depende muito do comprimento do refletor: o perímetro do ARRL (1030/f) dá o ganho máximo, e um refletor ' +
       'um pouco maior (≈ 3 % a mais) melhora bastante a relação frente–costas, perdendo menos de 1 dB de ganho (varredura no modelo).',
   });

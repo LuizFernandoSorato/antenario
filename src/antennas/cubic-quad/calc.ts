@@ -11,7 +11,7 @@
  * confirmar as razões e a dependência do diâmetro do fio.
  */
 
-import { assertFrequencyMHz, formatNumber, metersToInches } from '../../core/units';
+import { assertFrequencyMHz, assertPositive, formatNumber, metersToInches } from '../../core/units';
 import { wavelength } from '../../core/wave';
 import { type CalcResult, type CalcWarning, type Measurement, rangeWarning } from '../types';
 import { meta } from './meta';
@@ -22,12 +22,19 @@ export interface CubicQuadParams {
   directorCount: number;
   /** Espaçamento entre elementos, em λ. */
   spacingLambda: number;
+  /** Diâmetro do fio, em metros (só entra no modelo de padrão; os perímetros são para fio fino). */
+  wireDiameter: number;
+  /** Abertura do fio na alimentação da espira excitada, em metros; conta dentro do perímetro. */
+  feedGap: number;
 }
 
 export const defaultParams: CubicQuadParams = {
   frequencyMHz: 145,
   directorCount: 1,
   spacingLambda: 0.2,
+  // Premissa do modelo de padrão (era fixa em 2 mm); fio rígido comum, sem fonte.
+  wireDiameter: 0.002,
+  feedGap: 0,
 };
 
 const FT_IN_METERS = 0.3048;
@@ -49,8 +56,12 @@ export function estimatedGainDbd(directorCount: number): number {
 }
 
 export function calc(params: CubicQuadParams): CalcResult {
-  const { frequencyMHz: f, directorCount: nDir, spacingLambda: s } = params;
+  const { frequencyMHz: f, directorCount: nDir, spacingLambda: s, wireDiameter: wd, feedGap: gap } = params;
   assertFrequencyMHz(f);
+  assertPositive(wd, 'O diâmetro do fio');
+  if (!Number.isFinite(gap) || gap < 0) {
+    throw new RangeError(`O espaço de alimentação deve ser ≥ 0 (recebido: ${gap}).`);
+  }
   if (!Number.isInteger(nDir) || nDir < 0) {
     throw new RangeError(`O número de diretores deve ser um inteiro ≥ 0 (recebido: ${nDir}).`);
   }
@@ -65,6 +76,9 @@ export function calc(params: CubicQuadParams): CalcResult {
   const spacing = s * lambda;
   const elements = 2 + nDir;
   const boom = (elements - 1) * spacing;
+  if (gap >= driven / 4) {
+    throw new RangeError('O espaço de alimentação é maior que um lado da espira excitada.');
+  }
   const spreader = (reflector / 4) * Math.SQRT2; // diagonal da maior espira
 
   const measurements: Measurement[] = [
@@ -80,6 +94,12 @@ export function calc(params: CubicQuadParams): CalcResult {
     { label: 'H', name: 'Fio da espira excitada', meters: driven, description: 'Perímetro total, sem emendas.' },
     ...(nDir > 0
       ? [{ label: 'I', name: 'Fio de cada diretor', meters: director, description: 'Perímetro total, sem emendas.' }]
+      : []),
+    ...(gap > 0
+      ? [
+          { label: 'J', name: 'Fio a cortar da espira excitada', meters: driven - gap, description: 'H menos o espaço de alimentação: o fio é aberto no meio do lado de baixo.' },
+          { label: 'K', name: 'Espaço de alimentação', meters: gap, description: 'Abertura entre as duas pontas do fio, no meio do lado de baixo; já conta dentro de H.' },
+        ]
       : []),
   ];
 
@@ -131,7 +151,8 @@ export function calc(params: CubicQuadParams): CalcResult {
       { name: 'Perímetro do diretor', value: `${formatNumber(director / lambda, 4)}λ (${formatNumber((director / driven - 1) * 100, 1)} %)`, source: 'N6VNG: 975/f (ft, MHz)' },
       { name: 'Elementos', value: `${elements}: refletor, excitado e ${nDir} diretor${nDir === 1 ? '' : 'es'}` },
       { name: 'Espaçamento', value: `${formatNumber(s, 3)}λ (${formatNumber(metersToInches(spacing), 1)} pol)`, source: 'Electronics Notes: 0,15λ a 0,2λ → ≈ 50 Ω' },
-      { name: 'Fio', value: 'Fio fino de cobre, sem influência de diâmetro modelada', source: 'TODO(fonte)' },
+      { name: 'Diâmetro do fio', value: `${formatNumber(wd * 1000, 2)} mm: entra só no padrão e na impedância do modelo por momentos; os perímetros são para fio fino`, source: 'TODO(fonte): efeito do diâmetro nos perímetros' },
+      { name: 'Espaço de alimentação', value: `${formatNumber(gap * 1000, 1)} mm (dentro do perímetro H)`, source: 'Dado do usuário; comprimento total, como no dipolo' },
     ],
     expected: {
       impedance: {

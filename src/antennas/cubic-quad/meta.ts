@@ -37,5 +37,23 @@ export const meta: AntennaMeta = {
       max: 0.3,
       help: 'De 0,15λ a 0,2λ dá cerca de 50 Ω; com pouco mais de 0,25λ, cerca de 75 Ω (Electronics Notes).',
     },
+    {
+      key: 'wireDiameter',
+      label: 'Diâmetro do fio',
+      unit: 'mm',
+      defaultValue: 2,
+      toSi: 0.001,
+      min: 0,
+      help: 'Não altera os perímetros (as fórmulas são para fio fino; o efeito do diâmetro é TODO(fonte)); entra só no padrão de irradiação e na impedância do modelo por momentos.',
+    },
+    {
+      key: 'feedGap',
+      label: 'Espaço de alimentação da espira excitada',
+      unit: 'mm',
+      defaultValue: 0,
+      toSi: 0.001,
+      min: 0,
+      help: 'Abertura do fio no meio do lado de baixo, onde liga o cabo. Conta dentro do perímetro H; o fio a cortar é H menos o espaço.',
+    },
   ],
 };

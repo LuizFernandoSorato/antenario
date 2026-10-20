@@ -11,7 +11,7 @@ const dbi = (sol: ReturnType<typeof solveQuad>) => 10 * Math.log10(sol.directivi
 const fb = (sol: ReturnType<typeof solveQuad>) => 10 * Math.log10(sol.power([0, 0, 1]) / sol.power([0, 0, -1]));
 
 function quad(directorCount: number, frequencyMHz = 145) {
-  const result = calc({ frequencyMHz, directorCount, spacingLambda: 0.2 });
+  const result = calc({ frequencyMHz, directorCount, spacingLambda: 0.2, wireDiameter: 0.002, feedGap: 0 });
   return { result, frequencyMHz, directorCount };
 }
 
@@ -54,5 +54,12 @@ describe('quadra por momentos', () => {
     expect(z.re).toBeGreaterThan(20);
     expect(z.re).toBeLessThan(120);
     expect(Math.abs(z.im)).toBeLessThan(60);
+  });
+
+  it('o diâmetro do fio chega ao modelo: fio mais grosso muda a impedância de entrada', () => {
+    const q = quad(1);
+    const fino = solveQuad(q.result, q.frequencyMHz, 1, 0.001).inputImpedance(0);
+    const grosso = solveQuad(q.result, q.frequencyMHz, 1, 0.01).inputImpedance(0);
+    expect(Math.hypot(fino.re - grosso.re, fino.im - grosso.im)).toBeGreaterThan(1);
   });
 });

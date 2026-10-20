@@ -83,3 +83,28 @@ describe('quadra cúbica: lista de corte', () => {
     expect(items.find((i) => i.label === 'I')!.quantity).toBe(2);
   });
 });
+
+describe('quadra cúbica: diâmetro do fio e espaço de alimentação', () => {
+  const lab = (r: ReturnType<typeof calc>, label: string) => r.measurements.find((x) => x.label === label)?.meters;
+
+  it('o espaço conta dentro do perímetro H: H não muda, J = H − espaço, e a folha de corte usa J', () => {
+    const base = calc(defaultParams);
+    const r = calc({ ...defaultParams, feedGap: 0.01 });
+    expect(lab(r, 'H')).toBeCloseTo(lab(base, 'H')!, 12);
+    expect(lab(r, 'J')).toBeCloseTo(lab(base, 'H')! - 0.01, 12);
+    expect(lab(r, 'K')).toBeCloseTo(0.01, 12);
+    expect(lab(base, 'J')).toBeUndefined();
+    const item = cutList({ ...defaultParams, feedGap: 0.01 }).find((c) => c.label === 'J')!;
+    expect(item.meters).toBeCloseTo(lab(r, 'J')!, 12);
+    expect(cutList({ ...defaultParams, feedGap: 0.01 }).some((c) => c.label === 'H')).toBe(false);
+  });
+
+  it('o diâmetro do fio não muda as cotas e entradas inválidas são recusadas', () => {
+    const a = calc(defaultParams);
+    const b = calc({ ...defaultParams, wireDiameter: 0.005 });
+    expect(b.measurements.map((x) => x.meters)).toEqual(a.measurements.map((x) => x.meters));
+    expect(() => calc({ ...defaultParams, wireDiameter: 0 })).toThrow(RangeError);
+    expect(() => calc({ ...defaultParams, feedGap: -1 })).toThrow(RangeError);
+    expect(() => calc({ ...defaultParams, feedGap: 5 })).toThrow(RangeError);
+  });
+});

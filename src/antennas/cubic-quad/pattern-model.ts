@@ -7,8 +7,8 @@
  * plano H = y–z). As demais espiras são fios fechados sem carga. Fio de cobre (condutor perfeito), espaço livre, sem
  * vareta (spreader) nem boom.
  *
- * Premissa: o raio do fio. A ferramenta de cálculo da quadra não pede o diâmetro do fio; o modelo usa `WIRE_DIAMETER`
- * (fio rígido comum). Um fio mais grosso ou mais fino muda a ressonância de cada espira de forma pequena.
+ * Premissa: o raio do fio, que vem do diâmetro informado (padrão `WIRE_DIAMETER`, fio rígido comum). O espaço de alimentação é um gap delta
+ * (largura zero), sem efeito no modelo. Um fio mais grosso ou mais fino muda a ressonância de cada espira de forma pequena.
  */
 
 import { type MomSolution, type Vec3, type Wire, solveWires } from '../../core/mom';
@@ -31,13 +31,18 @@ function loop(side: number, z: number, radius: number): Wire {
 }
 
 /** Resolve a quadra por momentos: refletor, excitado (1 V) e diretores, a partir das cotas do cálculo. */
-export function solveQuad(result: CalcResult, frequencyMHz: number, directorCount: number): MomSolution {
+export function solveQuad(
+  result: CalcResult,
+  frequencyMHz: number,
+  directorCount: number,
+  wireDiameter: number = WIRE_DIAMETER,
+): MomSolution {
   const get = (label: string): number => {
     const m = result.measurements.find((x) => x.label === label);
     if (!m) throw new Error(`Cota ${label} não encontrada.`);
     return m.meters;
   };
-  const radius = WIRE_DIAMETER / 2;
+  const radius = wireDiameter / 2;
   const spacing = get('D');
   const wires: Wire[] = [loop(get('A'), 0, radius), loop(get('B'), spacing, radius)];
   for (let i = 0; i < directorCount; i++) wires.push(loop(get('C'), spacing * (2 + i), radius));

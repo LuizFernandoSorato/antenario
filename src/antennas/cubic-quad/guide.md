@@ -96,4 +96,4 @@ ferramenta "Transformador de 1/4 de onda"). Para casar, veja as ferramentas de r
 - ARRL Antenna Book (capítulo de quads). TODO(fonte): conferir razões e ganho.
 - Anatel: regulamentação do Serviço de Radioamador (versão vigente).
 - LABRE: plano de bandas (versão vigente).
-- Padrão de irradiação: método dos momentos (Harrington, 1968) sobre espiras quadradas de fio de 2 mm (premissa do modelo). O solver foi validado no dipolo, em arranjos e no Yagi do NBS; a quadra em si não tem comparação com medidas neste repositório. A relação frente–costas do modelo é sensível ao tamanho do refletor.
+- Padrão de irradiação: método dos momentos (Harrington, 1968) sobre espiras quadradas com o diâmetro de fio informado (padrão 2 mm, premissa do modelo; o diâmetro não altera os perímetros). O solver foi validado no dipolo, em arranjos e no Yagi do NBS; a quadra em si não tem comparação com medidas neste repositório. A relação frente–costas do modelo é sensível ao tamanho do refletor.
