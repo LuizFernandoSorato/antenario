@@ -5,9 +5,23 @@
  * que transforma a entrada em medidas, premissas, valores esperados e avisos).
  */
 
-/** Descrição de um parâmetro de entrada, usada pela UI para montar o formulário. */
+/** Uma opção de um campo de escolha (botões de opção). `value` é o valor numérico que chega ao cálculo. */
+export interface ParamOption {
+  value: number;
+  label: string;
+}
+
+/**
+ * Descrição de um parâmetro de entrada, usada pela UI para montar o formulário.
+ *
+ * `kind`: 'number' (padrão) = campo de texto numérico; 'boolean' = caixa de seleção (o cálculo recebe 1 marcada, 0 desmarcada,
+ * mas a tela nunca mostra 0 ou 1); 'choice' = botões de opção, um por item de `options` (o cálculo recebe o `value` da opção).
+ */
 export interface ParamSpec {
   key: string;
+  kind?: 'number' | 'boolean' | 'choice';
+  /** Só para kind = 'choice': as opções, na ordem em que aparecem. `defaultValue` é o `value` da opção marcada. */
+  options?: ParamOption[];
   label: string;
   /** Unidade exibida ao lado do campo (ex.: "MHz", "mm", "°"). */
   unit: string;
@@ -84,6 +98,14 @@ export interface CalcResult {
     bandwidth: Estimate | null;
   };
   warnings: CalcWarning[];
+  /** Método de montagem que depende da entrada (por exemplo, o sentido da polarização circular); a UI mostra como seção própria. */
+  assembly?: AssemblyGuide;
+}
+
+/** Passo a passo de montagem específico da configuração escolhida. */
+export interface AssemblyGuide {
+  title: string;
+  steps: string[];
 }
 
 /** Peça a cortar para a folha de corte. */

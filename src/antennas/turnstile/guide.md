@@ -31,7 +31,7 @@ Trena, paquímetro, serra, ferro de solda, estilete, descascador de coaxial, Nan
 
 1. Calcule as medidas com o seu VF. **A** é o comprimento de cada dipolo (de ponta a ponta, incluindo o espaço central), **B** o braço (`(A − E)/2`), **C** a linha de fase, **D** a distância ao refletor e **E** o espaço central de cada dipolo (só aparece se você informar um valor).
 2. Corte os quatro braços com **B** (com sobra para ajuste, por igual nos quatro).
-3. Monte os dois dipolos cruzados a 90° no suporte: um fica levemente acima do outro, isolados entre si.
+3. Monte os dois dipolos cruzados a 90° no suporte: um fica levemente acima do outro, isolados entre si. A posição dos braços vivos define o **sentido da polarização** (veja a seção 5).
 4. Corte a linha de fase com **C**, medindo o cabo **sem a capa** nas pontas.
 5. Ligue o dipolo 1 direto na junção e o dipolo 2 pela linha de fase (esquema na seção de alimentação).
 6. Instale o choke no cabo que vai ao rádio.
@@ -42,8 +42,13 @@ Trena, paquímetro, serra, ferro de solda, estilete, descascador de coaxial, Nan
 
 O dipolo 1 liga direto na junção; o dipolo 2, por um coaxial de 1/4 de onda. Se a impedância dessa linha for igual à resistência de cada
 dipolo (≈ 73 Ω), as correntes ficam **iguais em módulo e a 90°**, e a impedância na junção é a metade, ≈ 36,5 Ω (dois dipolos em paralelo),
-ou seja, ROE ≈ 1,4:1 em 50 Ω sem refletor. Com o refletor o valor muda: **meça**. Para trocar o sentido da polarização (direita ↔ esquerda),
-troque qual dipolo recebe a linha de fase. A forma exata de ligar vivo e malha de cada dipolo (balun) depende da montagem: use choke de corrente.
+ou seja, ROE ≈ 1,4:1 em 50 Ω sem refletor. Com o refletor o valor muda: **meça**. 
+
+**Sentido da polarização (RHCP ou LHCP).** O campo gira do dipolo adiantado (o direto) para o atrasado (o da linha de fase). Olhando de **baixo para cima**
+(na direção do feixe, com o eixo apontado para o céu), se o braço vivo (condutor central) do dipolo atrasado está 90° no sentido **horário** do braço vivo
+do dipolo direto, a polarização é circular à **direita** (RHCP, convenção IEEE); no sentido **anti-horário**, circular à **esquerda** (LHCP). Visto de cima é o inverso.
+Para trocar de um para o outro, inverta vivo e malha do dipolo atrasado ou troque qual dipolo recebe a linha de fase. A ferramenta mostra o método e o desenho
+para o sentido que você escolher. Esta regra é derivada do atraso de fase, não de uma fonte escrita (TODO(fonte)): confirme com um passe real. A forma exata de ligar vivo e malha de cada dipolo (balun) depende da montagem: use choke de corrente.
 
 ## 6. Ajuste
 

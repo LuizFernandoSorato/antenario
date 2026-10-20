@@ -20,6 +20,19 @@ describe('registro de antenas', () => {
         }
       });
 
+      it('campos booleanos e de escolha: boolean vale 0 ou 1 e choice tem opções com o padrão entre elas', () => {
+        for (const p of antenna.meta.params) {
+          if (p.kind === 'boolean') expect([0, 1]).toContain(p.defaultValue);
+          if (p.kind === 'choice') {
+            expect(p.options!.length).toBeGreaterThanOrEqual(2);
+            expect(p.options!.map((o) => o.value)).toContain(p.defaultValue);
+            expect(new Set(p.options!.map((o) => o.value)).size).toBe(p.options!.length);
+          } else {
+            expect(p.options).toBeUndefined();
+          }
+        }
+      });
+
       it('calcula com os valores padrão e declara premissas', () => {
         const r = antenna.calc({});
         expect(r.measurements.length).toBeGreaterThan(0);

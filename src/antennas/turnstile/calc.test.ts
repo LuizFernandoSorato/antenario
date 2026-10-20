@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { abs } from '../../core/complex';
 import { calc, defaultParams, quadratureFeed } from './calc';
+import { LHCP, RHCP } from '../circular';
 import { cutList } from './cutlist';
 
 // Referências:
@@ -95,5 +96,24 @@ describe('turnstile: lista de corte', () => {
     expect(items.find((i) => i.label === 'C')!.adjustable).toBe(false);
     expect(items.some((i) => i.label === 'D')).toBe(true);
     expect(cutList({ ...defaultParams, reflector: 0 }).some((i) => i.label === 'D')).toBe(false);
+  });
+});
+
+describe('turnstile: sentido da polarização e montagem', () => {
+  it('RHCP e LHCP dão passos de montagem opostos (horário × anti-horário) com as mesmas cotas', () => {
+    const rh = calc({ ...defaultParams, circularSense: RHCP });
+    const lh = calc({ ...defaultParams, circularSense: LHCP });
+    expect(rh.measurements).toEqual(lh.measurements);
+    const text = (r: ReturnType<typeof calc>) => r.assembly!.steps.join(' ');
+    expect(rh.assembly!.title).toContain('RHCP');
+    expect(lh.assembly!.title).toContain('LHCP');
+    expect(text(rh)).toContain('BAIXO para CIMA (na direção do feixe), gire o dipolo 2 até que o braço vivo dele fique 90° no sentido HORÁRIO');
+    expect(text(lh)).toContain('BAIXO para CIMA (na direção do feixe), gire o dipolo 2 até que o braço vivo dele fique 90° no sentido ANTI-HORÁRIO');
+  });
+
+  it('o padrão é RHCP e um sentido inválido é recusado', () => {
+    expect(defaultParams.circularSense).toBe(RHCP);
+    expect(() => calc({ ...defaultParams, circularSense: 0 })).toThrow(RangeError);
+    expect(() => calc({ ...defaultParams, circularSense: 3 })).toThrow(RangeError);
   });
 });

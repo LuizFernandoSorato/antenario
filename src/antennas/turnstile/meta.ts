@@ -1,3 +1,4 @@
+import { circularSenseParam } from '../circular';
 import type { AntennaMeta } from '../types';
 
 export const meta: AntennaMeta = {
@@ -59,13 +60,15 @@ export const meta: AntennaMeta = {
     },
     {
       key: 'reflector',
-      label: 'Com refletor (1 = sim, 0 = não)',
+      kind: 'boolean',
+      label: 'Com refletor a 1/4 de onda atrás dos dipolos',
       unit: '',
       defaultValue: 1,
       toSi: 1,
       min: 0,
       max: 1,
-      help: '1: refletor a 1/4 de onda atrás dos dipolos (circular para cima). 0: omnidirecional na horizontal.',
+      help: 'Marcado: refletor a 1/4 de onda atrás dos dipolos (circular para cima). Desmarcado: omnidirecional na horizontal.',
     },
+    circularSenseParam(),
   ],
 };

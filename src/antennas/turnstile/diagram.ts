@@ -9,6 +9,7 @@ import { wavelength } from '../../core/wave';
 import { type Diagram, circle, dimLabel, dimension, line, measure, rect, svgDoc, text } from '../diagram-kit';
 import { polarPlot } from '../pattern-kit';
 import type { CalcResult } from '../types';
+import { armPolarityDiagram, senseOf } from '../circular';
 import type { TurnstileParams } from './calc';
 
 function crossed(result: CalcResult, params: TurnstileParams): Diagram {
@@ -172,5 +173,12 @@ function patterns(result: CalcResult, params: TurnstileParams): Diagram[] {
 }
 
 export function diagrams(result: CalcResult, params: TurnstileParams): Diagram[] {
-  return [crossed(result, params), side(result, params), feed(), ...patterns(result, params)].filter((d): d is Diagram => d !== null);
+  const polarity = armPolarityDiagram({
+    id: 'ts-polarity',
+    sense: senseOf(params.circularSense),
+    viewText: 'de baixo para cima (olhando para o zênite, na direção do feixe)',
+    directName: 'dipolo 1 (direto)',
+    delayedName: 'dipolo 2 (linha de fase)',
+  });
+  return [crossed(result, params), side(result, params), feed(), polarity, ...patterns(result, params)].filter((d): d is Diagram => d !== null);
 }

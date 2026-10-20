@@ -22,7 +22,8 @@ import { type Complex, abs, complex } from '../../core/complex';
 import { reflectionCoefficient, swrFromGamma } from '../../core/reflection';
 import { assertFrequencyMHz, assertPositive, formatNumber } from '../../core/units';
 import { assertFactor, physicalLength, wavelength } from '../../core/wave';
-import { type CalcResult, type CalcWarning, type Estimate, type Measurement, rangeWarning } from '../types';
+import { type AssemblyGuide, type CalcResult, type CalcWarning, type Estimate, type Measurement, rangeWarning } from '../types';
+import { RHCP, SENSE_NAME, type Sense, senseOf } from '../circular';
 import { meta } from './meta';
 
 export interface TurnstileParams {
@@ -35,8 +36,10 @@ export interface TurnstileParams {
   centerGap: number;
   /** Fator de velocidade do coaxial de fase, em (0, 1]. */
   velocityFactor: number;
-  /** 1 = com refletor a 1/4 de onda; 0 = sem refletor. */
+  /** 1 = com refletor a 1/4 de onda; 0 = sem refletor (a tela mostra uma caixa de seleção). */
   reflector: number;
+  /** Sentido da polarização circular: RHCP ou LHCP (ver `circular.ts`). */
+  circularSense: number;
 }
 
 export const defaultParams: TurnstileParams = {
@@ -46,6 +49,7 @@ export const defaultParams: TurnstileParams = {
   centerGap: 0,
   velocityFactor: 0.66,
   reflector: 1,
+  circularSense: RHCP,
 };
 
 /** Resistência de radiação do dipolo fino de meia onda no espaço livre (Ω): Balanis, §4.6. */
@@ -84,6 +88,7 @@ export function calc(params: TurnstileParams): CalcResult {
     throw new RangeError('O parâmetro "com refletor" deve ser 0 ou 1.');
   }
   const withReflector = params.reflector === 1;
+  const sense = senseOf(params.circularSense);
 
   const lambda = wavelength(f);
   const total = physicalLength(0.5, f, k);
@@ -164,8 +169,9 @@ export function calc(params: TurnstileParams): CalcResult {
     {
       level: 'info',
       message:
-        'O sentido da polarização (direita ou esquerda) depende do sinal da defasagem de 90°: inverta qual dipolo recebe a linha de fase para trocar. ' +
-        'Satélites meteorológicos de 137 MHz usam polarização circular à direita; confirme para o seu satélite.',
+        `Montagem para ${SENSE_NAME[sense]}, vista de baixo para cima (na direção do feixe): veja o método de montagem e o diagrama de polaridade. ` +
+        'Satélites meteorológicos de 137 MHz usam polarização circular à direita (RHCP); confirme para o seu satélite. ' +
+        (withReflector ? '' : 'Sem refletor a antena irradia também para baixo, e ali o sentido é o inverso. '),
     },
     {
       level: 'info',
@@ -198,6 +204,7 @@ export function calc(params: TurnstileParams): CalcResult {
       { name: 'Resistência de cada dipolo', value: `${DIPOLE_RESISTANCE_OHMS} Ω (espaço livre)`, source: 'Balanis, Antenna Theory, §4.6' },
       { name: 'Impedância da linha de fase', value: `${DIPOLE_RESISTANCE_OHMS} Ω (igual à do dipolo)`, source: 'Teoria de linhas de 1/4 de onda (Pozar)' },
       { name: 'Defasagem', value: '90° (linha de 1/4 de onda)', source: 'Wikipedia (Kraus; Brown, US 2.086.976)' },
+      { name: 'Sentido da polarização', value: SENSE_NAME[sense], source: 'Dado do usuário; convenção IEEE Std 145 (ver core/polarization.ts)' },
       { name: 'Refletor', value: withReflector ? 'Plano, a 1/4 de onda atrás dos dipolos' : 'Sem refletor', source: 'Wikipedia (Milligan, 2005)' },
     ],
     expected: {
@@ -213,5 +220,23 @@ export function calc(params: TurnstileParams): CalcResult {
       bandwidth: null,
     },
     warnings,
+    assembly: assemblyFor(sense),
+  };
+}
+
+/** Método de montagem para o sentido pedido: qual braço vivo do dipolo atrasado fica no sentido horário ou anti-horário do vivo do direto. */
+function assemblyFor(sense: Sense): AssemblyGuide {
+  const right = sense === 'rhcp';
+  return {
+    title: `Montagem para ${SENSE_NAME[sense]}`,
+    steps: [
+      'Marque em cada dipolo qual braço vai ao condutor central do coaxial (braço vivo) e qual vai à malha. Os dois dipolos são idênticos.',
+      'Dipolo 1 (direto): ligado direto na junção. Dipolo 2 (atrasado): ligado à junção pela linha de fase C, de 1/4 de onda.',
+      `Fixe os dois dipolos cruzados a 90°, um levemente acima do outro. Olhando de BAIXO para CIMA (na direção do feixe), gire o dipolo 2 até que o braço vivo dele fique 90° no sentido ${right ? 'HORÁRIO' : 'ANTI-HORÁRIO'} do braço vivo do dipolo 1.`,
+      `Visto de CIMA para baixo, é o inverso: o braço vivo do dipolo 2 fica 90° no sentido ${right ? 'ANTI-HORÁRIO' : 'HORÁRIO'} do vivo do dipolo 1.`,
+      `Por quê: o campo gira do dipolo adiantado (1) para o atrasado (2); girando no sentido ${right ? 'horário' : 'anti-horário'} visto na direção do feixe, a onda é ${right ? 'RHCP' : 'LHCP'} (IEEE Std 145).`,
+      `Para trocar para ${right ? 'LHCP' : 'RHCP'} sem refazer a montagem: inverta vivo e malha do dipolo 2 (ou troque qual dipolo recebe a linha C).`,
+      'Confirme com um passe real: o sentido contrário perde muito sinal. Esta derivação não foi conferida com medida (TODO(fonte)).',
+    ],
   };
 }

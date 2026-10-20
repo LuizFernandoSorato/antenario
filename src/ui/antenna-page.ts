@@ -7,7 +7,7 @@
 import { marked } from 'marked';
 import type { AntennaModule, Diagram } from '../antennas';
 import { DEFAULT_MARGIN_PERCENT, cutLength, totalMaterial } from '../antennas/cutlist';
-import type { CalcResult, CutItem, Estimate } from '../antennas/types';
+import type { AssemblyGuide, CalcResult, CutItem, Estimate, ParamSpec } from '../antennas/types';
 import {
   formatLength,
   formatNumber,
@@ -83,6 +83,54 @@ function renderCutTotal(items: readonly CutItem[], marginPercent: number, fMHz: 
     Some as perdas de corte e as pontas que ficam presas nas conexões.`;
 }
 
+/** Campo do formulário: texto numérico, caixa de seleção (boolean) ou botões de opção (choice). */
+function renderField(p: ParamSpec): string {
+  const help = p.help ? `<small>${escapeHtml(p.help)}</small>` : '';
+  if (p.kind === 'boolean') {
+    return `<label class="check-field">
+      <input name="${p.key}" type="checkbox"${p.defaultValue ? ' checked' : ''} />
+      <span>${escapeHtml(p.label)}</span>
+      ${help}
+    </label>`;
+  }
+  if (p.kind === 'choice') {
+    return `<fieldset class="choice-field">
+      <legend>${escapeHtml(p.label)}</legend>
+      ${(p.options ?? [])
+        .map(
+          (o) =>
+            `<label><input type="radio" name="${p.key}" value="${o.value}"${o.value === p.defaultValue ? ' checked' : ''} /> <span>${escapeHtml(o.label)}</span></label>`,
+        )
+        .join('')}
+      ${help}
+    </fieldset>`;
+  }
+  return `<label>
+    <span>${escapeHtml(p.label)}${p.unit ? ` (${escapeHtml(p.unit)})` : ''}</span>
+    <input name="${p.key}" type="text" inputmode="decimal" autocomplete="off"
+      value="${formatNumber(p.defaultValue, decimalsOf(p.defaultValue), false)}" />
+    ${help}
+  </label>`;
+}
+
+/** Valor atual de um campo boolean (1 se marcado, 0 se não) ou choice (o valor da opção marcada, ou o padrão). */
+function readChoiceField(form: HTMLFormElement, p: ParamSpec): number {
+  if (p.kind === 'boolean') {
+    return (form.elements.namedItem(p.key) as HTMLInputElement).checked ? 1 : 0;
+  }
+  const checked = form.querySelector<HTMLInputElement>(`input[name="${p.key}"]:checked`);
+  return checked ? Number(checked.value) : p.defaultValue;
+}
+
+function renderAssembly(assembly: AssemblyGuide | undefined): string {
+  if (!assembly) return '';
+  return `
+    <section class="assembly">
+      <h3>${escapeHtml(assembly.title)}</h3>
+      <ol>${assembly.steps.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ol>
+    </section>`;
+}
+
 function renderResult(
   result: CalcResult,
   antenna: AntennaModule,
@@ -100,6 +148,7 @@ function renderResult(
     </div>
 
     ${renderDiagrams(antenna.diagrams(params))}
+    ${renderAssembly(result.assembly)}
     ${renderWarnings(result.warnings)}
 
     <h3>Medidas</h3>
@@ -169,16 +218,7 @@ export function mountAntennaPage(container: HTMLElement, antenna: AntennaModule)
         <span>≈ ${meta.nominalImpedanceOhms} Ω</span>
       </p>
       <form class="params no-print" novalidate>
-        ${meta.params
-          .map(
-            (p) => `<label>
-              <span>${escapeHtml(p.label)}${p.unit ? ` (${escapeHtml(p.unit)})` : ''}</span>
-              <input name="${p.key}" type="text" inputmode="decimal" autocomplete="off"
-                value="${formatNumber(p.defaultValue, decimalsOf(p.defaultValue), false)}" />
-              ${p.help ? `<small>${escapeHtml(p.help)}</small>` : ''}
-            </label>`,
-          )
-          .join('')}
+        ${meta.params.map(renderField).join('')}
       </form>
       <div class="result" aria-live="polite"></div>
     </section>
@@ -215,6 +255,10 @@ export function mountAntennaPage(container: HTMLElement, antenna: AntennaModule)
   function update(): void {
     const params: Record<string, number> = {};
     for (const p of meta.params) {
+      if (p.kind === 'boolean' || p.kind === 'choice') {
+        params[p.key] = readChoiceField(form, p) * p.toSi;
+        continue;
+      }
       const input = form.elements.namedItem(p.key) as HTMLInputElement;
       const value = parseDecimal(input.value);
       input.setAttribute('aria-invalid', String(Number.isNaN(value)));
