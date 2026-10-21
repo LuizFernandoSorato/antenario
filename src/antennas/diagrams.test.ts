@@ -36,7 +36,9 @@ const scenarios: Record<string, Record<string, number>[]> = {
   helical: [{}, { circularSense: 2 }, { turns: 4 }, { turns: 20, circumferenceRatio: 1.2 }, { frequencyMHz: 1575 }],
 };
 
-describe('diagramas das antenas', () => {
+// Várias antenas (discone, QFH, Yagi) rodam o método dos momentos para os padrões: com a suíte toda em paralelo,
+// um cenário pode passar dos 5 s padrão.
+describe('diagramas das antenas', { timeout: 60_000 }, () => {
   for (const antenna of antennas) {
     describe(antenna.meta.id, () => {
       for (const params of scenarios[antenna.meta.id] ?? [{}]) {
