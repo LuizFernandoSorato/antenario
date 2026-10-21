@@ -2,17 +2,24 @@
  * Dipolo de meia onda alimentado no centro.
  *
  * Comprimento total: L = K · λ/2. O fator K corrige a espessura finita do
- * condutor e o efeito de ponta (ver `core/wave.ts`).
+ * condutor e o efeito de ponta (ver `core/wave.ts`). Por padrão, K vem do diâmetro
+ * pelo método dos momentos (`core/dipole-resonance.ts`); o modo manual usa o K digitado.
  */
 
-import { assertFrequencyMHz, assertPositive, formatNumber } from '../../core/units';
+import { DIPOLE_K_MAX_DIAMETER_LAMBDA, DIPOLE_K_MIN_DIAMETER_LAMBDA, dipoleShorteningFactor } from '../../core/dipole-resonance';
+import { assertFrequencyMHz, assertPositive, formatEngineering, formatNumber } from '../../core/units';
 import { assertFactor, physicalLength, wavelength } from '../../core/wave';
 import { type CalcResult, type CalcWarning, rangeWarning } from '../types';
+import { K_FROM_DIAMETER, K_MANUAL } from './k-mode';
 import { meta } from './meta';
+
+export { K_FROM_DIAMETER, K_MANUAL };
 
 export interface DipoleParams {
   frequencyMHz: number;
-  /** Fator de encurtamento K, em (0, 1]. */
+  /** K_FROM_DIAMETER ou K_MANUAL. */
+  kMode: number;
+  /** Fator de encurtamento K, em (0, 1]. Só vale no modo manual (ou fora da faixa do modelo). */
   shorteningFactor: number;
   /** Diâmetro do condutor, em metros. */
   conductorDiameter: number;
@@ -22,21 +29,30 @@ export interface DipoleParams {
 
 export const defaultParams: DipoleParams = {
   frequencyMHz: 145,
+  kMode: K_FROM_DIAMETER,
   shorteningFactor: 0.95,
   conductorDiameter: 0.002,
   centerGap: 0,
 };
 
 export function calc(params: DipoleParams): CalcResult {
-  const { frequencyMHz: f, shorteningFactor: k, conductorDiameter: d, centerGap: gap } = params;
+  const { frequencyMHz: f, kMode, shorteningFactor: manualK, conductorDiameter: d, centerGap: gap } = params;
   assertFrequencyMHz(f);
-  assertFactor(k, 'O fator de encurtamento K');
+  assertFactor(manualK, 'O fator de encurtamento K');
   assertPositive(d, 'O diâmetro do condutor');
+  if (kMode !== K_FROM_DIAMETER && kMode !== K_MANUAL) {
+    throw new RangeError(`Modo do fator K inválido (recebido: ${kMode}).`);
+  }
   if (!Number.isFinite(gap) || gap < 0) {
     throw new RangeError(`O espaço central deve ser ≥ 0 (recebido: ${gap}).`);
   }
 
   const lambda = wavelength(f);
+  const diameterLambda = d / lambda;
+  const modelValid = diameterLambda >= DIPOLE_K_MIN_DIAMETER_LAMBDA && diameterLambda <= DIPOLE_K_MAX_DIAMETER_LAMBDA;
+  const modelK = modelValid ? dipoleShorteningFactor(diameterLambda) : null;
+  const auto = kMode === K_FROM_DIAMETER && modelK !== null;
+  const k = auto ? modelK : manualK;
   const total = physicalLength(0.5, f, k);
   if (gap >= total) {
     throw new RangeError('O espaço central é maior que o comprimento total do dipolo.');
@@ -51,15 +67,31 @@ export function calc(params: DipoleParams): CalcResult {
     measurements.push({ label: 'C', name: 'Espaço central', meters: gap, description: 'Entre os dois braços, no isolador central.' });
   }
 
+  const range = `${formatEngineering(DIPOLE_K_MIN_DIAMETER_LAMBDA, 'λ')} a ${formatEngineering(DIPOLE_K_MAX_DIAMETER_LAMBDA, 'λ')}`;
+  const kWarning: CalcWarning =
+    modelK === null
+      ? {
+          level: 'warning',
+          message:
+            `O condutor tem ${formatEngineering(diameterLambda, 'λ')} de diâmetro, fora da faixa do modelo de K (${range}): ` +
+            `usando o K digitado (${formatNumber(manualK, 3)}).`,
+        }
+      : auto
+        ? {
+            level: 'info',
+            message:
+              `K = ${formatNumber(modelK, 4)} calculado pelo diâmetro (dipolo reto no espaço livre). Fio com isolamento plástico, ` +
+              'solo próximo e isoladores nas pontas deixam a antena real um pouco mais curta: corte comprido e ajuste.',
+          }
+        : {
+            level: 'info',
+            message:
+              `K informado manualmente. Pelo diâmetro do condutor, o modelo daria K = ${formatNumber(modelK, 4)} ` +
+              `(A = ${formatNumber(physicalLength(0.5, f, modelK), 3)} m).`,
+          };
+
   const warnings: CalcWarning[] = [
-    {
-      level: 'info',
-      message:
-        'K foi informado manualmente. Ele depende da razão comprimento/diâmetro do condutor ' +
-        '(curva no ARRL Antenna Book); o cálculo automático de K a partir do diâmetro ainda não ' +
-        // TODO(fonte): digitalizar a curva com a fonte citada.
-        'foi implementado.',
-    },
+    kWarning,
     {
       level: 'warning',
       message:
@@ -87,8 +119,16 @@ export function calc(params: DipoleParams): CalcResult {
     measurements,
     assumptions: [
       { name: 'Comprimento de onda (λ)', value: `${formatNumber(lambda, 4)} m`, source: 'λ = 299,792458 / f(MHz)' },
-      { name: 'Fator de encurtamento (K)', value: formatNumber(k, 3) },
-      { name: 'Diâmetro do condutor', value: `${formatNumber(d * 1000, 2)} mm` },
+      auto
+        ? {
+            name: 'Fator de encurtamento (K)',
+            value: `${formatNumber(k, 4)}, pelo diâmetro`,
+            source:
+              'Método dos momentos desta ferramenta (core/dipole-resonance.ts), conferido com o NEC-4 de L. B. Cebik, W4RNL, ' +
+              '"80-Meter Dipoles and Inverted-Vs" (0,15 %)',
+          }
+        : { name: 'Fator de encurtamento (K)', value: `${formatNumber(k, 3)}, digitado` },
+      { name: 'Diâmetro do condutor', value: `${formatNumber(d * 1000, 2)} mm = ${formatEngineering(diameterLambda, 'λ')}` },
       { name: 'Razão comprimento/diâmetro', value: formatNumber(total / d, 0) },
       { name: 'Ambiente', value: 'Espaço livre: sem efeito do solo nem de objetos próximos' },
     ],

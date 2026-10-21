@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { calc, defaultParams } from './calc';
+import { dipoleShorteningFactor } from '../../core/dipole-resonance';
+import { K_MANUAL, calc, defaultParams as autoDefaults } from './calc';
 import { meta } from './meta';
 
 // Referências:
@@ -8,6 +9,10 @@ import { meta } from './meta';
 //   468 × 0,3048 = 142,646 m·MHz (equivale a K ≈ 0,9516). Nosso K = 0,95 deve
 //   ficar a menos de 0,2 % dessa regra.
 // Tolerância: 1e-9 m nas contas exatas.
+//
+// Os testes das contas usam K digitado; os do K automático ficam no fim (o modelo é conferido em core/dipole-resonance.test.ts).
+
+const defaultParams = { ...autoDefaults, kMode: K_MANUAL };
 
 const ARRL_468_M_MHZ = 468 * 0.3048;
 /** 0,5 × 299,792458 × 0,95 = 142,40141755 m·MHz (valor exato do método). */
@@ -66,7 +71,39 @@ describe('dipolo de meia onda: calc', () => {
     expect(r.warnings.some((w) => /fora da faixa/.test(w.message))).toBe(true);
   });
 
+  it('K pelo diâmetro (padrão): usa o K do modelo e diz isso nas premissas', () => {
+    expect(autoDefaults.kMode).not.toBe(K_MANUAL);
+    // 145 MHz, 2 mm: d/λ ≈ 9,7e-4, K ≈ 0,958.
+    const r = calc(autoDefaults);
+    const k = dipoleShorteningFactor(0.002 / (299.792458 / 145));
+    expect(measure(r, 'A')).toBeCloseTo((k * 299.792458) / 145 / 2, 9);
+    expect(k).toBeGreaterThan(0.95);
+    expect(k).toBeLessThan(0.965);
+    expect(r.assumptions.some((a) => /pelo diâmetro/.test(a.value) && /Cebik/.test(a.source ?? ''))).toBe(true);
+    // O K digitado é ignorado.
+    expect(measure(calc({ ...autoDefaults, shorteningFactor: 0.9 }), 'A')).toBeCloseTo(measure(r, 'A'), 12);
+  });
+
+  it('K pelo diâmetro: condutor mais grosso, dipolo mais curto', () => {
+    const thin = measure(calc({ ...autoDefaults, frequencyMHz: 14.2, conductorDiameter: 0.001 }), 'A');
+    const thick = measure(calc({ ...autoDefaults, frequencyMHz: 14.2, conductorDiameter: 0.05 }), 'A');
+    expect(thick).toBeLessThan(thin);
+  });
+
+  it('K pelo diâmetro fora da faixa do modelo: usa o K digitado e avisa', () => {
+    // 435 MHz com tubo de 10 mm: d/λ ≈ 0,0145.
+    const r = calc({ ...autoDefaults, frequencyMHz: 435, conductorDiameter: 0.01, shorteningFactor: 0.93 });
+    expect(measure(r, 'A')).toBeCloseTo((0.93 * 299.792458) / 435 / 2, 9);
+    expect(r.warnings.some((w) => w.level === 'warning' && /fora da faixa do modelo/.test(w.message))).toBe(true);
+  });
+
+  it('K digitado: o aviso mostra o K que o modelo daria', () => {
+    const r = calc(defaultParams);
+    expect(r.warnings.some((w) => /manualmente/.test(w.message) && /0,95/.test(w.message))).toBe(true);
+  });
+
   it('rejeita entradas inválidas', () => {
+    expect(() => calc({ ...defaultParams, kMode: 3 })).toThrow(RangeError);
     expect(() => calc({ ...defaultParams, frequencyMHz: 0 })).toThrow(RangeError);
     expect(() => calc({ ...defaultParams, shorteningFactor: 1.2 })).toThrow(RangeError);
     expect(() => calc({ ...defaultParams, conductorDiameter: 0 })).toThrow(RangeError);

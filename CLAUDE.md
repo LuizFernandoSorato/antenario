@@ -53,6 +53,7 @@ src/
     pattern.ts     # padrões analíticos: dipolo, monopolo, dipolos cruzados, loop pequena, colinear, hélice axial, com testes
     mom.ts         # método dos momentos para fios finos (Yagi, quadra, QFH, discone), validado contra NBS TN 688 e Balanis
     exposure.ts    # exposição a RF em campo distante (estimativa)
+    dipole-resonance.ts  # fator K do dipolo pelo diâmetro (MoM), conferido com o Cebik
   antennas/
     <antenna-id>/
       calc.ts      # entrada → medidas (função pura)
@@ -158,7 +159,7 @@ Cada guia segue o mesmo modelo:
 
 ### Estado atual (atualizado em 2026-10-17)
 
-Para retomar: `git log --oneline` mostra o que foi feito. 777 testes passando e build ok em 2026-10-21 (depois da Moxon;
+Para retomar: `git log --oneline` mostra o que foi feito. 786 testes passando e build ok em 2026-10-21 (depois da Moxon e do K do dipolo pelo diâmetro;
 o último commit está em `git log`).
 
 **Navegação (`src/main.ts`, `src/ui/`):** roteamento por hash. Vazio = página inicial com cartões
@@ -238,6 +239,12 @@ sem junções, 200 trechos/λ; com 100 os fios grossos ficam 3 Ω abaixo) confer
 146 MHz 1/8"): ganho ±0,1 dB, R ±5 %, X ±3 Ω. Cotas: A largura, B cauda do excitado, C folga, D cauda do refletor, E profundidade, F cada metade
 do excitado esticada, G refletor esticado, H espaço central. Os testes com MoM pesado usam `{ timeout: 60_000 }` no `describe`.
 
+**K do dipolo pelo diâmetro (`core/dipole-resonance.ts`, 2026-10-21):** K = comprimento ressonante do dipolo reto no espaço livre / (λ/2),
+pelo MoM (40 trechos, só depende de d/λ). Conferido com o NEC-4 do Cebik (AWG #12 a 3,75 MHz: 0,15 %). Fica 0,1 % (fio fino) a 1,1 % (λ/2d = 100)
+abaixo do ajuste K = 1 − 0,225/ln(λ/2d) do webantenna (curva do ARRL lida por eles; o livro não foi consultado). Faixa: 1e-6 a 5e-3 λ (acima disso o
+fio fino falha; o dipolo usa então o K digitado e avisa). No dipolo é o padrão (`kMode`: 1 pelo diâmetro, 2 digitado). Em HF dá ≈ 2,5 % a mais que a
+regra 468/f (que embute isoladores e isolamento). Ainda não aplicado ao ground plane, J-pole, turnstile, bazooka nem ao V invertido.
+
 **Exposição a RF:** conferida em 2026-10-17. A Resolução Anatel 700/2018 (Art. 4º § 1º) adota a ICNIRP via Ato; o Ato
 458/2019 foi revogado e substituído pelo Ato 17.865 (em vigor desde 01/03/2024, fonte secundária
 https://dplnews.com/?p=220353). A minuta (Consulta Pública 63/2022) usa a ICNIRP 2020 com os mesmos valores de
@@ -256,7 +263,7 @@ espaço central (como no dipolo); cada braço mede (total − espaço)/2; o espa
 corte); quadra cúbica (`wireDiameter`, `feedGap`: H perímetro, J fio a cortar = H − espaço, K espaço); QFH (`wireDiameter`: só no padrão, as medidas são as de 4,1 mm); discone
 (`rodDiameter`, `centerGap`: folga F, 0 = proporção do exemplo de Stearns; EXCEÇÃO à regra: a folga fica ENTRE as hastes e não entra em A nem E, porque R + L = λ/2 é das hastes).
 Sem gap: ground plane, J-pole, helicoidal, loop magnética, colinear de coaxial, QFH (alimentação no topo, arranjo real sem fonte). O diâmetro só muda as cotas na Yagi (correção
-NBS/DL6WU) e na impedância do stub do J-pole; no dipolo, turnstile e quadra ele é informativo (K e perímetros são para fio fino; curva do ARRL: TODO(fonte)).
+NBS/DL6WU) e na impedância do stub do J-pole; no dipolo, ele dá o K (padrão "calcular pelo diâmetro", ver abaixo); no turnstile e na quadra é informativo (K e perímetros para fio fino).
 A regra "gap dentro do comprimento total" é a convenção usual de comprimento ponta a ponta, não foi conferida em livro (ARRL Antenna Book e NBS TN 688 não consultados).
 
 **Polarização circular (2026-10-20):** cross Yagi, turnstile, QFH e helicoidal têm o campo `circularSense` (RHCP/LHCP, botões de opção; `antennas/circular.ts`)
@@ -268,8 +275,6 @@ anti-horário (LHCP) do vivo do direto, olhando na direção do feixe; QFH direi
 ### Pendências
 
 **Falta fonte (não implementar de memória). O usuário precisa fornecer o livro/PDF:**
-- Fator de encurtamento K em função de L/d (diâmetro do condutor): a curva do ARRL Antenna Book (ver
-  `dipole/calc.ts`, `TODO(fonte)`). O material do condutor quase não muda o comprimento; o isolamento do fio sim.
 - Gamma match: equações no cap. 9 do Balanis (só o cabeçalho do programa MATLAB está online) ou no ARRL Antenna
   Book (Tolles, W7ITB).
 - QFH: equações do Kilgus (IEEE, paywall).

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { cutLength, totalMaterial } from './cutlist';
-import { defaultParams as dipoleDefaults } from './dipole/calc';
+import { K_MANUAL, defaultParams as dipoleDefaults } from './dipole/calc';
 import { cutList as dipoleCuts } from './dipole/cutlist';
 import { defaultParams as gpDefaults } from './ground-plane/calc';
 import { cutList as gpCuts } from './ground-plane/cutlist';
@@ -31,7 +31,7 @@ describe('cutLength / totalMaterial', () => {
 
 describe('listas de corte das antenas', () => {
   it('dipolo: 2 braços iguais à cota B', () => {
-    const items = dipoleCuts({ ...dipoleDefaults, frequencyMHz: 145 });
+    const items = dipoleCuts({ ...dipoleDefaults, kMode: K_MANUAL, frequencyMHz: 145 });
     expect(items).toHaveLength(1);
     expect(items[0]!.quantity).toBe(2);
     expect(items[0]!.meters).toBeCloseTo((0.5 * 299.792458 * 0.95) / 145 / 2, 9);
