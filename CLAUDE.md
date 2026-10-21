@@ -158,7 +158,7 @@ Cada guia segue o mesmo modelo:
 
 ### Estado atual (atualizado em 2026-10-17)
 
-Para retomar: `git log --oneline` mostra o que foi feito. 637 testes passando e build ok em 2026-10-20 (depois do sentido de polarização circular em cross Yagi, turnstile, QFH e helicoidal;
+Para retomar: `git log --oneline` mostra o que foi feito. 742 testes passando e build ok em 2026-10-21 (depois do V invertido e da flowerpot;
 o último commit está em `git log`).
 
 **Navegação (`src/main.ts`, `src/ui/`):** roteamento por hash. Vazio = página inicial com cartões
@@ -206,6 +206,29 @@ eles não: continua `TODO(fonte)`.
   (dipolo curto, D ≈ 1,6 dBi), convergência com a discretização (≤ 0,2 dB) e ROE mínima do projeto de 50 Ω (≈ 1,5; Stearns cita ≈ 1,4). Resultado: em 1× um "donut" largo; em 2× e 4×
   o máximo desce ABAIXO do horizonte (coerente com a região entre o disco e o cone, que se abre para baixo) e, com 8 hastes, aparece ondulação em azimute de até 4 dB em 4×.
   Sem coaxial nem mastro. Não comparado com padrões medidos nem com os do artigo de Stearns (a figura não foi lida). TODO(fonte).
+
+**Double bazooka (`src/antennas/bazooka/`, 2026-10-21):** dipolo com a parte central de coaxial (malha cortada no centro, vivo soldado na malha
+nas pontas: dois tocos de λ/4·VF em série, em paralelo com o dipolo) e fios nas pontas até K·λ/2. Cotas: A total, B seção de coaxial (2C + E), C toco,
+D fio da ponta (é o que se ajusta), E corte da malha. Cabo é campo de escolha (índice em `coaxCables`: Z0, VF, diâmetro e perda do datasheet); VF medido
+opcional (0 = datasheet). Banda, impedância e perda nos tocos vêm de `feed-model.ts`: MoM do dipolo (fio todo com o diâmetro externo do coaxial, ajustado
+para ressoar em f) ∥ 2·Z0·tanh(γl), ROE em 50 Ω, varredura de ±15 %. Resultado: banda de 2:1 de 1,04 a 1,10× a do dipolo e perda de 0,04 a 0,18 dB;
+confere com F5AD (≈ 1,075×, 0,1–0,5 dB) e fica abaixo do 1,14× do ARRL Antenna Book 2003 (p. 9.6–9.7). Essas três fontes foram lidas só via ZS6GM
+(https://www.zs6stn.org.za/ResourceArticles/Download/17); o artigo do W2DU (Reflections II, cap. 18, k6mhe.com) estava fora do ar. Variante com tocos em
+paralelo ("cross-connected", 1,55× com 80 % de eficiência segundo o ARRL) não implementada.
+
+**V invertido (`src/antennas/inverted-v/`, 2026-10-21):** A = K·λ/2 (K do dipolo reto, ajustável) × alongamento do V. O alongamento, a impedância,
+o ganho, a banda e os padrões vêm de `v-model.ts` (MoM, um fio do ápice às pontas, espaço livre). Validação contra L. B. Cebik, W4RNL, "80-Meter
+Dipoles and Inverted-Vs" (NEC-4, 3,75 MHz, AWG #12; espelho https://antenna2.github.io/cebik/content/wire/80dp.pdf): comprimento relativo ao dipolo
+a ±0,3 % (120°: +0,8 %, 90°: +1,9 %); as resistências do Cebik ficam 1,5 a 2,6 Ω acima das nossas (perda do cobre, que ele inclui e o modelo não) e,
+descontada essa perda, os ganhos dele (1,79 e 1,49 dBi) saem a ±0,05 dB. Ângulo de 60° a 180°; abaixo de 90° avisa (fora do conferido). Altura do
+ápice é entrada só para a geometria (F = altura das pontas; recusa pontas abaixo do chão). Cotas: A fio, B braço, C espaço, D vão, E queda, F altura.
+
+**Flowerpot (`src/antennas/flowerpot/`, 2026-10-21):** dipolo vertical de RG-58 em conduíte (vivo sem malha em cima, coaxial embaixo, bobina do
+cabo como choke). Fonte: J. Bishop, VK2ZOI (https://vk2zoi.com/articles/half-wave-flower-pot/): protótipo de 2 m (457/447 mm, ROE mínima ≈ 146 MHz
+LIDA NA CURVA) calibra os fatores (≈ 0,890 e 0,871 de λ/4); o de 6 m (1273/1245 mm, ≈ 52,4 MHz) confere a 0,1 %. Bobina: tabela do VK2ZOI (RG-58,
+tubos de 25/32/50 mm, ressonância 47–160 MHz) com alvo 5,5 % abaixo da operação, interpolada e arredondada a meia espira (para menos numa frequência,
+para mais na faixa toda): dá 9 espiras em 25 mm no 2 m, como o protótipo. Sem tubo: +2 % (estimativa do VK2ZOI, "2 % ou talvez 3 %"). Fora da
+tabela (ex.: 70 cm, 10 m) não dá espiras e avisa. Banda: mínimo de 2,7 % para ROE < 1,5:1, das curvas medidas (um protótipo de cada).
 
 **Exposição a RF:** conferida em 2026-10-17. A Resolução Anatel 700/2018 (Art. 4º § 1º) adota a ICNIRP via Ato; o Ato
 458/2019 foi revogado e substituído pelo Ato 17.865 (em vigor desde 01/03/2024, fonte secundária
@@ -264,12 +287,15 @@ projeto). A página do YO5OSF com saída do AntMaker não bate com o DL6WU.BAS (
   indica diretividade bem acima do "+3 dB" da Wikipedia usado no texto (ver `turnstile/calc.ts`); não reconciliado.
 - Hairpin: sem efeito de cantos e barra de curto; faixa de uso (25 a 35 Ω) vem de relatos de radioamadores.
 - Ground plane: curva ângulo × impedância (ver acima). ADS-B: ganho e alcance típicos.
+- Double bazooka: ler o ARRL Antenna Book (p. 9.6–9.7) e o W2DU para saber o caso do 1,14× e conferir o modelo.
+- V invertido: só espaço livre (o solo muda ressonância e impedância; o Cebik tem tabelas sobre solo médio, não implementadas). K manual como no dipolo.
+- Flowerpot: só um projeto (VK2ZOI), sem fórmula; fatores dependem do RG-58 sólido e do conduíte cinza. Bobinas fora de 47–160 MHz sem tabela.
+  Frequências das ROE mínimas lidas nas curvas (±0,3 MHz). Ganho e perda da bobina não medidos.
 
 **Antenas sugeridas para adicionar (ordem recomendada):**
-1. V-dipolo para satélites meteorológicos (137 MHz).
-2. Dipolo em V invertido (inverted-V).
-3. Moxon (precisa da fonte do Cebik).
-4. Dipolo multibanda (fan dipole), EFHW com unun 49:1 (exige dados de ferrite com fonte) e log-periódica.
+1. V-dipolo para satélites meteorológicos (137 MHz). O `v-model.ts` do V invertido serve de base (é o mesmo fio dobrado, deitado).
+2. Moxon (fonte do Cebik: o espelho https://antenna2.github.io/cebik/content/moxon/moxpage.html está acessível).
+3. Dipolo multibanda (fan dipole), EFHW com unun 49:1 (exige dados de ferrite com fonte) e log-periódica.
 
 Antes de cada uma, pesquisar a fonte e avisar o usuário dos `TODO(fonte)`.
 
