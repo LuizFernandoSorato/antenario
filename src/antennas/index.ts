@@ -44,6 +44,11 @@ import { cutList as bazookaCutList } from './bazooka/cutlist';
 import { diagrams as bazookaDiagrams } from './bazooka/diagram';
 import bazookaGuide from './bazooka/guide.md?raw';
 import { meta as bazookaMeta } from './bazooka/meta';
+import * as invertedV from './inverted-v/calc';
+import { cutList as invertedVCutList } from './inverted-v/cutlist';
+import { diagrams as invertedVDiagrams } from './inverted-v/diagram';
+import invertedVGuide from './inverted-v/guide.md?raw';
+import { meta as invertedVMeta } from './inverted-v/meta';
 import * as dipole from './dipole/calc';
 import { cutList as dipoleCutList } from './dipole/cutlist';
 import { diagrams as dipoleDiagrams } from './dipole/diagram';
@@ -117,6 +122,7 @@ function register<P extends object>(
 export const antennas: readonly AntennaModule[] = [
   register(dipoleMeta, dipole.defaultParams, dipole.calc, dipoleDiagrams, dipoleCutList, dipoleGuide),
   register(bazookaMeta, bazooka.defaultParams, bazooka.calc, bazookaDiagrams, bazookaCutList, bazookaGuide),
+  register(invertedVMeta, invertedV.defaultParams, invertedV.calc, invertedVDiagrams, invertedVCutList, invertedVGuide),
   register(groundPlaneMeta, groundPlane.defaultParams, groundPlane.calc, groundPlaneDiagrams, groundPlaneCutList, groundPlaneGuide),
   register(jPoleMeta, jPole.defaultParams, jPole.calc, jPoleDiagrams, jPoleCutList, jPoleGuide),
   register(helicalMeta, helical.defaultParams, helical.calc, helicalDiagrams, helicalCutList, helicalGuide),
