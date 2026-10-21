@@ -12,6 +12,8 @@ const ICONS: Readonly<Record<string, string>> = {
   bazooka: '<path d="M4 18h8M36 18h8M24 21v19"/><rect x="12" y="15" width="10" height="6" rx="1"/><rect x="26" y="15" width="10" height="6" rx="1"/>',
   // Mastro com os dois braços descendo do topo até as pontas.
   'inverted-v': '<path d="M24 8v34M24 8L6 30M24 8l18 22M14 44h20"/><circle cx="24" cy="8" r="2.5"/>',
+  // Tubo vertical com o elemento fino em cima e a bobina embaixo.
+  flowerpot: '<rect x="19" y="4" width="10" height="40" rx="2"/><path d="M24 7v14M24 21v12M16 31l16 3M16 35l16 3M16 39l16 3"/>',
   // Radiador vertical sobre radiais inclinados.
   'ground-plane': '<path d="M24 5v24M24 29L8 41M24 29l16 12M24 29l-6 13M24 29l6 13"/>',
   // Letra J: haste longa e stub de 1/4 de onda ligados por baixo.

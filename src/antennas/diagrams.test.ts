@@ -21,6 +21,7 @@ const scenarios: Record<string, Record<string, number>[]> = {
   dipole: [{}, { centerGap: 0.01 }, { frequencyMHz: 7.1 }],
   bazooka: [{}, { centerGap: 0.01 }, { frequencyMHz: 145, cable: 4 }, { frequencyMHz: 3.65, velocityFactor: 0.78 }, { frequencyMHz: 1.9, cable: 5 }],
   'inverted-v': [{}, { apexAngleDeg: 180 }, { apexAngleDeg: 90, centerGap: 0.02, apexHeight: 20 }, { frequencyMHz: 3.65, apexHeight: 15 }, { frequencyMHz: 145, apexHeight: 30 }, { apexAngleDeg: 60, apexHeight: 30 }],
+  flowerpot: [{}, { frequencyMHz: 52.4 }, { frequencyMHz: 435 }, { housing: 2, chokeBand: 1 }, { frequencyMHz: 52.4, formerDiameter: 0.025 }],
   'ground-plane': [{}, { droopAngleDeg: 0 }, { droopAngleDeg: 80 }, { radialCount: 3 }, { radialCount: 8 }],
   adsb: [{}, { droopAngleDeg: 0 }, { radialCount: 3 }],
   'j-pole': [{}, { frequencyMHz: 435 }, { frequencyMHz: 52 }],

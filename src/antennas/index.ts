@@ -49,6 +49,11 @@ import { cutList as invertedVCutList } from './inverted-v/cutlist';
 import { diagrams as invertedVDiagrams } from './inverted-v/diagram';
 import invertedVGuide from './inverted-v/guide.md?raw';
 import { meta as invertedVMeta } from './inverted-v/meta';
+import * as flowerpot from './flowerpot/calc';
+import { cutList as flowerpotCutList } from './flowerpot/cutlist';
+import { diagrams as flowerpotDiagrams } from './flowerpot/diagram';
+import flowerpotGuide from './flowerpot/guide.md?raw';
+import { meta as flowerpotMeta } from './flowerpot/meta';
 import * as dipole from './dipole/calc';
 import { cutList as dipoleCutList } from './dipole/cutlist';
 import { diagrams as dipoleDiagrams } from './dipole/diagram';
@@ -125,6 +130,7 @@ export const antennas: readonly AntennaModule[] = [
   register(invertedVMeta, invertedV.defaultParams, invertedV.calc, invertedVDiagrams, invertedVCutList, invertedVGuide),
   register(groundPlaneMeta, groundPlane.defaultParams, groundPlane.calc, groundPlaneDiagrams, groundPlaneCutList, groundPlaneGuide),
   register(jPoleMeta, jPole.defaultParams, jPole.calc, jPoleDiagrams, jPoleCutList, jPoleGuide),
+  register(flowerpotMeta, flowerpot.defaultParams, flowerpot.calc, flowerpotDiagrams, flowerpotCutList, flowerpotGuide),
   register(helicalMeta, helical.defaultParams, helical.calc, helicalDiagrams, helicalCutList, helicalGuide),
   register(yagiMeta, yagi.defaultParams, yagi.calc, yagiDiagrams, yagiCutList, yagiGuide),
   register(crossYagiMeta, crossYagi.defaultParams, crossYagi.calc, crossYagiDiagrams, crossYagiCutList, crossYagiGuide),
