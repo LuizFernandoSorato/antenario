@@ -158,7 +158,7 @@ Cada guia segue o mesmo modelo:
 
 ### Estado atual (atualizado em 2026-10-17)
 
-Para retomar: `git log --oneline` mostra o que foi feito. 742 testes passando e build ok em 2026-10-21 (depois do V invertido e da flowerpot;
+Para retomar: `git log --oneline` mostra o que foi feito. 777 testes passando e build ok em 2026-10-21 (depois da Moxon;
 o último commit está em `git log`).
 
 **Navegação (`src/main.ts`, `src/ui/`):** roteamento por hash. Vazio = página inicial com cartões
@@ -230,6 +230,14 @@ tubos de 25/32/50 mm, ressonância 47–160 MHz) com alvo 5,5 % abaixo da opera�
 para mais na faixa toda): dá 9 espiras em 25 mm no 2 m, como o protótipo. Sem tubo: +2 % (estimativa do VK2ZOI, "2 % ou talvez 3 %"). Fora da
 tabela (ex.: 70 cm, 10 m) não dá espiras e avisa. Banda: mínimo de 2,7 % para ROE < 1,5:1, das curvas medidas (um protótipo de cada).
 
+**Moxon (`src/antennas/moxon/`, 2026-10-21):** medidas pelas equações de L. B. Cebik, W4RNL, "Designing Moxon Rectangles by Equation and
+by Model" (AntenneX, 2000; espelho https://antenna2.github.io/cebik/content/moxon/moxgen.html; os mesmos coeficientes do MoxGen,
+https://jedsoft.org/slang/slshapps/moxgen.sl, achado pelo projeto webantenna). Regressão em x = log10(d/λ), válida de 1e-5 a 1e-2 λ (fora disso avisa).
+Teste: as equações reproduzem a tabela 2 do artigo a ±0,0015 λ. Impedância, ganho, F/C, banda e padrões por MoM (`moxon-model.ts`: dois fios em U
+sem junções, 200 trechos/λ; com 100 os fios grossos ficam 3 Ω abaixo) conferidos com os três exemplos NEC do artigo (7,15 MHz #12, 28,5 MHz 1",
+146 MHz 1/8"): ganho ±0,1 dB, R ±5 %, X ±3 Ω. Cotas: A largura, B cauda do excitado, C folga, D cauda do refletor, E profundidade, F cada metade
+do excitado esticada, G refletor esticado, H espaço central. Os testes com MoM pesado usam `{ timeout: 60_000 }` no `describe`.
+
 **Exposição a RF:** conferida em 2026-10-17. A Resolução Anatel 700/2018 (Art. 4º § 1º) adota a ICNIRP via Ato; o Ato
 458/2019 foi revogado e substituído pelo Ato 17.865 (em vigor desde 01/03/2024, fonte secundária
 https://dplnews.com/?p=220353). A minuta (Consulta Pública 63/2022) usa a ICNIRP 2020 com os mesmos valores de
@@ -264,8 +272,6 @@ anti-horário (LHCP) do vivo do direto, olhando na direção do feixe; QFH direi
   `dipole/calc.ts`, `TODO(fonte)`). O material do condutor quase não muda o comprimento; o isolamento do fio sim.
 - Gamma match: equações no cap. 9 do Balanis (só o cabeçalho do programa MATLAB está online) ou no ARRL Antenna
   Book (Tolles, W7ITB).
-- Moxon: equações do artigo de L. B. Cebik, W4RNL ("Designing Moxon Rectangles by Equation and by Model", em
-  antenna2.net; deu erro de SSL no `WebFetch`, vale tentar `curl`).
 - QFH: equações do Kilgus (IEEE, paywall).
 - Padrão de irradiação da helicoidal (Kraus) e da colinear. O padrão do discone e da QFH vem de modelo por momentos sem comparação com medidas.
 - Texto final do Ato 17.865 da Anatel.
@@ -291,11 +297,11 @@ projeto). A página do YO5OSF com saída do AntMaker não bate com o DL6WU.BAS (
 - V invertido: só espaço livre (o solo muda ressonância e impedância; o Cebik tem tabelas sobre solo médio, não implementadas). K manual como no dipolo.
 - Flowerpot: só um projeto (VK2ZOI), sem fórmula; fatores dependem do RG-58 sólido e do conduíte cinza. Bobinas fora de 47–160 MHz sem tabela.
   Frequências das ROE mínimas lidas nas curvas (±0,3 MHz). Ganho e perda da bobina não medidos.
+- Moxon: tolerância da folga C escalada do 1/4" do 2 m (Cebik); sem perdas no modelo; o QST de Lumpkin e Cerrito (jan. 2000) não foi lido.
 
 **Antenas sugeridas para adicionar (ordem recomendada):**
 1. V-dipolo para satélites meteorológicos (137 MHz). O `v-model.ts` do V invertido serve de base (é o mesmo fio dobrado, deitado).
-2. Moxon (fonte do Cebik: o espelho https://antenna2.github.io/cebik/content/moxon/moxpage.html está acessível).
-3. Dipolo multibanda (fan dipole), EFHW com unun 49:1 (exige dados de ferrite com fonte) e log-periódica.
+2. Dipolo multibanda (fan dipole), EFHW com unun 49:1 (exige dados de ferrite com fonte) e log-periódica.
 
 Antes de cada uma, pesquisar a fonte e avisar o usuário dos `TODO(fonte)`.
 

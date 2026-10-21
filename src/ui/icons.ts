@@ -22,6 +22,8 @@ const ICONS: Readonly<Record<string, string>> = {
   helical: '<path d="M9 44h30M12 37l24-5M12 29l24-5M12 21l24-5M12 13l24-5M24 44V8" stroke-dasharray="0"/>',
   // Boom horizontal com refletor longo, excitado e diretores progressivamente menores.
   yagi: '<path d="M5 40h38M10 9v31M19 13v27M28 17v23M37 20v23"/>',
+  // Vista de cima: excitado e refletor em U, com as pontas frente a frente e a folga entre elas.
+  moxon: '<path d="M6 21V12h36v9M6 27v9h36v-9"/><circle cx="24" cy="12" r="2.5"/>',
   // Dois quadrados (refletor e excitado), um atrás do outro.
   'cubic-quad': '<rect x="6" y="6" width="26" height="26"/><rect x="16" y="16" width="26" height="26"/>',
   // Disco em cima e cone com o vértice voltado para o disco.

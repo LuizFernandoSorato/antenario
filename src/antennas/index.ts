@@ -79,6 +79,11 @@ import { cutList as magneticLoopCutList } from './magnetic-loop/cutlist';
 import { diagrams as magneticLoopDiagrams } from './magnetic-loop/diagram';
 import magneticLoopGuide from './magnetic-loop/guide.md?raw';
 import { meta as magneticLoopMeta } from './magnetic-loop/meta';
+import * as moxon from './moxon/calc';
+import { cutList as moxonCutList } from './moxon/cutlist';
+import { diagrams as moxonDiagrams } from './moxon/diagram';
+import moxonGuide from './moxon/guide.md?raw';
+import { meta as moxonMeta } from './moxon/meta';
 import * as yagi from './yagi/calc';
 import { cutList as yagiCutList } from './yagi/cutlist';
 import { diagrams as yagiDiagrams } from './yagi/diagram';
@@ -134,6 +139,7 @@ export const antennas: readonly AntennaModule[] = [
   register(helicalMeta, helical.defaultParams, helical.calc, helicalDiagrams, helicalCutList, helicalGuide),
   register(yagiMeta, yagi.defaultParams, yagi.calc, yagiDiagrams, yagiCutList, yagiGuide),
   register(crossYagiMeta, crossYagi.defaultParams, crossYagi.calc, crossYagiDiagrams, crossYagiCutList, crossYagiGuide),
+  register(moxonMeta, moxon.defaultParams, moxon.calc, moxonDiagrams, moxonCutList, moxonGuide),
   register(cubicQuadMeta, cubicQuad.defaultParams, cubicQuad.calc, cubicQuadDiagrams, cubicQuadCutList, cubicQuadGuide),
   register(disconeMeta, discone.defaultParams, discone.calc, disconeDiagrams, disconeCutList, disconeGuide),
   register(magneticLoopMeta, magneticLoop.defaultParams, magneticLoop.calc, magneticLoopDiagrams, magneticLoopCutList, magneticLoopGuide),
