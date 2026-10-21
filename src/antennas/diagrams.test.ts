@@ -19,6 +19,7 @@ function tagBalance(svg: string): Record<string, number> {
 
 const scenarios: Record<string, Record<string, number>[]> = {
   dipole: [{}, { centerGap: 0.01 }, { frequencyMHz: 7.1 }],
+  bazooka: [{}, { centerGap: 0.01 }, { frequencyMHz: 145, cable: 4 }, { frequencyMHz: 3.65, velocityFactor: 0.78 }, { frequencyMHz: 1.9, cable: 5 }],
   'ground-plane': [{}, { droopAngleDeg: 0 }, { droopAngleDeg: 80 }, { radialCount: 3 }, { radialCount: 8 }],
   adsb: [{}, { droopAngleDeg: 0 }, { radialCount: 3 }],
   'j-pole': [{}, { frequencyMHz: 435 }, { frequencyMHz: 52 }],

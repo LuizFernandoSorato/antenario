@@ -39,6 +39,11 @@ import { cutList as disconeCutList } from './discone/cutlist';
 import { diagrams as disconeDiagrams } from './discone/diagram';
 import disconeGuide from './discone/guide.md?raw';
 import { meta as disconeMeta } from './discone/meta';
+import * as bazooka from './bazooka/calc';
+import { cutList as bazookaCutList } from './bazooka/cutlist';
+import { diagrams as bazookaDiagrams } from './bazooka/diagram';
+import bazookaGuide from './bazooka/guide.md?raw';
+import { meta as bazookaMeta } from './bazooka/meta';
 import * as dipole from './dipole/calc';
 import { cutList as dipoleCutList } from './dipole/cutlist';
 import { diagrams as dipoleDiagrams } from './dipole/diagram';
@@ -111,6 +116,7 @@ function register<P extends object>(
 
 export const antennas: readonly AntennaModule[] = [
   register(dipoleMeta, dipole.defaultParams, dipole.calc, dipoleDiagrams, dipoleCutList, dipoleGuide),
+  register(bazookaMeta, bazooka.defaultParams, bazooka.calc, bazookaDiagrams, bazookaCutList, bazookaGuide),
   register(groundPlaneMeta, groundPlane.defaultParams, groundPlane.calc, groundPlaneDiagrams, groundPlaneCutList, groundPlaneGuide),
   register(jPoleMeta, jPole.defaultParams, jPole.calc, jPoleDiagrams, jPoleCutList, jPoleGuide),
   register(helicalMeta, helical.defaultParams, helical.calc, helicalDiagrams, helicalCutList, helicalGuide),
