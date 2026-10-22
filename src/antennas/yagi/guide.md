@@ -69,7 +69,7 @@ do casamento escolhido. Um dipolo simples dentro do Yagi fica bem abaixo de 50 �
 
 - **Dipolo dobrado de ≈ 200 Ω** com balun de 4:1 para 50 Ω. Para o balun de meia onda de coaxial,
   use a ferramenta "Balun de meia onda de coaxial (4:1)".
-- **Hairpin**: use a ferramenta "Hairpin (casamento de Yagi)" com a impedância medida do elemento. **Gamma match**: ainda sem equações com fonte aqui.
+- **Hairpin**: use a ferramenta "Hairpin" com a impedância medida do elemento. **Gamma match**: ainda sem equações com fonte aqui.
 - Instale um choke de corrente no coaxial, logo atrás do excitado, para a malha não irradiar.
 
 ## 6. Ajuste

@@ -147,15 +147,12 @@ export function calc(params: CubicQuadParams): CalcResult {
   const { z0, q } = quadQ({ measurements }, f, nDir, wd);
   const direct = Math.max(z0.re / 50, 50 / z0.re);
   const bandwidth = qBandwidthEstimate(f, q, {
-    reference: 'com casamento ideal na frequência de projeto',
+    // O Q vale para uma ressonância isolada: quando outra espira ressoa perto (no modelo, com 2 diretores), a faixa real é maior.
+    // Espaço livre, fio de cobre ideal, sem varetas nem boom. Q de Yaghjian e Best, IEEE 2005 (fórmulas via arXiv 1909.08019).
     note:
-      `No modelo a espira excitada tem Z ≈ ${formatNumber(z0.re, 0)} ${z0.im < 0 ? '−' : '+'} j${formatNumber(Math.abs(z0.im), 0)} Ω; ` +
-      `ajustada para ressoar e ligada direto em 50 Ω, a ROE mínima seria ≈ ${formatNumber(direct, 1)}:1. ` +
-      'Pelo Q da impedância, que vale para uma ressonância isolada: quando outra espira ressoa perto (no modelo, com 2 diretores), a faixa ' +
-      'real é maior (estimativa conservadora). Espaço livre, fio de cobre ideal, sem varetas nem boom.',
-    source:
-      'Modelo desta ferramenta: método dos momentos (core/mom.ts) e Q da impedância de Yaghjian e Best (IEEE Trans. Antennas Propag., 2005; ' +
-      'fórmulas via arXiv 1909.08019). A quadra não tem comparação com medida.',
+      `Direto em 50 Ω (R ≈ ${formatNumber(z0.re, 0)} Ω) a ROE mínima seria ≈ ${formatNumber(direct, 1)}:1. ` +
+      'Conservadora se outra espira ressoar perto.',
+    source: 'Momentos desta ferramenta e Q de Yaghjian e Best (IEEE, 2005); sem comparação com medida',
   });
 
   const gainDbd = estimatedGainDbd(nDir);

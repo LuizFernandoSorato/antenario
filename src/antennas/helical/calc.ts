@@ -210,12 +210,11 @@ export function calc(params: HelicalParams): CalcResult {
         min: (AXIAL_MODE_C_MIN / c) * f,
         max: (AXIAL_MODE_C_MAX / c) * f,
         unit: 'MHz',
+        // Faixa do diagrama e da polarização. R ≈ 140·C/λ (quase resistiva) é proporcional à frequência; casada em f0 (R0), a ROE na
+        // borda é R/R0 ou R0/R, a razão das frequências. A fórmula é aproximada.
         note:
-          'Faixa em que o modo axial se mantém para esta circunferência (3/4 < C/λ < 4/3): é a faixa do diagrama e da polarização. ' +
-          // R ≈ 140·C/λ é proporcional à frequência; casada em f0 (R0), a ROE na borda é R/R0 ou R0/R, a razão das frequências.
-          `Pela fórmula de Kraus a impedância é quase resistiva e cresce com a frequência (≈ 140·C/λ); com a antena casada na frequência de projeto, ` +
-          `a ROE nas bordas dessa faixa ficaria ≈ ${formatNumber(Math.max(AXIAL_MODE_C_MAX / c, c / AXIAL_MODE_C_MIN), 2)}:1. O limite é o modo axial, ` +
-          'não a ROE. A fórmula é aproximada; meça.',
+          'Faixa do modo axial (3/4 < C/λ < 4/3). Com R ≈ 140·C/λ, casada em f0, a ROE nas bordas fica ' +
+          `≈ ${formatNumber(Math.max(AXIAL_MODE_C_MAX / c, c / AXIAL_MODE_C_MIN), 2)}:1: o limite é o diagrama, não a ROE.`,
         source: 'Kraus & Marhefka, cap. 7 (banda de cerca de 1,78:1; R ≈ 140·C/λ)',
       },
     },

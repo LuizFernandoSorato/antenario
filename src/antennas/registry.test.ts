@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { MAX_NOTE_LENGTH, MAX_SOURCE_LENGTH } from './bandwidth';
 import { antennas } from './index';
 
 // Teste de consistência: a UI monta o formulário a partir de meta.params, então
@@ -34,6 +35,18 @@ describe('registro de antenas', { timeout: 60_000 }, () => {
         }
       });
 
+      it('campo dependente (enabledBy) aponta para uma caixa de seleção que vem antes dele', () => {
+        const params = antenna.meta.params;
+        params.forEach((p, i) => {
+          if (p.enabledBy === undefined) return;
+          const owner = params.findIndex((q) => q.key === p.enabledBy);
+          expect(owner).toBeGreaterThanOrEqual(0);
+          expect(owner).toBeLessThan(i);
+          expect(params[owner]!.kind).toBe('boolean');
+          expect(params[owner]!.enabledBy).toBeUndefined();
+        });
+      });
+
       it('calcula com os valores padrão e declara premissas', () => {
         const r = antenna.calc({});
         expect(r.measurements.length).toBeGreaterThan(0);
@@ -48,6 +61,13 @@ describe('registro de antenas', { timeout: 60_000 }, () => {
         for (const e of [impedance, gain, bandwidth]) {
           if (e) expect(e.source.length).toBeGreaterThan(0);
         }
+      });
+
+      it('nota e fonte da banda cabem no cartão (os três cartões ficam lado a lado)', () => {
+        const { bandwidth } = antenna.calc({}).expected;
+        if (!bandwidth) return;
+        expect(bandwidth.note.length).toBeLessThanOrEqual(MAX_NOTE_LENGTH);
+        expect(bandwidth.source.length).toBeLessThanOrEqual(MAX_SOURCE_LENGTH);
       });
 
       it('guia segue o modelo de 9 seções do CLAUDE.md', () => {

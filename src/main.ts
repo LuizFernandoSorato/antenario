@@ -3,6 +3,7 @@ import { antennas } from './antennas';
 import { mountHomePage } from './ui/home-page';
 import { mountAntennaPage } from './ui/antenna-page';
 import { mountSmithPage } from './ui/smith-page';
+import { creditsHtml, loadStarCount } from './ui/project-info';
 import { mountToolPage } from './ui/tool-page';
 import { tools } from './ui/tools';
 
@@ -13,9 +14,11 @@ app.innerHTML = `
   <header class="no-print">
     <h1><a class="home-link" href="#">Antenário</a></h1>
     <p>Projete, calcule e construa antenas.</p>
+    ${creditsHtml()}
   </header>
   <main id="page"></main>
 `;
+void loadStarCount(app);
 
 const page = app.querySelector<HTMLElement>('#page')!;
 

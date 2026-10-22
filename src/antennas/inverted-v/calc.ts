@@ -11,8 +11,11 @@ import { assertFrequencyMHz, assertPositive, formatNumber } from '../../core/uni
 import { physicalLength, wavelength } from '../../core/wave';
 import { K_FIELD_NOTE, kAssumption, kWarning, shorteningFactorFor } from '../k-factor';
 import { type CalcResult, type CalcWarning, type Estimate, type Measurement, rangeWarning } from '../types';
-import { type InvertedVModel, type VBand, bandWidthMHz, invertedVModel } from './v-model';
+import { rangeText, widthText } from '../bandwidth';
+import { type InvertedVModel, SPAN, bandWidthMHz, invertedVModel } from './v-model';
 import { meta } from './meta';
+
+const BAND_SPAN_PERCENT = SPAN * 100;
 
 export interface InvertedVParams {
   frequencyMHz: number;
@@ -48,14 +51,6 @@ export function modelFor(params: InvertedVParams): InvertedVModel {
     radiusM: params.conductorDiameter / 2,
     referenceOhms: FEED_OHMS,
   });
-}
-
-function bandText(band: VBand | null, unit: 'kHz' | 'MHz'): string {
-  if (!band) return 'não chega lá';
-  const k = unit === 'kHz' ? 1000 : 1;
-  const d = unit === 'kHz' ? 0 : 2;
-  const open = band.open ? ' (ou mais: passou da varredura de ±15 %)' : '';
-  return `${formatNumber(bandWidthMHz(band) * k, d)} ${unit}, de ${formatNumber(band.lowMHz, 3)} a ${formatNumber(band.highMHz, 3)} MHz${open}`;
 }
 
 export function calc(params: InvertedVParams): CalcResult {
@@ -118,9 +113,9 @@ export function calc(params: InvertedVParams): CalcResult {
         typical: bandWidthMHz(b2) * (unit === 'kHz' ? 1000 : 1),
         unit,
         note:
-          `ROE < 2:1 em 50 Ω: ${bandText(b2, unit)}. ROE < 1,5:1: ${bandText(model.band15, unit)}. ` +
-          'Antena já ajustada para ressoar na frequência de projeto, no espaço livre. Perto do chão a resistência cai e a banda muda.',
-        source: modelSource,
+          `ROE < 2:1 em 50 Ω ${rangeText(b2, BAND_SPAN_PERCENT)}; < 1,5:1 em ${widthText(model.band15)}. ` +
+          'Ajustado para ressoar, no espaço livre; perto do chão a banda muda.',
+        source: 'Momentos desta ferramenta; conferido com Cebik, W4RNL, "80-Meter Dipoles and Inverted-Vs" (NEC-4)',
       }
     : null;
 

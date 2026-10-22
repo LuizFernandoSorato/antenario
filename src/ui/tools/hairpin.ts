@@ -7,7 +7,7 @@ import hairpinGuide from './guides/hairpin.md?raw';
 
 export const hairpinTool: Tool = {
   id: 'hairpin',
-  name: 'Hairpin (casamento de Yagi)',
+  name: 'Hairpin',
   guide: hairpinGuide,
   description:
     'Um grampo de dois fios em curto, ligado nos terminais do elemento excitado, vale uma indutância em paralelo. Ela cancela a ' +

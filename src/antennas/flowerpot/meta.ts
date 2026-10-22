@@ -2,7 +2,7 @@ import type { AntennaMeta } from '../types';
 
 export const meta: AntennaMeta = {
   id: 'flowerpot',
-  name: 'Flowerpot (dipolo coaxial vertical)',
+  name: 'Flowerpot',
   description:
     'Dipolo vertical de meia onda feito de um único cabo coaxial: em cima, o vivo sem a malha; embaixo, o próprio coaxial; ' +
     'uma bobina do cabo enrolada no tubo faz o choke que termina a antena. Tudo dentro de um tubo de PVC.',

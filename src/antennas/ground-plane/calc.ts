@@ -110,11 +110,8 @@ export function calc(params: GroundPlaneParams): CalcResult {
   const bandwidth = swrBandwidthEstimate(sweep, {
     reference: 'em 50 Ω',
     spanPercent: DIPOLE_SWEEP.span * 100,
-    note:
-      `Estimativa indicativa: a impedância do dipolo do mesmo condutor, escalada para os ${formatNumber(z, 0)} Ω estimados acima ` +
-      '(mesmo Q do dipolo, exato só com radiais horizontais sobre plano infinito e com radiais a 90°). Antena já ajustada para ' +
-      'ressoar na frequência de projeto. Com poucos radiais e o cabo por perto, meça.',
-    source: `${BAND_SOURCE}; teoria das imagens (Balanis, Antenna Theory, 4ª ed., §4.7)`,
+    note: `Indicativa: banda do dipolo do mesmo fio, escalada para os ${formatNumber(z, 0)} Ω estimados. Meça.`,
+    source: `${BAND_SOURCE}; teoria das imagens (Balanis, §4.7)`,
   });
 
   const warnings: CalcWarning[] = [

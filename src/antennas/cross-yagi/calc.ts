@@ -22,12 +22,12 @@ import { reflectionCoefficient, swrFromGamma } from '../../core/reflection';
 import { assertFrequencyMHz, assertPositive, formatNumber } from '../../core/units';
 import { assertFactor, physicalLength, wavelength } from '../../core/wave';
 import { inputImpedance } from '../../lines/transmission-line';
-import { bandText, swrBandwidthEstimate } from '../bandwidth';
+import { axialText, swrBandwidthEstimate } from '../bandwidth';
 import { quadratureSweep } from '../quadrature-feed';
 import { type AssemblyGuide, type CalcResult, type CalcWarning, type Measurement, rangeWarning } from '../types';
 import { quadratureFeed } from '../turnstile/calc';
 import { yagiQ } from '../yagi/band-model';
-import { YAGI_BAND_SOURCE, type YagiParams, designCalc, defaultParams as yagiDefaults } from '../yagi/calc';
+import { DL6WU_MIN_ELEMENTS, type YagiParams, designCalc, defaultParams as yagiDefaults } from '../yagi/calc';
 import { yagiElements } from '../yagi/elements';
 import { RHCP, SENSE_NAME, type Sense, senseOf } from '../circular';
 import { meta } from './meta';
@@ -106,14 +106,13 @@ export function calc(params: CrossYagiParams): CalcResult {
   const bandwidth = swrBandwidthEstimate(quad.swr, {
     reference: 'em 50 Ω',
     spanPercent,
+    // A ROE do conjunto é mais larga que a de um Yagi só: as reflexões dos dois chegam à junção com 180° de diferença e se cancelam.
+    // Premissas: cada Yagi como circuito ressonante de zy com o Q do modelo, linhas sem perdas, acoplamento entre os Yagis desprezado.
+    // Em Yagis longas o Q é conservador (a faixa de ROE do Yagi no modelo é maior).
     note:
-      `Mas a polarização só fica circular (razão axial < 3 dB: ${bandText(quad.axialBand, 'MHz', spanPercent)}) perto da frequência de projeto: ` +
-      'fora dela a linha defasadora deixa de dar 90° e as correntes ficam desiguais. A ROE do conjunto é mais larga que a de um Yagi só porque as ' +
-      'reflexões dos dois chegam à junção com 180° de diferença e se cancelam. ' +
-      `Modelo: cada Yagi como circuito ressonante de ${formatNumber(zy, 0)} Ω com o Q do modelo por momentos (${formatNumber(q, 0)}), linhas sem perdas, ` +
-      'acoplamento entre os Yagis desprezado.' +
-      (elements.length >= 11 ? ' Em Yagis longas o Q é conservador (a faixa de ROE do Yagi no modelo é maior).' : ''),
-    source: `${YAGI_BAND_SOURCE}; linhas pela matriz ABCD (Pozar); razão axial < 3 dB: critério usual (IntechOpen, fonte secundária)`,
+      `${axialText(quad.axialBand, spanPercent)} Cada Yagi com Q ≈ ${formatNumber(q, 0)}` +
+      (elements.length >= DL6WU_MIN_ELEMENTS ? ' (conservador em Yagi longa).' : '.'),
+    source: 'Momentos + Q de Yaghjian e Best; linhas pela matriz ABCD (Pozar); razão axial < 3 dB: critério usual (IntechOpen)',
   });
 
   const measurements: Measurement[] = [

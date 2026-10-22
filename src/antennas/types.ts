@@ -31,6 +31,11 @@ export interface ParamSpec {
   min?: number;
   max?: number;
   help?: string;
+  /**
+   * Chave de um campo `boolean` que vem antes deste: a tela mostra os dois no mesmo cartão e desativa este campo quando a caixa está
+   * desmarcada. O `calc` continua recebendo o valor (e deve ignorá-lo nesse caso).
+   */
+  enabledBy?: string;
 }
 
 export interface AntennaMeta {

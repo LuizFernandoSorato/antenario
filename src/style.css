@@ -55,6 +55,45 @@ header p,
   padding: 1rem;
 }
 
+/* Autor, repositório e botão de estrela do GitHub, abaixo do subtítulo. */
+.credits {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.credits a {
+  color: var(--accent);
+  overflow-wrap: anywhere;
+}
+
+.star-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--fg) !important;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.star-button:hover,
+.star-button:focus-visible {
+  border-color: var(--accent);
+}
+
+.star-count {
+  padding-left: 0.4rem;
+  border-left: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+
 label {
   display: grid;
   gap: 0.25rem;
@@ -174,6 +213,35 @@ small {
 
 .choice-field legend {
   padding: 0 0.25rem;
+}
+
+/* Caixa de seleção e os campos que dependem dela, num cartão só. */
+.field-group {
+  display: grid;
+  gap: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+}
+
+.dependent-field {
+  border: 0;
+  margin: 0;
+  padding: 0 0 0 1.5rem;
+  min-width: 0;
+}
+
+.dependent-field .choice-field {
+  border: 0;
+  padding: 0;
+}
+
+.dependent-field .choice-field legend {
+  padding: 0;
+}
+
+.dependent-field:disabled {
+  opacity: 0.5;
 }
 
 .choice-field label,

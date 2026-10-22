@@ -2,7 +2,7 @@ import type { AntennaMeta } from '../types';
 
 export const meta: AntennaMeta = {
   id: 'inverted-v',
-  name: 'V invertido (inverted-V)',
+  name: 'V invertido',
   description:
     'Dipolo de meia onda com o centro preso no alto de um único mastro e os braços descendo inclinados até as pontas. ' +
     'Ocupa menos espaço que o dipolo reto e tem impedância mais perto de 50 Ω, com um pouco menos de ganho.',

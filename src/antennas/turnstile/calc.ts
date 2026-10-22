@@ -24,9 +24,8 @@ import { type Complex, abs, complex } from '../../core/complex';
 import { reflectionCoefficient, swrFromGamma } from '../../core/reflection';
 import { assertFrequencyMHz, assertPositive, formatNumber } from '../../core/units';
 import { assertFactor, physicalLength, wavelength } from '../../core/wave';
-import { bandText, swrBandwidthEstimate } from '../bandwidth';
+import { axialText, swrBandwidthEstimate } from '../bandwidth';
 import { DIPOLE_SWEEP, type DipoleReflector, dipoleBandModel } from '../dipole/band-model';
-import { BAND_SOURCE } from '../dipole/calc';
 import { K_FIELD_NOTE, kAssumption, kWarning, shorteningFactorFor } from '../k-factor';
 import { quadratureSweep } from '../quadrature-feed';
 import { type AssemblyGuide, type CalcResult, type CalcWarning, type Estimate, type Measurement, rangeWarning } from '../types';
@@ -188,17 +187,14 @@ export function calc(params: TurnstileParams): CalcResult {
   const bandwidth = swrBandwidthEstimate(quad.swr, {
     reference: 'em 50 Ω',
     spanPercent,
-    note:
-      `Mas a polarização só fica circular (razão axial < 3 dB: ${bandText(quad.axialBand, 'MHz', spanPercent)}) perto da frequência de projeto: ` +
-      'fora dela a linha de fase deixa de dar 90° e as correntes ficam desiguais. A ROE do conjunto é mais larga que a de um dipolo porque as ' +
-      'reflexões dos dois dipolos chegam à junção com 180° de diferença e se cancelam. ' +
-      `Modelo: cada dipolo ajustado para ressoar (R ≈ ${formatNumber(band.impedanceAt(f).re, 0)} Ω` +
-      (withReflector ? (tubes ? ', com o tubo do refletor' : ', com o refletor como plano infinito') : '') +
-      `), linha de fase de ${DIPOLE_RESISTANCE_OHMS} Ω sem perdas, acoplamento entre os dipolos cruzados desprezado; razão axial na direção do feixe.`,
+    // A ROE do conjunto é mais larga que a de um dipolo: as reflexões dos dois dipolos chegam à junção com 180° de diferença e se
+    // cancelam. Premissas: dipolos ajustados para ressoar (com o refletor do modelo), linha de fase sem perdas, acoplamento entre os
+    // dipolos cruzados desprezado, razão axial na direção do feixe.
+    note: axialText(quad.axialBand, spanPercent),
     source:
-      `${BAND_SOURCE}; linha de 1/4 de onda pela matriz ABCD (Pozar)` +
-      (withReflector && !tubes ? '; plano pela teoria das imagens (Balanis, §4.7)' : '') +
-      '; razão axial < 3 dB: critério usual (IntechOpen, fonte secundária)',
+      'Momentos (conferido com Cebik); linha de 1/4 pela matriz ABCD (Pozar)' +
+      (withReflector && !tubes ? '; plano por imagens (Balanis)' : '') +
+      '; razão axial < 3 dB: critério usual (IntechOpen)',
   });
 
   const gain: Estimate = withReflector

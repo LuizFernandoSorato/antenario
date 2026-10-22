@@ -78,7 +78,7 @@ export interface MoxonModel {
 /** Com 100 trechos/λ os fios grossos ainda não convergem (R 3 Ω abaixo); com 200 ficam a ±2 Ω do NEC do Cebik (teste). */
 const SEGMENTS_PER_LAMBDA = 200;
 /** Varredura de ±10 % em passos de 1 %, interpolada para 401 pontos. */
-const SPAN = 0.1;
+export const SPAN = 0.1;
 const COARSE_STEPS = 20;
 const FINE_STEPS = 400;
 

@@ -18,9 +18,8 @@ import { meta } from './meta';
 /** Impedância do cabo de alimentação usada como referência da ROE (rádio de 50 Ω). */
 const FEED_OHMS = 50;
 
-export const BAND_SOURCE =
-  'Modelo desta ferramenta: método dos momentos no espaço livre (core/mom.ts); conferido com L. B. Cebik, W4RNL, ' +
-  '"80-Meter Dipoles and Inverted-Vs" (150 a 200 kHz de banda no 80 m com fio #12)';
+/** Modelo do dipolo ressonante (band-model.ts); a validação no 80 m vem de Cebik, "80-Meter Dipoles and Inverted-Vs". */
+export const BAND_SOURCE = 'Método dos momentos desta ferramenta; conferido com Cebik, W4RNL (80 m, fio #12: 150 a 200 kHz)';
 
 export interface DipoleParams {
   frequencyMHz: number;
@@ -66,10 +65,11 @@ export function calc(params: DipoleParams): CalcResult {
   const bandwidth = swrBandwidthEstimate(sweep, {
     reference: 'em 50 Ω',
     spanPercent: DIPOLE_SWEEP.span * 100,
+    // Dipolo ajustado para ressoar em f, no espaço livre, condutor perfeito, sem balun. Diâmetro acima do limite do modelo: banda
+    // calculada no limite (a real é um pouco maior).
     note:
-      `Dipolo já ajustado para ressoar na frequência de projeto (R ≈ ${formatNumber(band.impedanceAt(f).re, 0)} Ω no modelo), no ` +
-      'espaço livre, condutor perfeito, sem balun. Condutor mais grosso dá banda maior. Perto do chão a resistência muda e a banda também.' +
-      (band.clamped ? ' O diâmetro passou do limite do modelo: a banda foi calculada no limite (a real é um pouco maior).' : ''),
+      'Ajustado para ressoar, no espaço livre. Condutor mais grosso alarga; o solo muda a banda.' +
+      (band.clamped ? ' Diâmetro acima do limite do modelo: a real é maior.' : ''),
     source: BAND_SOURCE,
   });
 

@@ -36,9 +36,10 @@ export function mountHomePage(container: HTMLElement, antennas: readonly Antenna
   container.innerHTML = `
     <section class="home">
       <h2>Escolha uma antena</h2>
-      <p class="note">Toque em um modelo para informar a frequência e os dados do projeto. Depois você vê os diagramas, a folha de corte e o guia de construção.</p>
+      <p class="note">Escolha um modelo, informe a frequência e o material. Você recebe as medidas, diagramas e o guia de construção. As medidas são o ponto de partida: toda antena real precisa de ajuste com um medidor de ROE ou NanoVNA.</p>
       <div class="pick-grid">${entries.antennas.map(card).join('')}</div>
-      <h2>Cabos, casamento e segurança</h2>
+      <h2>Ferramentas</h2>
+      <p class="note">Cabos e casamento de impedâncias</p>
       <div class="pick-grid">${entries.tools.map(card).join('')}</div>
     </section>`;
 }

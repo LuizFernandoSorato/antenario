@@ -53,7 +53,7 @@ export interface InvertedVModel {
 /** Trechos do fio (par, para haver um nó no ápice). Com 30 a razão de comprimentos muda < 0,1 % em relação a 60 (teste). */
 const SEGMENTS = 30;
 /** Varredura de ±15 % em passos de 1 %, interpolada para 601 pontos (mesma técnica da double bazooka). */
-const SPAN = 0.15;
+export const SPAN = 0.15;
 const COARSE_STEPS = 30;
 const FINE_STEPS = 600;
 

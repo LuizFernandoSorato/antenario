@@ -57,7 +57,8 @@ describe('turnstile: calc', () => {
         expect(b.unit).toBe('MHz');
         expect(b.typical!).toBeGreaterThan(18);
         expect(b.typical!).toBeLessThan(30);
-        const ar = Number(/razão axial < 3 dB: ([\d,]+) MHz/.exec(b.note)![1]!.replace(',', '.'));
+        const [, lo, hi] = /razão axial < 3 dB\) só de ([\d,]+) a ([\d,]+) MHz/.exec(b.note)!;
+        const ar = Number(hi!.replace(',', '.')) - Number(lo!.replace(',', '.'));
         expect(ar).toBeGreaterThan(5);
         expect(ar).toBeLessThan(b.typical! / 2);
       }

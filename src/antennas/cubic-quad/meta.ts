@@ -2,7 +2,7 @@ import type { AntennaMeta } from '../types';
 
 export const meta: AntennaMeta = {
   id: 'cubic-quad',
-  name: 'Quadra cúbica (cubical quad)',
+  name: 'Quadra cúbica',
   description:
     'Elementos em espiras quadradas de uma onda de perímetro, montados em varetas cruzadas ' +
     '(spreaders) sobre um boom. Um refletor, uma espira excitada e zero ou mais diretores. ' +

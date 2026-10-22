@@ -85,6 +85,29 @@ function renderField(p: ParamSpec): string {
   </label>`;
 }
 
+/** Campos do formulário; uma caixa de seleção e os campos que dependem dela (`enabledBy`) ficam juntos, num cartão só. */
+function renderFields(params: readonly ParamSpec[]): string {
+  return params
+    .filter((p) => p.enabledBy === undefined)
+    .map((p) => {
+      const dependents = params.filter((d) => d.enabledBy === p.key);
+      if (dependents.length === 0) return renderField(p);
+      return `<div class="field-group">
+        ${renderField(p)}
+        ${dependents.map((d) => `<fieldset class="dependent-field" data-enabled-by="${p.key}">${renderField(d)}</fieldset>`).join('')}
+      </div>`;
+    })
+    .join('');
+}
+
+/** Desativa os campos dependentes cuja caixa de seleção está desmarcada. */
+function syncDependents(form: HTMLFormElement): void {
+  for (const group of form.querySelectorAll<HTMLFieldSetElement>('fieldset[data-enabled-by]')) {
+    const owner = form.elements.namedItem(group.dataset['enabledBy']!) as HTMLInputElement;
+    group.disabled = !owner.checked;
+  }
+}
+
 /** Valor atual de um campo boolean (1 se marcado, 0 se não) ou choice (o valor da opção marcada, ou o padrão). */
 function readChoiceField(form: HTMLFormElement, p: ParamSpec): number {
   if (p.kind === 'boolean') {
@@ -190,7 +213,7 @@ export function mountAntennaPage(container: HTMLElement, antenna: AntennaModule)
         <span>≈ ${meta.nominalImpedanceOhms} Ω</span>
       </p>
       <form class="params no-print" novalidate>
-        ${meta.params.map(renderField).join('')}
+        ${renderFields(meta.params)}
       </form>
       <div class="result" aria-live="polite"></div>
     </section>
@@ -225,6 +248,7 @@ export function mountAntennaPage(container: HTMLElement, antenna: AntennaModule)
   }
 
   function update(): void {
+    syncDependents(form);
     const params: Record<string, number> = {};
     for (const p of meta.params) {
       if (p.kind === 'boolean' || p.kind === 'choice') {

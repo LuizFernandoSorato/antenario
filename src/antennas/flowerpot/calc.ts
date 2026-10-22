@@ -229,9 +229,8 @@ export function calc(params: FlowerpotParams): CalcResult {
       bandwidth: {
         min: 0.027 * f,
         unit: 'MHz',
-        note:
-          'ROE < 1,5:1 em pelo menos 2,7 % da frequência: o protótipo de 2 m ficou abaixo de 1,2:1 de 144 a 148 MHz (toda a curva ' +
-          'publicada) e o de 6 m abaixo de 1,5:1 de ≈ 51,4 a mais de 53,8 MHz. Medidas de um protótipo de cada, não um modelo.',
+        // Protótipo de 2 m: < 1,2:1 de 144 a 148 MHz (toda a curva publicada); de 6 m: < 1,5:1 de ≈ 51,4 a mais de 53,8 MHz.
+        note: 'ROE < 1,5:1 em pelo menos 2,7 % da frequência, pelas curvas medidas (um protótipo de 2 m e um de 6 m). Não é um modelo.',
         source: 'VK2ZOI (curvas de ROE medidas)',
       },
     },

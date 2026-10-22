@@ -161,7 +161,7 @@ Cada guia segue o mesmo modelo:
 
 ### Estado atual (atualizado em 2026-10-17)
 
-Para retomar: `git log --oneline` mostra o que foi feito. 826 testes passando e build ok em 2026-10-22 (depois da largura de banda de todas as antenas;
+Para retomar: `git log --oneline` mostra o que foi feito. 861 testes passando e build ok em 2026-10-22 (depois dos textos da página inicial; notas de banda: nota ≤ 240 e fonte ≤ 180 caracteres, teste do registro;
 o último commit está em `git log`).
 
 **Largura de banda (2026-10-22, pedido do usuário: "estimar a largura de banda de todas as antenas"):** `expected.bandwidth` com ROE < 2:1 e
@@ -187,7 +187,9 @@ o último commit está em `git log`).
 **Navegação (`src/main.ts`, `src/ui/`):** roteamento por hash. Vazio = página inicial com cartões
 (`home-page.ts`, ícones SVG em `icons.ts`; todo id de antena do registro precisa de ícone, há teste). `#id` = página
 da antena (formulário primeiro, depois diagramas, medidas, folha de corte e guia), ferramenta ou Carta de Smith.
-O seletor de páginas antigo foi removido.
+O seletor de páginas antigo foi removido. Nomes dos cartões curtos, sem parênteses (2026-10-22, pedido do usuário; o título do guia
+mantém o nome completo). Cabeçalho com autor, repositório e botão de estrela (`ui/project-info.ts`: link comum, sem script de terceiros; o
+número vem da API do GitHub e some offline).
 
 **Yagi (`src/antennas/yagi/`):** a entrada é o **número de elementos** (refletor + excitado + diretores); o boom
 (cota **L**, entre centros) é calculado. Método AUTOMÁTICO (`chooseMethod`, sem campo na interface): 3, 5 e 6 elementos = NBS TN 688; o resto (4, 7 a 40) = DL6WU.
@@ -301,7 +303,9 @@ A regra "gap dentro do comprimento total" é a convenção usual de comprimento 
 e devolvem `CalcResult.assembly` (seção "Montagem" na tela) e, nas cruzadas, o diagrama de polaridade dos braços. `core/polarization.ts` (`circularSense`) define a convenção
 (IEEE 145; Ey atrasado 90° = RHCP) e o teste valida a fase do solver. Regras: pares cruzados, o vivo do elemento atrasado fica 90° no sentido horário (RHCP) ou
 anti-horário (LHCP) do vivo do direto, olhando na direção do feixe; QFH direita→LHCP, esquerda→RHCP; helicoidal direita→RHCP (Kraus). Na interface, campo `kind: 'boolean'`
-(checkbox) e `kind: 'choice'` (radio) em `ParamSpec`: o `calc` recebe números, a tela nunca mostra 0/1.
+(checkbox) e `kind: 'choice'` (radio) em `ParamSpec`: o `calc` recebe números, a tela nunca mostra 0/1. `enabledBy: '<chave de um boolean>'`
+(2026-10-22, pedido do usuário): o campo vai no mesmo cartão da caixa de seleção e fica desativado quando ela está desmarcada (turnstile:
+"Com refletor" + "Tipo de refletor"); o `calc` continua recebendo o valor e deve ignorá-lo. O teste do registro exige que a caixa venha antes.
 
 ### Pendências
 

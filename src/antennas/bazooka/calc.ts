@@ -21,8 +21,11 @@ import { type CoaxCable, coaxCables } from '../../data/coax-cables';
 import { attenuationDbPer100m } from '../../lines/coax';
 import { K_FIELD_NOTE, kAssumption, kWarning, shorteningFactorFor } from '../k-factor';
 import { type CalcResult, type CalcWarning, type Estimate, type Measurement, rangeWarning } from '../types';
-import { type Band, type BazookaModel, bandWidthMHz, bazookaModel } from './feed-model';
+import { rangeText, widthText } from '../bandwidth';
+import { type BazookaModel, SPAN, bandWidthMHz, bazookaModel } from './feed-model';
 import { DEFAULT_CABLE, meta } from './meta';
+
+const BAND_SPAN_PERCENT = SPAN * 100;
 
 export interface BazookaParams {
   frequencyMHz: number;
@@ -62,14 +65,6 @@ export function modelFor(f: number, cable: CoaxCable, vf: number): BazookaModel 
       },
     },
   });
-}
-
-function bandText(band: Band | null, unit: 'kHz' | 'MHz'): string {
-  if (!band) return 'não chega lá';
-  const k = unit === 'kHz' ? 1000 : 1;
-  const d = unit === 'kHz' ? 0 : 2;
-  const open = band.open ? ' (ou mais: passou da varredura de ±15 %)' : '';
-  return `${formatNumber(bandWidthMHz(band) * k, d)} ${unit}, de ${formatNumber(band.lowMHz, 3)} a ${formatNumber(band.highMHz, 3)} MHz${open}`;
 }
 
 export function calc(params: BazookaParams): CalcResult {
@@ -126,12 +121,12 @@ export function calc(params: BazookaParams): CalcResult {
     ? {
         typical: bandWidthMHz(b2) * (unit === 'kHz' ? 1000 : 1),
         unit,
+        // Antena ajustada para ressoar em f, no espaço livre; a altura e o solo mudam a resistência e, com ela, a banda.
         note:
-          `ROE < 2:1 em 50 Ω: ${bandText(b2, unit)}. Um dipolo comum com o mesmo diâmetro: ${bandText(d2, unit)}` +
-          (ratio ? ` (a bazooka dá ${formatNumber(ratio, 2)} vez essa banda)` : '') +
-          `. ROE < 1,5:1: ${bandText(model.band15.bazooka, unit)} (dipolo: ${bandText(model.band15.dipole, unit)}). ` +
-          'Antena já ajustada (ressonante na frequência de projeto), no espaço livre. A altura e o solo mudam a resistência e, com ela, a banda.',
-        source: modelSource,
+          `ROE < 2:1 em 50 Ω ${rangeText(b2, BAND_SPAN_PERCENT)}; < 1,5:1 em ${widthText(model.band15.bazooka)}. ` +
+          (ratio ? `${formatNumber(ratio, 2)}× a banda do dipolo de mesmo diâmetro. ` : '') +
+          'Ajustada para ressoar, no espaço livre.',
+        source: 'Momentos (dipolo) em paralelo com os tocos com a perda do datasheet (Pozar §2.7); compare: ARRL (2003) e F5AD, via ZS6GM',
       }
     : null;
 

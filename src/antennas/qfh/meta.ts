@@ -3,7 +3,7 @@ import type { AntennaMeta } from '../types';
 
 export const meta: AntennaMeta = {
   id: 'qfh',
-  name: 'QFH (hélice quadrifilar)',
+  name: 'QFH',
   description:
     'Duas espiras de fio, uma maior e outra menor, torcidas meia volta em torno de um cilindro e ' +
     'cruzadas a 90°. Dá polarização circular com diagrama quase hemisférico: recebe satélites ' +

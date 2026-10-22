@@ -94,7 +94,7 @@ describe('ground plane 1/4 de onda: calc', () => {
     // A ROE mínima vira 50/36,5 ≈ 1,37: a faixa de 2:1 até alarga (um pouco de descasamento alarga a de 2:1), a de 1,5:1 não.
     const width15 = (angle: number) => {
       const note = calc({ ...defaultParams, droopAngleDeg: angle }).expected.bandwidth!.note;
-      return Number(/ROE < 1,5:1: ([\d,]+) MHz/.exec(note)![1]!.replace(',', '.'));
+      return Number(/< 1,5:1 em ([\d,]+) MHz/.exec(note)![1]!.replace(',', '.'));
     };
     expect(width15(0)).toBeLessThan(width15(45));
   });

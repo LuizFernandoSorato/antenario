@@ -70,7 +70,8 @@ describe('cross Yagi: calc', { timeout: 60_000 }, () => {
       const single = yagiCalc(defaultParams).expected.bandwidth!;
       expect(b.unit).toBe('MHz');
       expect(b.typical!).toBeGreaterThan(single.typical!);
-      const ar = Number(/razão axial < 3 dB: ([\d,]+) MHz/.exec(b.note)![1]!.replace(',', '.'));
+      const [, lo, hi] = /razão axial < 3 dB\) só de ([\d,]+) a ([\d,]+) MHz/.exec(b.note)!;
+      const ar = Number(hi!.replace(',', '.')) - Number(lo!.replace(',', '.'));
       expect(ar).toBeLessThan(b.typical!);
     }
   });

@@ -11,7 +11,7 @@ function yagiParam(key: string) {
 
 export const meta: AntennaMeta = {
   id: 'cross-yagi',
-  name: 'Cross Yagi (polarização circular)',
+  name: 'Cross Yagi',
   description:
     'Dois Yagis idênticos no mesmo boom, girados 90° um em relação ao outro, com os elementos cruzados nas mesmas posições ' +
     '(no mesmo plano). Um é ligado direto e o outro por uma linha de 1/4 de onda, que o atrasa 90° e dá polarização circular. ' +

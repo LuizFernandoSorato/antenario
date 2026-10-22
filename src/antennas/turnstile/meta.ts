@@ -4,7 +4,7 @@ import type { AntennaMeta } from '../types';
 
 export const meta: AntennaMeta = {
   id: 'turnstile',
-  name: 'Turnstile (dipolos cruzados)',
+  name: 'Turnstile',
   description:
     'Dois dipolos de meia onda cruzados a 90°, alimentados com defasagem de 90° (um deles por um trecho de cabo de ' +
     '1/4 de onda). Com um refletor a 1/4 de onda atrás, dá polarização circular apontando para cima (satélites). ' +
@@ -65,6 +65,7 @@ export const meta: AntennaMeta = {
     {
       key: 'reflectorKind',
       kind: 'choice',
+      enabledBy: 'reflector',
       label: 'Tipo de refletor',
       unit: '',
       defaultValue: REFLECTOR_PLATE,
@@ -73,7 +74,7 @@ export const meta: AntennaMeta = {
         { value: REFLECTOR_PLATE, label: 'Chapa ou tela quadrada (melhor)' },
         { value: REFLECTOR_TUBES, label: 'Um tubo alinhado com cada dipolo (cruz)' },
       ],
-      help: 'Só vale com refletor. A cruz de tubos é mais simples de montar, mas irradia bem mais para trás e perde ganho (valores no aviso do resultado).',
+      help: 'A cruz de tubos é mais simples de montar, mas irradia bem mais para trás e perde ganho (valores no aviso do resultado).',
     },
     circularSenseParam(),
   ],

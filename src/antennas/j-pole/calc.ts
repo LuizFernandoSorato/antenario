@@ -129,11 +129,11 @@ export function calc(params: JPoleParams): CalcResult {
       // TODO(fonte): curva de ROE medida com o diâmetro e o critério declarados.
       bandwidth: {
         unit: 'MHz',
+        // A versão de fita de 300 Ω do mesmo artigo teve metade da banda (condutor mais fino). Cópia do QST em repeater-builder.com.
         note:
-          `Sem estimativa calculada. Referência medida: um J-pole de 2 m de cano de cobre teve banda de ≈ 8 MHz (≈ ${formatNumber(FONG_BANDWIDTH_FRACTION * 100, 1)} % de 146 MHz), ` +
-          `o dobro da versão de fita de 300 Ω, porque o condutor é mais grosso (aqui, a mesma fração daria ≈ ${formatNumber(FONG_BANDWIDTH_FRACTION * f, 1)} MHz). ` +
-          'O artigo não diz o critério de ROE nem o diâmetro do cano: use só como ordem de grandeza e meça.',
-        source: 'E. Fong, WB6IQN, "The DBJ-1: A VHF-UHF Dual-Band J-Pole", QST, fev. 2003 (cópia em repeater-builder.com)',
+          `Sem cálculo. Medida de referência: J-pole de 2 m de cano de cobre, ≈ 8 MHz (${formatNumber(FONG_BANDWIDTH_FRACTION * 100, 1)} %; ` +
+          `aqui ≈ ${formatNumber(FONG_BANDWIDTH_FRACTION * f, 1)} MHz). Critério de ROE e diâmetro não informados: meça.`,
+        source: 'E. Fong, WB6IQN, "The DBJ-1: A VHF-UHF Dual-Band J-Pole", QST, fev. 2003',
       },
     },
     warnings,

@@ -3,7 +3,7 @@ import type { AntennaMeta } from '../types';
 
 export const meta: AntennaMeta = {
   id: 'helical',
-  name: 'Helicoidal (modo axial)',
+  name: 'Helicoidal',
   description:
     'Uma hélice de fio sobre um refletor circular, irradiando na direção do eixo com ' +
     'polarização circular. É a antena clássica para satélites (polarização circular evita ' +

@@ -75,7 +75,7 @@ export interface BazookaModel {
 /** Trechos do dipolo (par, para haver um nó no centro). Com 30 a banda muda < 1 % em relação a 60: ver o teste de convergência. */
 const SEGMENTS = 30;
 /** Varredura de ±15 % em passos de 1 %: o dipolo é calculado nesses pontos e interpolado entre eles. */
-const SPAN = 0.15;
+export const SPAN = 0.15;
 const COARSE_STEPS = 30;
 const FINE_STEPS = 600;
 

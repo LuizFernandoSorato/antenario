@@ -8,11 +8,12 @@
 
 import { assertFrequencyMHz, assertPositive, formatEngineering, formatNumber } from '../../core/units';
 import { wavelength } from '../../core/wave';
+import { rangeText, widthText } from '../bandwidth';
 import { type CalcResult, type CalcWarning, type Estimate, type Measurement, rangeWarning } from '../types';
 import {
   MOXON_MAX_DIAMETER_LAMBDA,
   MOXON_MIN_DIAMETER_LAMBDA,
-  type MoxonBand,
+  SPAN,
   type MoxonDimensions,
   type MoxonModel,
   bandWidthMHz,
@@ -20,6 +21,8 @@ import {
   moxonModel,
 } from './moxon-model';
 import { meta } from './meta';
+
+const BAND_SPAN_PERCENT = SPAN * 100;
 
 export interface MoxonParams {
   frequencyMHz: number;
@@ -57,14 +60,6 @@ export function modelFor(params: MoxonParams): MoxonModel {
     radiusM: params.conductorDiameter / 2,
     referenceOhms: FEED_OHMS,
   });
-}
-
-function bandText(band: MoxonBand | null, unit: 'kHz' | 'MHz'): string {
-  if (!band) return 'não chega lá';
-  const k = unit === 'kHz' ? 1000 : 1;
-  const d = unit === 'kHz' ? 0 : 2;
-  const open = band.open ? ' (ou mais: passou da varredura de ±10 %)' : '';
-  return `${formatNumber(bandWidthMHz(band) * k, d)} ${unit}, de ${formatNumber(band.lowMHz, 3)} a ${formatNumber(band.highMHz, 3)} MHz${open}`;
 }
 
 export function calc(params: MoxonParams): CalcResult {
@@ -114,10 +109,11 @@ export function calc(params: MoxonParams): CalcResult {
     ? {
         typical: bandWidthMHz(b2) * (unit === 'kHz' ? 1000 : 1),
         unit,
+        // Espaço livre, condutor perfeito.
         note:
-          `ROE < 2:1 em 50 Ω: ${bandText(b2, unit)}. ROE < 1,5:1: ${bandText(model.band15, unit)}. No espaço livre, condutor ` +
-          'perfeito. A F/C máxima é estreita (fica perto da frequência de projeto), mas a rejeição traseira continua boa na faixa toda (Cebik).',
-        source: modelSource,
+          `ROE < 2:1 em 50 Ω ${rangeText(b2, BAND_SPAN_PERCENT)}; < 1,5:1 em ${widthText(model.band15)}. ` +
+          'A F/C máxima é estreita, mas a rejeição traseira segue boa na faixa (Cebik).',
+        source: 'Momentos desta ferramenta; conferido com os exemplos NEC de Cebik, W4RNL, "Designing Moxon Rectangles…"',
       }
     : null;
 

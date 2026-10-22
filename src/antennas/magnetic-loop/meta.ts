@@ -2,7 +2,7 @@ import type { AntennaMeta } from '../types';
 
 export const meta: AntennaMeta = {
   id: 'magnetic-loop',
-  name: 'Loop magnética (small loop)',
+  name: 'Loop magnética',
   description:
     'Uma espira circular de tubo ou coaxial, bem menor que o comprimento de onda, sintonizada por um ' +
     'capacitor variável. Cabe em casa ou numa varanda e funciona em HF sem radiais. O preço é a banda ' +

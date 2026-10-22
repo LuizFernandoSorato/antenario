@@ -2,7 +2,7 @@ import type { AntennaMeta } from '../types';
 
 export const meta: AntennaMeta = {
   id: 'moxon',
-  name: 'Moxon (retângulo de Moxon)',
+  name: 'Moxon',
   description:
     'Antena direcional de dois elementos com as pontas dobradas para dentro, formando um retângulo. Quase o ganho de uma ' +
     'Yagi de 2 elementos, com rejeição traseira muito alta e 50 Ω direto, em cerca de 70 % da largura.',

@@ -78,7 +78,7 @@ export function elementPositionsLambda(directorCount: number, spacing: number): 
 }
 
 /** Menor número de elementos (boom de 2,2λ) a partir do qual o DL6WU vale (ver `dl6wu.ts`). */
-const DL6WU_MIN_ELEMENTS = 11;
+export const DL6WU_MIN_ELEMENTS = 11;
 
 /**
  * Método automático: o NBS (projetos medidos e otimizados) para Yagis curtos que ele cobre, ou seja, 3, 5 e 6 elementos; o DL6WU a partir
@@ -135,9 +135,8 @@ export function calc(params: YagiParams): CalcResult {
   return { ...result, expected: { ...result.expected, bandwidth: yagiBandwidth(elements, params.elementDiameter, params.frequencyMHz) } };
 }
 
-export const YAGI_BAND_SOURCE =
-  'Modelo desta ferramenta: método dos momentos sem boom (core/mom.ts, conferido com o ganho medido do NBS TN 688) e Q da impedância de ' +
-  'Yaghjian e Best (IEEE Trans. Antennas Propag., 2005; fórmulas via arXiv 1909.08019)';
+/** Momentos: core/mom.ts, sem boom. Q: Yaghjian e Best, IEEE Trans. Antennas Propag., 2005 (fórmulas via arXiv 1909.08019). */
+export const YAGI_BAND_SOURCE = 'Momentos sem boom (conferido com o ganho medido do NBS TN 688) e Q de Yaghjian e Best (IEEE, 2005)';
 
 /** Banda de ROE < 2:1 com casamento ideal em f0, pelo Q do excitado; para Yagis longas o Q é conservador (teste de band-model). */
 export function yagiBandwidth(elements: readonly YagiElement[], diameterM: number, f0: number): Estimate {
@@ -145,15 +144,11 @@ export function yagiBandwidth(elements: readonly YagiElement[], diameterM: numbe
   const direct = Math.max(z0.re / 50, 50 / z0.re);
   const long = elements.length >= DL6WU_MIN_ELEMENTS;
   return qBandwidthEstimate(f0, q, {
-    reference: 'com casamento ideal na frequência de projeto',
+    // A rede de casamento ideal não tem perdas nem banda própria. Espaço livre, condutor perfeito, sem boom. Em Yagis longas a
+    // impedância ondula e a varredura do modelo dá mais banda que o Q; ganho e F/C dentro da faixa não foram calculados.
     note:
-      `No modelo o excitado tem Z ≈ ${formatNumber(z0.re, 0)} ${z0.im < 0 ? '−' : '+'} j${formatNumber(Math.abs(z0.im), 0)} Ω; ` +
-      `ajustado para ressoar e ligado direto em 50 Ω, a ROE mínima seria ≈ ${formatNumber(direct, 1)}:1. A rede de casamento ideal não tem ` +
-      'perdas nem banda própria: gamma, hairpin e dipolo dobrado estreitam um pouco a faixa. Espaço livre, condutor perfeito, sem boom.' +
-      (long
-        ? ' Em Yagis longas a impedância varia em ondulações e, no modelo, a faixa de ROE < 2:1 é maior que esta (estimativa conservadora). ' +
-          'O ganho e a relação frente–costas também mudam dentro da faixa; não foram calculados aqui.'
-        : ''),
+      `Direto em 50 Ω (R ≈ ${formatNumber(z0.re, 0)} Ω) a ROE mínima seria ≈ ${formatNumber(direct, 1)}:1; gamma e hairpin estreitam um pouco.` +
+      (long ? ' Yagi longa: estimativa conservadora.' : ''),
     source: YAGI_BAND_SOURCE,
   });
 }
@@ -310,4 +305,4 @@ function calcNbs(params: YagiParams): CalcResult {
   };
 }
 
-// TODO(fonte) [guide.md]: fonte pendente: «- **Hairpin**: use a ferramenta "Hairpin (casamento de Yagi)" com a impedância medida do e…»
+// TODO(fonte) [guide.md]: fonte pendente: «- **Hairpin**: use a ferramenta "Hairpin" com a impedância medida do e…»

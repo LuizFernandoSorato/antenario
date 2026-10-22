@@ -2,7 +2,7 @@ import type { AntennaMeta } from '../types';
 
 export const meta: AntennaMeta = {
   id: 'yagi',
-  name: 'Yagi-Uda (NBS TN 688)',
+  name: 'Yagi-Uda',
   description:
     'Antena direcional com um refletor, um elemento excitado e vários diretores num boom. ' +
     'As medidas seguem os projetos otimizados do relatório NBS TN 688 (de 0,4λ a 4,2λ de ' +

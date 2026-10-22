@@ -18,7 +18,7 @@ function meters(m: number): string {
 
 export const rfExposureTool: Tool = {
   id: 'rf-exposure',
-  name: 'Exposição a RF: distância de segurança',
+  name: 'Exposição a RF',
   guide: exposureGuide,
   description:
     'Estimativa da densidade de potência S = P·G / (4π·r²) em campo distante e da distância mínima para ficar abaixo ' +

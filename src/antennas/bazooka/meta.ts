@@ -6,7 +6,7 @@ export const DEFAULT_CABLE = coaxCables.findIndex((c) => c.id === 'belden-8259')
 
 export const meta: AntennaMeta = {
   id: 'bazooka',
-  name: 'Bazooka (double bazooka)',
+  name: 'Double bazooka',
   description:
     'Dipolo de meia onda com a parte central feita de cabo coaxial: a malha é cortada no meio e o vivo é ligado à malha nas ' +
     'pontas, formando dois tocos de 1/4 de onda por dentro do cabo. Fios completam o comprimento do dipolo. Popular em HF; ' +

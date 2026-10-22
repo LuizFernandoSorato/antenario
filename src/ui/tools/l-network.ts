@@ -42,7 +42,7 @@ function componentRows(label: string, c: ReactiveComponent | null, withPower: bo
 
 export const lNetworkTool: Tool = {
   id: 'l-network',
-  name: 'Rede L (casamento com L e C)',
+  name: 'Rede L',
   guide: lNetworkGuide,
   description:
     'Dois componentes, um indutor e/ou um capacitor, casam qualquer impedância com parte resistiva ' +
