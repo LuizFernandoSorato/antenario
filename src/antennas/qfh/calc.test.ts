@@ -48,6 +48,17 @@ describe('QFH: calc', () => {
   });
 });
 
+describe('QFH: ganho', { timeout: 60_000 }, () => {
+  it('pelo modelo por momentos: dentro dos 3 a 5 dBic citados por rfessentials.com, nos dois sentidos', () => {
+    for (const circularSense of [RHCP, LHCP]) {
+      const g = calc({ ...defaultParams, circularSense }).expected.gain!;
+      expect(g.unit).toBe('dBic');
+      expect(g.typical!).toBeGreaterThan(3);
+      expect(g.typical!).toBeLessThan(5);
+    }
+  });
+});
+
 describe('QFH: lista de corte', () => {
   it('duas espiras ajustáveis, cortadas com o fio já descontado do espaço central', () => {
     const items = cutList(defaultParams);

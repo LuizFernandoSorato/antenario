@@ -25,20 +25,49 @@ export const MAX_MODEL_RODS = 16;
 /** Trechos por comprimento de onda (λ/12). Escolha do modelo: contra λ/20 e λ/30 a diretividade muda menos de 0,1 dB; ver o teste de convergência. */
 export const SEGMENTS_PER_WAVELENGTH = 12;
 
+/** Frequências do padrão e do ganho, como múltiplos da menor frequência de operação (o padrão do discone muda muito ao longo da banda). */
+export const PATTERN_MULTIPLES: readonly number[] = [1, 2, 4];
+
 export interface DisconeModel {
   solution: MomSolution;
   /** Número de pares de hastes usado no modelo. */
   rodCount: number;
   /** Impedância de entrada (hastes em paralelo), em ohms. */
   inputImpedance: { re: number; im: number };
+  /** Diretividade máxima (razão), calculada uma vez. */
+  maxDirectivity: () => number;
 }
 
+/**
+ * Soluções recentes: o cálculo (ganho) e os diagramas pedem as mesmas frequências, e cada uma leva de 0,7 a 5 s no navegador.
+ * A chave é a geometria usada, então qualquer mudança de entrada resolve de novo.
+ */
+const cache = new Map<string, DisconeModel>();
+const CACHE_SIZE = 6;
+
 export function solveDiscone(
-  result: CalcResult,
+  result: Pick<CalcResult, 'measurements'>,
   rodCount: number,
   rodDiameter: number,
   frequencyMHz: number,
   segmentsPerWavelength = SEGMENTS_PER_WAVELENGTH,
+): DisconeModel {
+  const geometry = ['A', 'B', 'C', 'E', 'F'].map((label) => result.measurements.find((x) => x.label === label)?.meters);
+  const key = JSON.stringify([geometry, rodCount, rodDiameter, frequencyMHz, segmentsPerWavelength]);
+  const hit = cache.get(key);
+  if (hit) return hit;
+  const model = solveUncached(result, rodCount, rodDiameter, frequencyMHz, segmentsPerWavelength);
+  if (cache.size >= CACHE_SIZE) cache.delete(cache.keys().next().value!);
+  cache.set(key, model);
+  return model;
+}
+
+function solveUncached(
+  result: Pick<CalcResult, 'measurements'>,
+  rodCount: number,
+  rodDiameter: number,
+  frequencyMHz: number,
+  segmentsPerWavelength: number,
 ): DisconeModel {
   const get = (label: string): number => {
     const m = result.measurements.find((x) => x.label === label);
@@ -86,5 +115,11 @@ export function solveDiscone(
     sumIm += cur.im;
   }
   const mag2 = sumRe * sumRe + sumIm * sumIm;
-  return { solution, rodCount: n, inputImpedance: { re: sumRe / mag2, im: -sumIm / mag2 } };
+  let directivity: number | undefined;
+  return {
+    solution,
+    rodCount: n,
+    inputImpedance: { re: sumRe / mag2, im: -sumIm / mag2 },
+    maxDirectivity: () => (directivity ??= solution.directivity()),
+  };
 }

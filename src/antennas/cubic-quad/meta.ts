@@ -12,7 +12,7 @@ export const meta: AntennaMeta = {
   typicalRangeMHz: { min: 14, max: 450 },
   nominalImpedanceOhms: 50,
   polarization: 'Horizontal (alimentada no meio do lado de baixo) ou vertical (no meio de um lado)',
-  // Ganho: estimativa aditiva de fonte secundária; ver calc().expected.gain.
+  // Ganho: do modelo por momentos (depende dos diretores); ver calc().expected.gain.
   approxGainDbi: null,
   usage: { rx: true, tx: true },
   outdoor: true,

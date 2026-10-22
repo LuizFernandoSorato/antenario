@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { wavelength } from '../../core/wave';
-import { calc, defaultParams, estimatedGainDbd, loopPerimeter } from './calc';
+import { calc, defaultParams, loopPerimeter } from './calc';
+import { solveQuad } from './pattern-model';
 import { cutList } from './cutlist';
 
 // Referências: fórmulas N6VNG (f em MHz, comprimento em pés): refletor 1030/f, excitado 1005/f,
@@ -56,10 +57,20 @@ describe('quadra cúbica: calc', () => {
     expect(r.measurements.some((x) => x.label === 'C' || x.label === 'I')).toBe(false);
   });
 
-  it('ganho aditivo: 2 + 5 dBd (2 elementos), +2 (1º diretor), +1 por diretor extra', () => {
-    expect(estimatedGainDbd(0)).toBe(7);
-    expect(estimatedGainDbd(1)).toBe(9);
-    expect(estimatedGainDbd(3)).toBe(11);
+  it('ganho e impedância pelo modelo por momentos: o ganho cresce com os diretores e é o mesmo do diagrama', () => {
+    // Modelo a 145 MHz, 0,2λ: ≈ 7,5 dBi (2 elementos) a ≈ 11,6 dBi (4 diretores). Sem referência externa (ver pattern-model.test.ts).
+    const gains = [0, 1, 2, 3, 4].map((directorCount) => {
+      const p = { ...defaultParams, directorCount };
+      const r = calc(p);
+      const s = solveQuad(r, p.frequencyMHz, directorCount, p.wireDiameter);
+      expect(r.expected.gain!.typical!).toBeCloseTo(10 * Math.log10(s.directivity([0, 0, 1])), 6);
+      expect(r.expected.impedance!.typical!).toBeCloseTo(s.inputImpedance(0).re, 6);
+      expect(r.expected.gain!.source).toMatch(/Momentos/);
+      return r.expected.gain!.typical!;
+    });
+    for (let i = 1; i < gains.length; i++) expect(gains[i]!).toBeGreaterThan(gains[i - 1]!);
+    expect(gains[0]!).toBeGreaterThan(7);
+    expect(gains[4]!).toBeLessThan(12.5);
   });
 
   it('espaçamento fora de 0,15λ–0,25λ gera aviso', () => {

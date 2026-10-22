@@ -11,9 +11,11 @@ cruzadas (os **spreaders**). Um boom une as espiras: o **refletor** (atrás, um 
 - **Polarização:** horizontal se a alimentação fica no meio do lado de baixo; vertical se fica no meio de
   um lado vertical.
 - **Diagrama:** direcional, para o lado dos diretores.
-- **Ganho:** a espira sozinha dá cerca de 2 dB sobre o dipolo; o refletor soma cerca de 5 dB e cada
-  diretor mais 1 a 2 dB. É uma estimativa de fonte secundária, com incerteza de vários dB.
-- **Impedância:** cerca de 50 Ω com espaçamento de 0,15λ a 0,2λ.
+- **Ganho:** pelo modelo por momentos desta ferramenta, ≈ 7,5 dBi com 2 elementos e ≈ 9,5 a 11,6 dBi com 1 a 4 diretores
+  (espaço livre, sem perdas, sem medida). A soma de fonte secundária usada antes (2 dB da espira, 5 do refletor, 1 a 2 por
+  diretor) dá 1,6 a 2,6 dB a mais.
+- **Impedância:** o Electronics Notes cita cerca de 50 Ω com espaçamento de 0,15λ a 0,2λ; o modelo desta ferramenta dá valores
+  diferentes (≈ 80 Ω com 2 elementos a 0,2λ, 33 a 59 Ω com diretores). A tela mostra o do modelo. Meça.
 
 ## 2. Materiais
 
@@ -53,10 +55,11 @@ Trena, serra, furadeira, estilete, ferro de solda, alicate e NanoVNA ou medidor 
 
 ## 5. Alimentação e casamento
 
-Com espaçamento de 0,15λ a 0,2λ a impedância da espira excitada fica perto de 50 Ω, o que permite ligar o
-coaxial direto, **com choke/balun de corrente** para a malha do cabo não irradiar. Com espaçamento pouco
-acima de 0,25λ a impedância sobe para perto de 75 Ω, e um transformador de 1/4 de onda pode servir (use a
-ferramenta "Transformador de 1/4 de onda"). Para casar, veja as ferramentas de rede L e de stub. Gamma match ainda não tem equações com fonte aqui.
+Segundo o Electronics Notes, com espaçamento de 0,15λ a 0,2λ a impedância da espira excitada fica perto de 50 Ω, o que
+permite ligar o coaxial direto, **com choke/balun de corrente** para a malha do cabo não irradiar; com espaçamento pouco
+acima de 0,25λ ela sobe para perto de 75 Ω, e um transformador de 1/4 de onda pode servir (use a ferramenta
+"Transformador de 1/4 de onda"). O modelo desta ferramenta não confirma esses valores (veja a impedância na tela):
+meça antes de escolher o casamento. Para casar, veja as ferramentas de rede L e de stub. Gamma match ainda não tem equações com fonte aqui.
 
 ## 6. Ajuste
 

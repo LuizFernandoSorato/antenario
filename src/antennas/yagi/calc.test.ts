@@ -9,6 +9,7 @@ import {
   reflectorLength as dl6wuReflectorLength,
 } from './dl6wu';
 import { NBS_DESIGNS, boomCorrection, directorLengths, reflectorLength } from './nbs688';
+import { isolatedElements, solveYagi } from './pattern-model';
 
 // Referências: NBS Technical Note 688 (Viezbicke, 1976).
 // - Tabela 1 (p. 7): comprimentos dos parasitas em d/λ = 0,0085, espaçamento e ganho.
@@ -159,6 +160,31 @@ describe('Yagi: calc', { timeout: 60_000 }, () => {
     expect(long.note).toMatch(/conservadora/);
     expect(calc({ ...defaultParams, boomDiameter: 0 }).expected.bandwidth!.typical).toBeCloseTo(short.typical!, 9);
   });
+
+  it('impedância do excitado (dipolo simples) pelo modelo: bem abaixo de 50 Ω com os parasitas do NBS', () => {
+    // O dipolo isolado tem ≈ 70 Ω no mesmo modelo (CLAUDE.md); os parasitas próximos do NBS a derrubam para ≈ 20 Ω (valor do modelo).
+    const z = calc(defaultParams).expected.impedance!;
+    expect(z.typical!).toBeGreaterThan(10);
+    expect(z.typical!).toBeLessThan(35);
+    expect(z.note).toMatch(/j\d/);
+    expect(z.source).toMatch(/Momentos/);
+  });
+
+  it('DL6WU curta (boom < 2,2λ): ganho pelo modelo, igual à diretividade do diagrama e crescendo de 7 a 10 elementos', () => {
+    const gains = [7, 8, 9, 10].map((elementCount) => {
+      const p = { ...defaultParams, elementCount };
+      const g = calc(p).expected.gain!;
+      expect(g.source).toMatch(/Momentos/);
+      const d = solveYagi(isolatedElements(p), p).directivity([0, 0, 1]);
+      expect(g.typical!).toBeCloseTo(10 * Math.log10(d), 6);
+      return g.typical!;
+    });
+    for (let i = 1; i < gains.length; i++) expect(gains[i]!).toBeGreaterThan(gains[i - 1]!);
+    expect(calc({ ...defaultParams, elementCount: 4 }).expected.gain!.typical).toBeDefined();
+    // Onde o método dá o ganho (NBS, DL6WU ≥ 11 elementos), ele continua sendo o mostrado.
+    expect(calc(defaultParams).expected.gain!.source).toMatch(/NBS/);
+    expect(calc({ ...defaultParams, elementCount: 11 }).expected.gain!.source).toMatch(/DL6WU\.BAS/);
+  });
 });
 
 describe('Yagi: lista de corte', { timeout: 60_000 }, () => {
@@ -211,8 +237,8 @@ describe('Yagi: método DL6WU (qualquer número de elementos)', { timeout: 60_00
     const g = (n: number) => calc({ ...base, elementCount: n }).expected.gain;
     expect(g(11).typical).toBeCloseTo(9.2 + 3.39 * Math.log(2.49) + 2.15, 9);
     expect(g(20).typical!).toBeGreaterThan(g(11).typical!);
-    // 10 elementos: boom de 2,145λ, abaixo de 2,2λ: sem ganho e com aviso
-    expect(g(10).typical).toBeUndefined();
+    // 10 elementos: boom de 2,145λ, abaixo de 2,2λ: sem a estimativa do DL6WU (o ganho vem do modelo) e com aviso
+    expect(g(10).source).toMatch(/Momentos/);
     expect(calc({ ...base, elementCount: 10 }).warnings.some((w) => w.message.includes('fora da faixa do método DL6WU'))).toBe(true);
     expect(calc({ ...base, elementCount: 11 }).warnings.some((w) => w.message.includes('fora da faixa do método DL6WU'))).toBe(false);
   });

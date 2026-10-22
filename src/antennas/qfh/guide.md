@@ -8,7 +8,7 @@ quase hemisférico, então a antena recebe satélites de órbita baixa sem rastr
 
 - **Uso:** recepção (satélites meteorológicos de 137 MHz, por exemplo). Esta ferramenta não traz dados de transmissão para a QFH.
 - **Polarização:** circular. O sentido de **enrolamento** das hélices define se é direita (RHCP) ou esquerda (LHCP): escolha o sentido na ferramenta e siga o método de montagem mostrado. Pelo modelo (e por uma patente, fonte secundária), enrolamento **à esquerda** dá RHCP e **à direita** dá LHCP. Satélites de 137 MHz usam RHCP.
-- **Ganho:** o modelo por momentos (ver as referências) dá ≈ 4,8 dBi no zênite, com −6 a −7 dB no horizonte e ≈ −16 dB para baixo; a faixa de 3 a 5 dBic vem de uma fonte secundária. Não há medida com fonte aqui. O que importa na prática é o diagrama largo.
+- **Ganho:** o modelo por momentos (ver as referências) dá ≈ 4,8 dBic no zênite, com −6 a −7 dB no horizonte e ≈ −16 dB para baixo; a faixa de 3 a 5 dBic vem de uma fonte secundária. Não há medida com fonte aqui. O que importa na prática é o diagrama largo.
 - **Aviso importante:** as medidas são as de uma calculadora publicada para 137,5 MHz, **escaladas** pela frequência. Meça e ajuste.
 
 ## 2. Materiais

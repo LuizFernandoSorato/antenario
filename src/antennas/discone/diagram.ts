@@ -10,7 +10,7 @@ import { type Diagram, chokeBeads, circle, dimLabel, dimension, line, measure, p
 import type { CalcResult } from '../types';
 import type { DisconeParams } from './calc';
 import { coneHalfAngleDeg } from './calc';
-import { MAX_MODEL_RODS, solveDiscone } from './pattern-model';
+import { MAX_MODEL_RODS, PATTERN_MULTIPLES, solveDiscone } from './pattern-model';
 
 function sideView(result: CalcResult, params: DisconeParams): Diagram {
   const id = 'dc-side';
@@ -95,9 +95,6 @@ function topView(result: CalcResult, params: DisconeParams): Diagram {
   };
 }
 
-/** Frequências do padrão, como múltiplos da menor frequência de operação (o padrão do discone muda muito ao longo da banda). */
-const PATTERN_MULTIPLES = [1, 2, 4];
-
 /**
  * Padrões do discone por método dos momentos (ver `pattern-model.ts`), em três frequências. Corte vertical que passa por uma haste;
  * a ondulação em azimute (entre as hastes e sobre elas) vai na legenda.
@@ -132,7 +129,7 @@ function patterns(result: CalcResult, params: DisconeParams): Diagram[] {
       title: `Padrão a ${formatNumber(f, 0)} MHz (${multiple === 1 ? 'menor frequência' : `${multiple}× a menor`})`,
       caption:
         `Corte vertical que passa por uma haste. O máximo fica ${formatNumber(Math.abs(elevation), 0)}° ${elevation >= 0 ? 'acima' : 'abaixo'} do horizonte (no horizonte o nível é ${formatNumber(10 * Math.log10(power(0) / peak), 1)} dB); diretividade ` +
-        `${formatNumber(10 * Math.log10(model.solution.directivity()), 1)} dBi; ondulação em azimute nesse ângulo de ${formatNumber(ripple, 1)} dB. ` +
+        `${formatNumber(10 * Math.log10(model.maxDirectivity()), 1)} dBi; ondulação em azimute nesse ângulo de ${formatNumber(ripple, 1)} dB. ` +
         `Impedância de entrada do modelo ${formatNumber(model.inputImpedance.re, 0)} ${model.inputImpedance.im < 0 ? '−' : '+'} j${formatNumber(Math.abs(model.inputImpedance.im), 0)} Ω. ` +
         `Calculado por método dos momentos com ${model.rodCount} hastes no disco e no cone de ${formatNumber(params.rodDiameter * 1000, 1)} mm, no espaço livre, ` +
         'sem o coaxial nem o mastro' + (params.rodCount > MAX_MODEL_RODS ? `; o modelo limita as hastes a ${MAX_MODEL_RODS}` : '') +

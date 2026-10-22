@@ -51,12 +51,6 @@ export function loopPerimeter(coefficientFtMHz: number, fMHz: number): number {
   return (coefficientFtMHz * FT_IN_METERS) / fMHz;
 }
 
-/** Estimativa aditiva de ganho (dBd), fonte secundária (Electronics Notes): ver `expected.gain`. */
-export function estimatedGainDbd(directorCount: number): number {
-  // Excitado ≈ 2 dB sobre o dipolo; refletor ≈ +5 dB; 1º diretor ≈ +2 dB; demais ≈ +1 dB cada.
-  return 2 + 5 + (directorCount >= 1 ? 2 : 0) + Math.max(0, directorCount - 1);
-}
-
 export function calc(params: CubicQuadParams): CalcResult {
   const { frequencyMHz: f, directorCount: nDir, spacingLambda: s, wireDiameter: wd, feedGap: gap } = params;
   assertFrequencyMHz(f);
@@ -144,7 +138,7 @@ export function calc(params: CubicQuadParams): CalcResult {
   );
 
   // Banda pelo Q da espira excitada no modelo por momentos (pattern-model.ts; o teste de lá confere o Q contra a varredura).
-  const { z0, q } = quadQ({ measurements }, f, nDir, wd);
+  const { z0, q, directivity } = quadQ({ measurements }, f, nDir, wd);
   const direct = Math.max(z0.re / 50, 50 / z0.re);
   const bandwidth = qBandwidthEstimate(f, q, {
     // O Q vale para uma ressonância isolada: quando outra espira ressoa perto (no modelo, com 2 diretores), a faixa real é maior.
@@ -155,7 +149,6 @@ export function calc(params: CubicQuadParams): CalcResult {
     source: 'Momentos desta ferramenta e Q de Yaghjian e Best (IEEE, 2005); sem comparação com medida',
   });
 
-  const gainDbd = estimatedGainDbd(nDir);
   return {
     measurements,
     assumptions: [
@@ -170,23 +163,22 @@ export function calc(params: CubicQuadParams): CalcResult {
       { name: 'Espaço de alimentação', value: `${formatNumber(gap * 1000, 1)} mm (dentro do perímetro H)`, source: 'Dado do usuário; comprimento total, como no dipolo' },
     ],
     expected: {
+      // Impedância e ganho do modelo por momentos (pattern-model.ts). O Electronics Notes (fonte secundária) fala em ≈ 50 Ω com 2
+      // elementos a 0,15–0,2λ e ≈ 75 Ω acima de 0,25λ; o modelo dá ≈ 80 Ω a 0,2λ. Divergência não resolvida. TODO(fonte): ARRL Antenna
+      // Book ou medida. A soma aditiva de ganho usada antes (Electronics Notes, sem fonte primária) dava 1,6 a 2,6 dB a mais.
       impedance: {
-        ...(s <= 0.2 ? { typical: 50 } : {}),
+        typical: z0.re,
         unit: 'Ω',
         note:
-          'Cerca de 50 Ω para espaçamento de 0,15λ a 0,2λ em quad de 2 elementos; sobe para ≈ 75 Ω com pouco mais de 0,25λ. ' +
-          'Meça.',
-        // TODO(fonte): ARRL Antenna Book.
-        source: 'Electronics Notes, "Cubical Quad Beam Antenna: Reflector & Director" (fonte secundária).',
+          `Espira excitada no modelo: ${formatNumber(z0.re, 0)} ${z0.im < 0 ? '−' : '+'} j${formatNumber(Math.abs(z0.im), 0)} Ω (espaço livre, ` +
+          'fio ideal, sem varetas nem boom). O Electronics Notes cita ≈ 50 Ω com 2 elementos a 0,15–0,2λ; o modelo não confirma. Meça.',
+        source: 'Momentos desta ferramenta; Electronics Notes (fonte secundária, diverge)',
       },
       gain: {
-        typical: gainDbd + 2.15,
+        typical: 10 * Math.log10(directivity),
         unit: 'dBi',
-        note:
-          `Soma aproximada: ${formatNumber(gainDbd, 0)} dB sobre o dipolo (+ 2,15 dB para dBi). A espira sozinha dá ≈ 2 dB, o refletor ≈ 5, ` +
-          'o 1º diretor ≈ 2 e cada diretor a mais ≈ 1. Estimativa com incerteza de vários dB.',
-        // TODO(fonte): ARRL Antenna Book.
-        source: 'Electronics Notes (fonte secundária).',
+        note: 'Diretividade do modelo na frente, no espaço livre e sem perdas. O real fica um pouco abaixo.',
+        source: 'Momentos desta ferramenta; sem comparação com medida',
       },
       bandwidth,
     },

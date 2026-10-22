@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { wavelength } from '../../core/wave';
 import { calc, coneHalfAngleDeg, defaultParams, monoconeImpedance } from './calc';
 import { cutList } from './cutlist';
+import { solveDiscone } from './pattern-model';
 
 // Referências: S. Stearns (K6OIK), "All About the Discone Antenna", QEX jan/fev 2007.
 // - Eq. 2: Z0 = (η/2π)·ln cot(θ/2), η = 376,73 Ω.
@@ -32,7 +33,7 @@ describe('discone: fórmulas do artigo', () => {
   });
 });
 
-describe('discone: calc', () => {
+describe('discone: calc', { timeout: 120_000 }, () => {
   it('R + L = λ/2 da primeira ressonância (0,7 × menor frequência)', () => {
     const r = calc({ ...defaultParams, frequencyMHz: 470 });
     const lambdaRes = wavelength(0.7 * 470);
@@ -69,14 +70,14 @@ describe('discone: calc', () => {
   });
 });
 
-describe('discone: lista de corte', () => {
+describe('discone: lista de corte', { timeout: 120_000 }, () => {
   it('hastes do cone (A) e do disco (E), na quantidade informada', () => {
     const items = cutList({ ...defaultParams, rodCount: 12 });
     expect(items.map((i) => [i.label, i.quantity])).toEqual([['A', 12], ['E', 12]]);
   });
 });
 
-describe('discone: folga disco–cone informada', () => {
+describe('discone: folga disco–cone informada', { timeout: 120_000 }, () => {
   const f = (r: ReturnType<typeof calc>, label: string) => r.measurements.find((x) => x.label === label)!.meters;
 
   it('0 usa a proporção automática; um valor informado vira a cota F e não muda A, B, C, D, E', () => {
@@ -90,5 +91,22 @@ describe('discone: folga disco–cone informada', () => {
   it('rejeita folga negativa ou maior que o raio do disco', () => {
     expect(() => calc({ ...defaultParams, centerGap: -0.01 })).toThrow(RangeError);
     expect(() => calc({ ...defaultParams, centerGap: 5 })).toThrow(RangeError);
+  });
+});
+
+describe('discone: ganho pelo modelo', { timeout: 120_000 }, () => {
+  it('faixa entre 1×, 2× e 4× a menor frequência, a mesma solução dos diagramas (cache)', () => {
+    // Modelo de 8 hastes de 4 mm em 100 MHz: ≈ 0,8, 2,2 e 3,4 dBi (ver pattern-model.test.ts para as verificações do modelo).
+    const r = calc(defaultParams);
+    const g = r.expected.gain!;
+    expect(g.min!).toBeGreaterThan(0);
+    expect(g.max!).toBeLessThan(5);
+    expect(g.max!).toBeGreaterThan(g.min!);
+    expect(g.source).toMatch(/Momentos/);
+    expect(g.note).toMatch(/1×, 2× e 4×/);
+    const a = solveDiscone(r, defaultParams.rodCount, defaultParams.rodDiameter, defaultParams.frequencyMHz);
+    const b = solveDiscone(r, defaultParams.rodCount, defaultParams.rodDiameter, defaultParams.frequencyMHz);
+    expect(b).toBe(a);
+    expect(10 * Math.log10(a.maxDirectivity())).toBeCloseTo(g.min!, 6);
   });
 });

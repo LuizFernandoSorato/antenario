@@ -45,8 +45,25 @@ describe('turnstile: calc', () => {
     expect(b / a).toBeCloseTo(1.1, 12);
   });
 
-  it('impedância esperada ≈ 36,5 Ω', () => {
-    expect(calc(defaultParams).expected.impedance.typical).toBeCloseTo(36.5, 9);
+  it('impedância pelo modelo: o refletor muda a R de cada dipolo, mas a junção fica perto de 36,5 Ω (R ∥ 73²/R)', () => {
+    // Valores do modelo a 137,5 MHz (ver o plano): dipolo livre ≈ 72 Ω, sobre plano ≈ 80 Ω, com tubo ≈ 75 Ω.
+    for (const [reflector, reflectorKind] of [[0, REFLECTOR_PLATE], [1, REFLECTOR_PLATE], [1, REFLECTOR_TUBES]]) {
+      const z = calc({ ...defaultParams, reflector: reflector!, reflectorKind: reflectorKind! }).expected.impedance!;
+      expect(Math.abs(z.typical! - 36.5)).toBeLessThan(1);
+      expect(z.source).toMatch(/Momentos/);
+    }
+    expect(calc(defaultParams).expected.impedance!.note).toMatch(/≈ 8[01] Ω/);
+  });
+
+  it('ganho no zênite: 2,1 dBic sem refletor (analítico) e os valores do estudo do refletor com tela e com tubos', () => {
+    const g = (reflector: number, reflectorKind: number) => calc({ ...defaultParams, reflector, reflectorKind }).expected.gain!;
+    // Dois dipolos cruzados de ≈ 0,48λ em quadratura: D ≈ 1,6 no eixo (Balanis §4.2, integração numérica de core/pattern.ts).
+    expect(g(0, REFLECTOR_PLATE).typical!).toBeCloseTo(2.1, 1);
+    // reflector-model.ts: tela de 1λ, 7,8 dBi; um tubo de 0,5λ por dipolo, 5,6 dBi.
+    expect(g(1, REFLECTOR_PLATE).typical).toBe(7.8);
+    expect(g(1, REFLECTOR_TUBES).typical).toBe(5.6);
+    for (const r of [0, 1]) expect(g(r, REFLECTOR_PLATE).unit).toBe('dBic');
+    expect(g(1, REFLECTOR_PLATE).source).not.toMatch(/Wikipedia/);
   });
 
   it('banda: a quadratura alarga a ROE (bem mais que um dipolo só), mas a razão axial < 3 dB é bem mais estreita', () => {

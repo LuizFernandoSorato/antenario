@@ -6,7 +6,7 @@ import { bandWidthMHz, swrSweep } from '../../core/swr-band';
 import { calc, defaultParams } from './calc';
 import { quadImpedance, quadQ, solveQuad } from './pattern-model';
 
-// Sem referência primária de ganho/diagrama da quadra neste repositório (a estimativa aditiva do calc.ts não tem fonte).
+// Sem referência primária de ganho/diagrama da quadra neste repositório (o ganho do calc.ts vem deste modelo).
 // O solver de momentos foi validado no dipolo, no arranjo de dois dipolos e no Yagi contra o NBS (ver core/mom.test.ts e
 // yagi/pattern-model.test.ts). Aqui há testes de sanidade física e a conferência da afirmação da legenda sobre o refletor.
 

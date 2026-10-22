@@ -17,6 +17,7 @@ import { wavelength } from '../../core/wave';
 import { type AssemblyGuide, type CalcResult, type CalcWarning, type Measurement, rangeWarning } from '../types';
 import { RHCP, SENSE_NAME, type Sense, senseOf } from '../circular';
 import { meta } from './meta';
+import { solveQfh } from './pattern-model';
 
 /** Sentido de enrolamento das hélices: à direita (como uma rosca comum) ou à esquerda. */
 export type Winding = 'right' | 'left';
@@ -134,6 +135,7 @@ export function calc(params: QfhParams): CalcResult {
     { label: 'K', name: 'Espaço central (alimentação no topo)', meters: gap, description: 'Abertura no meio do braço de cima de cada espira, onde liga a alimentação; já conta dentro de A e de E.' },
   ];
 
+  const model = solveQfh({ measurements }, f, wd, winding);
   const sens = diameterSensitivity();
   const worst = Math.max(...Object.values(sens).map((v) => Math.abs(v)));
   const warnings: CalcWarning[] = [];
@@ -203,12 +205,15 @@ export function calc(params: QfhParams): CalcResult {
         // TODO(fonte): Kilgus.
         source: 'IK1HGI (montagem)',
       },
+      // Diretividade do modelo por momentos (pattern-model.ts), com o pico no zênite. TODO(fonte): sem medida; a quadratura real
+      // depende da junção e do coaxial, que o modelo não tem.
       gain: {
-        unit: 'dBi',
-        // TODO(fonte): fonte pendente para o texto abaixo.
-        note: 'Diagrama quase hemisférico de polarização circular. Não há valor de ganho com fonte aqui.',
-        // TODO(fonte): fonte pendente para o texto abaixo.
-        source: 'Sem fonte citada',
+        typical: 10 * Math.log10(model.directivity),
+        unit: 'dBic',
+        note:
+          'No zênite, com as espiras em quadratura ideal (o modelo não tem a junção nem o coaxial) e sem perdas. ' +
+          'Diagrama quase hemisférico, com pouco ganho no horizonte.',
+        source: 'Momentos desta ferramenta; dentro dos 3 a 5 dBic citados por rfessentials.com (fonte secundária)',
       },
       // TODO(fonte): sem medida. O modelo por momentos com as espiras em paralelo no topo (autofaseada) dá a melhor quadratura em
       // ≈ 0,98·f (correntes 2,7:1 em f) e não foi conferido; não é usado (2026-10-22).

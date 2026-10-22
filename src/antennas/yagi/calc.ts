@@ -6,6 +6,7 @@
  * elementos parasitas somam o campo na frente e o cancelam atrás.
  */
 
+import type { Complex } from '../../core/complex';
 import { assertFrequencyMHz, assertPositive, formatNumber } from '../../core/units';
 import { wavelength } from '../../core/wave';
 import { qBandwidthEstimate } from '../bandwidth';
@@ -132,7 +133,47 @@ export function calc(params: YagiParams): CalcResult {
   // O modelo não tem boom: usa os elementos sem a correção do boom (ver pattern-model.ts, isolatedElements).
   const isolated = params.boomDiameter === 0 ? result : designCalc({ ...params, boomDiameter: 0 });
   const elements = yagiElements(isolated);
-  return { ...result, expected: { ...result.expected, bandwidth: yagiBandwidth(elements, params.elementDiameter, params.frequencyMHz) } };
+  const model = yagiQ(elements, params.elementDiameter, params.frequencyMHz);
+  const gain = result.expected.gain;
+  return {
+    ...result,
+    expected: {
+      ...result.expected,
+      impedance: modelImpedanceEstimate(model.z0),
+      gain: gain && gain.typical === undefined ? modelGainEstimate(model.directivity) : gain,
+      bandwidth: yagiBandwidth(elements, params.elementDiameter, params.frequencyMHz),
+    },
+  };
+}
+
+/**
+ * Impedância do excitado (dipolo simples) no modelo por momentos (band-model.ts: elementos soltos, sem boom, espaço livre).
+ * TODO(fonte): não conferida com medida; o NBS TN 688 não dá a impedância e o DL6WU.BAS supõe dipolo dobrado.
+ */
+export function modelImpedanceEstimate(z0: Complex): Estimate {
+  return {
+    typical: z0.re,
+    unit: 'Ω',
+    note:
+      `Excitado como dipolo simples, no modelo: ${formatNumber(z0.re, 0)} ${z0.im < 0 ? '−' : '+'} j${formatNumber(Math.abs(z0.im), 0)} Ω ` +
+      '(espaço livre, sem boom). Precisa de casamento (hairpin, gamma) ou de dipolo dobrado com balun 4:1. Meça.',
+    source: 'Momentos desta ferramenta; impedância não conferida com medida',
+  };
+}
+
+/**
+ * Ganho pelo modelo por momentos onde o método não o estima (DL6WU com boom abaixo de 2,2λ). O modelo fica a ≤ 0,7 dB do ganho
+ * medido dos projetos do NBS TN 688 e a ≤ 0,9 dB da estimativa do DL6WU na faixa dele (pattern-model.test.ts).
+ */
+export function modelGainEstimate(directivity: number): Estimate {
+  return {
+    typical: 10 * Math.log10(directivity),
+    unit: 'dBi',
+    note:
+      'Diretividade do modelo por momentos (espaço livre, sem boom, sem perdas): o DL6WU não estima ganho com boom abaixo de 2,2λ. ' +
+      'O real fica um pouco abaixo.',
+    source: 'Momentos desta ferramenta, conferido com o ganho medido do NBS TN 688 (≤ 0,7 dB) e com o DL6WU (≤ 0,9 dB)',
+  };
 }
 
 /** Momentos: core/mom.ts, sem boom. Q: Yaghjian e Best, IEEE Trans. Antennas Propag., 2005 (fórmulas via arXiv 1909.08019). */

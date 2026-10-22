@@ -16,7 +16,7 @@ campo na frente e o cancelam atrás.
   No método DL6WU, a estimativa é 9,2 + 3,39·ln(boom em λ) dBd, para boom de 2,2λ a 39λ.
 - **Dois métodos, escolhidos automaticamente pelo número de elementos:** com **3, 5 ou 6 elementos** vale o **NBS TN 688**
   (projetos otimizados e testados). Com **11 ou mais**, o **DL6WU** (qualquer número de 3 a 40; feito para Yagis longos, boom a partir
-  de 2,2λ). Com 4 ou de 7 a 10 elementos o NBS não tem projeto e o DL6WU calcula, mas com aviso e sem estimar o ganho. A tela informa
+  de 2,2λ). Com 4 ou de 7 a 10 elementos o NBS não tem projeto e o DL6WU calcula, mas com aviso; o ganho mostrado vem do modelo por momentos. A tela informa
   qual método foi usado.
 - **Medidas:** no NBS, os projetos da Tabela 1 corrigidos para o diâmetro dos elementos (Fig. 9) e do boom
   (Fig. 10). No DL6WU, as equações do programa DL6WU.BAS (Hoch, DL6WU; G3SEK), com espaçamento crescente

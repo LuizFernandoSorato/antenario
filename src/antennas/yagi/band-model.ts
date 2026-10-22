@@ -16,6 +16,8 @@ export interface QModel {
   /** Impedância do excitado em f0, sem casamento. */
   z0: Complex;
   q: number;
+  /** Diretividade (razão) na frente (+z) em f0, da mesma solução de z0. */
+  directivity: number;
 }
 
 const cache = new Map<string, QModel>();
@@ -30,8 +32,14 @@ export function yagiQ(elements: readonly YagiElement[], diameterM: number, f0MHz
   const hit = cache.get(key);
   if (hit) return hit;
   const at = (x: number) => impedanceAt(elements, diameterM, f0MHz, f0MHz * x);
-  const z0 = at(1);
-  const model = { z0, q: impedanceQ(at(1 - Q_DELTA), z0, at(1 + Q_DELTA), f0MHz, f0MHz * Q_DELTA) };
+  const center = solveElements(elements, diameterM, f0MHz);
+  const zc = center.inputImpedance(0);
+  const z0 = complex(zc.re, zc.im);
+  const model = {
+    z0,
+    q: impedanceQ(at(1 - Q_DELTA), z0, at(1 + Q_DELTA), f0MHz, f0MHz * Q_DELTA),
+    directivity: center.directivity([0, 0, 1]),
+  };
   if (cache.size > 16) cache.clear();
   cache.set(key, model);
   return model;

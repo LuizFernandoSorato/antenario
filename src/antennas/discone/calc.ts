@@ -15,6 +15,7 @@ import { assertFrequencyMHz, assertPositive, formatNumber } from '../../core/uni
 import { wavelength } from '../../core/wave';
 import { type CalcResult, type CalcWarning, type Measurement, rangeWarning } from '../types';
 import { meta } from './meta';
+import { PATTERN_MULTIPLES, solveDiscone } from './pattern-model';
 
 export interface DisconeParams {
   /** Menor frequência de operação, em MHz. */
@@ -134,6 +135,10 @@ export function calc(params: DisconeParams): CalcResult {
     },
   );
 
+  // As mesmas soluções dos diagramas (cache em pattern-model.ts): o ganho não custa um segundo cálculo na página.
+  const gains = PATTERN_MULTIPLES.map((k) => 10 * Math.log10(solveDiscone({ measurements }, rodCount, rodDiameter, fLow * k).maxDirectivity()));
+  const listPt = (items: string[]) => `${items.slice(0, -1).join(', ')} e ${items[items.length - 1]}`;
+
   return {
     measurements,
     assumptions: [
@@ -153,12 +158,16 @@ export function calc(params: DisconeParams): CalcResult {
           'o artigo mostra, por simulação, um projeto de 50 Ω com ROE mínima de ≈ 1,4 perto de 500 MHz. Meça.',
         source: 'Stearns, QEX 2007, Eqs. 2 e 4 e Fig. 9',
       },
+      // Diretividade máxima do modelo por momentos (pattern-model.ts) nas frequências dos diagramas. TODO(fonte): sem medida nem
+      // comparação com o artigo do Stearns.
       gain: {
+        min: Math.min(...gains),
+        max: Math.max(...gains),
         unit: 'dBi',
-        // TODO(fonte): fonte pendente para o texto abaixo.
-        note: 'Omnidirecional no plano horizontal. O ganho varia com a frequência e não há valor típico com fonte aqui.',
-        // TODO(fonte): fonte pendente para o texto abaixo.
-        source: 'Sem fonte citada',
+        note:
+          `Máximo do modelo em ${listPt(PATTERN_MULTIPLES.map((k) => `${k}×`))} a menor frequência: ` +
+          `${listPt(gains.map((g) => formatNumber(g, 1)))} dBi. Acima de 1× o máximo pode ficar abaixo do horizonte.`,
+        source: 'Momentos desta ferramenta (hastes, espaço livre, sem coaxial nem mastro); sem medida',
       },
       bandwidth: {
         min: fLow,

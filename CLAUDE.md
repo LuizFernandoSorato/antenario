@@ -161,8 +161,18 @@ Cada guia segue o mesmo modelo:
 
 ### Estado atual (atualizado em 2026-10-17)
 
-Para retomar: `git log --oneline` mostra o que foi feito. 861 testes passando e build ok em 2026-10-22 (depois dos textos da página inicial; notas de banda: nota ≤ 240 e fonte ≤ 180 caracteres, teste do registro;
+Para retomar: `git log --oneline` mostra o que foi feito. 866 testes passando e build ok em 2026-10-22 (depois do ganho e da impedância pelos modelos; notas de banda: nota ≤ 240 e fonte ≤ 180 caracteres, teste do registro;
 o último commit está em `git log`).
+
+**Ganho e impedância pelos modelos (2026-10-22, "grupo 1", aprovado pelo usuário: o modelo por momentos vale como fonte quando
+não há outra, dito na nota):** Yagi: impedância do excitado (dipolo simples) sempre do modelo (`yagiQ` devolve z0, Q e a diretividade da mesma
+solução); ganho do modelo só onde o método não dá (DL6WU com boom < 2,2λ: 4 e 7 a 10 elementos), `modelGainEstimate`, também na cross Yagi.
+QFH: ganho = diretividade do `solveQfh` (4,8 dBic, quadratura ideal). Turnstile: impedância = `quadratureFeed(R do dipolo do modelo com o refletor)`
+(≈ 36 Ω nos três casos: R ∥ 73²/R); ganho: 2,1 dBic analítico sem refletor e a linha do estudo do refletor (tela 1λ 7,8 dBic, tubos 5,6 dBic),
+no lugar do "+3 dB" da Wikipedia. Quadra: impedância e ganho do modelo (`quadQ` devolve a diretividade); a soma aditiva (Electronics Notes)
+saiu (dava 1,6 a 2,6 dB a mais); o ≈ 50 Ω do Electronics Notes diverge do modelo (≈ 80 Ω com 2 elementos a 0,2λ), dito na nota.
+Discone: ganho = faixa da diretividade máxima em 1×, 2× e 4× (`PATTERN_MULTIPLES`), com cache em `solveDiscone` compartilhado com os diagramas.
+Nenhum desses foi conferido com medida (TODO(fonte)).
 
 **Largura de banda (2026-10-22, pedido do usuário: "estimar a largura de banda de todas as antenas"):** `expected.bandwidth` com ROE < 2:1 e
 < 1,5:1 no texto. Ferramentas: `core/swr-band.ts` (varredura grossa + Lagrange + faixa a partir do mínimo; usada também pelo V invertido),
@@ -216,8 +226,8 @@ eles não: continua `TODO(fonte)`.
   o 73,1 Ω do Balanis é de corrente senoidal exata), dois dipolos (5,98 dBi, igual ao elemento × arranjo), conservação de energia, e Yagi contra o ganho MEDIDO dos
   6 projetos do NBS TN 688 (−0,5 a +0,3 dB) e contra a estimativa do DL6WU (−0,6 a −0,3 dB). O modelo da Yagi usa os elementos SEM a correção do boom
   (`isolatedElements`): a correção compensa o boom, que o modelo não tem; com ela, a relação frente–costas desabava. Limite de 40 elementos na Yagi e na cross Yagi (`DL6WU_MAX_ELEMENTS`,
-  porque o MoM é O(N³) no navegador): o `calc` recusa mais que isso e a tela mostra o erro. O DL6WU.BAS original vai a 102. Quadra: fio de 2 mm assumido (premissa do modelo); o ganho do modelo (2 el. 7,5 dBi, 3 el. 9,5 dBi) fica ≈ 1,5–2 dB
-  abaixo da "estimativa aditiva" do calc (que continua sem fonte). O refletor do ARRL dá o ganho máximo; um refletor ≈ 3 % maior sobe a relação frente–costas
+  porque o MoM é O(N³) no navegador): o `calc` recusa mais que isso e a tela mostra o erro. O DL6WU.BAS original vai a 102. Quadra: fio de 2 mm assumido (premissa do modelo); o ganho do modelo (2 el. 7,5 dBi, 3 el. 9,5 dBi) é o que o calc mostra desde 2026-10-22 (antes,
+  uma soma aditiva sem fonte dava 1,5–2 dB a mais). O refletor do ARRL dá o ganho máximo; um refletor ≈ 3 % maior sobe a relação frente–costas
   de ≈ 5 para ≈ 24 dB, perdendo < 1 dB. Cross Yagi: o plano diagonal difere um pouco do principal (termo cruzado).
 - **QFH** (`qfh/pattern-model.ts`), por momentos: duas espiras fechadas de fio de 4,1 mm, cada uma com 2 braços helicoidais de meia volta (mesmo sentido) e
   2 braços horizontais, reconstruídas das medidas da calculadora de Coppens. Os "separadores" conferem a 0,1 mm: o vertical é o comprimento do braço helicoidal
@@ -324,13 +334,13 @@ projeto). A página do YO5OSF com saída do AntMaker não bate com o DL6WU.BAS (
   foi derivada (Ey atrasado 90°), não tirada de fonte; confirmar com um passe de satélite.
 - Yagi: divergência entre a tabela e a curva do NBS TN 688 no projeto de 0,4λ. DL6WU: os artigos originais do Hoch não
   foram consultados e não há comparação com dados medidos.
-- Quadra cúbica: ganho é estimativa aditiva sem fonte.
-- Discone: regra do gap e ganho.
+- Quadra cúbica: ganho e impedância só do modelo, sem medida; impedância diverge do Electronics Notes.
+- Discone: regra do gap; ganho só do modelo, sem medida.
 - Colinear de coaxial: tabela de ganho vem de fonte de radioamador; impedância da seção de baixo não consta.
 - Loop magnética: regra do loop de acoplamento (diâmetro ≈ 1/5) sem fonte.
 - QFH: medidas são a saída da calculadora de Coppens a 137,5 MHz, escaladas; faltam as equações (Kilgus). Os "separadores" foram reconstruídos (ver os padrões). Falta o arranjo real de alimentação (qual espira adianta, junção); o sentido vem do modelo.
-- Turnstile: impedância com refletor e ganho absoluto sem fonte. O TAMANHO do refletor (tela quadrada de 1λ, vãos ≤ 0,05λ, mínimo 0,75λ; opção `reflectorKind`: um tubo de 0,5λ alinhado com cada dipolo, F/B ≈ 9 dB contra ≈ 18 dB da tela, e crítico: ≤ 0,45λ vira diretor) vem de um estudo por momentos (`turnstile/reflector-model.ts`, sem medida nem regra publicada: TODO(fonte)); a pesquisa na web só achou relatos de espaçamento (0,2 a 0,37λ muda o diagrama vertical) e nenhuma dimensão de refletor. O padrão com refletor ideal
-  indica diretividade bem acima do "+3 dB" da Wikipedia usado no texto (ver `turnstile/calc.ts`); não reconciliado.
+- Turnstile: impedância e ganho só do modelo, sem medida. O TAMANHO do refletor (tela quadrada de 1λ, vãos ≤ 0,05λ, mínimo 0,75λ; opção `reflectorKind`: um tubo de 0,5λ alinhado com cada dipolo, F/B ≈ 9 dB contra ≈ 18 dB da tela, e crítico: ≤ 0,45λ vira diretor) vem de um estudo por momentos (`turnstile/reflector-model.ts`, sem medida nem regra publicada: TODO(fonte)); a pesquisa na web só achou relatos de espaçamento (0,2 a 0,37λ muda o diagrama vertical) e nenhuma dimensão de refletor. O estudo dá ≈ +5,7 dB
+  com a tela, acima do "+3 dB" da Wikipedia (Milligan), que deixou de ser usado; Milligan não foi lido.
 - Hairpin: sem efeito de cantos e barra de curto; faixa de uso (25 a 35 Ω) vem de relatos de radioamadores.
 - Ground plane: curva ângulo × impedância (ver acima). ADS-B: ganho e alcance típicos.
 - Double bazooka: ler o ARRL Antenna Book (p. 9.6–9.7) e o W2DU para saber o caso do 1,14× e conferir o modelo.
@@ -342,7 +352,8 @@ projeto). A página do YO5OSF com saída do AntMaker não bate com o DL6WU.BAS (
   quadra e cross Yagi sem comparação com medida (só com o próprio modelo); o artigo original de Yaghjian e Best e o Balanis/IEEE 145 (razão axial
   de 3 dB) não foram lidos.
 
-**Antenas sugeridas para adicionar (ordem recomendada):**
+**Antenas sugeridas para adicionar (ordem recomendada; EM ESPERA desde 2026-10-22, decisão do usuário: "não precisamos mais
+implementar antenas por enquanto"; a página inicial também fica como está, sem o subtítulo novo nem a linha por cartão):**
 1. V-dipolo para satélites meteorológicos (137 MHz). O `v-model.ts` do V invertido serve de base (é o mesmo fio dobrado, deitado).
 2. Dipolo multibanda (fan dipole), EFHW com unun 49:1 (exige dados de ferrite com fonte) e log-periódica.
 

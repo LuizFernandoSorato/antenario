@@ -27,7 +27,7 @@ import { quadratureSweep } from '../quadrature-feed';
 import { type AssemblyGuide, type CalcResult, type CalcWarning, type Measurement, rangeWarning } from '../types';
 import { quadratureFeed } from '../turnstile/calc';
 import { yagiQ } from '../yagi/band-model';
-import { DL6WU_MIN_ELEMENTS, type YagiParams, designCalc, defaultParams as yagiDefaults } from '../yagi/calc';
+import { DL6WU_MIN_ELEMENTS, type YagiParams, designCalc, modelGainEstimate, defaultParams as yagiDefaults } from '../yagi/calc';
 import { yagiElements } from '../yagi/elements';
 import { RHCP, SENSE_NAME, type Sense, senseOf } from '../circular';
 import { meta } from './meta';
@@ -92,7 +92,7 @@ export function calc(params: CrossYagiParams): CalcResult {
   // Yagi (yagi/band-model.ts), a junção pela linha de 1/4 de onda (quadrature-feed.ts) e, se houver, o transformador T sem perdas.
   const isolated = params.boomDiameter === 0 ? yagi : designCalc({ ...yagiParams, boomDiameter: 0 });
   const elements = yagiElements(isolated);
-  const { q } = yagiQ(elements, params.elementDiameter, f);
+  const { q, directivity } = yagiQ(elements, params.elementDiameter, f);
   const transformerLine = { z0: zTransformer, lengthM: wavelength(f) / 4, velocityFactor: 1 };
   const quad = quadratureSweep({
     centerMHz: f,
@@ -193,7 +193,8 @@ export function calc(params: CrossYagiParams): CalcResult {
     },
   );
 
-  const yagiGain = yagi.expected.gain;
+  const designGain = yagi.expected.gain;
+  const yagiGain = designGain && designGain.typical === undefined ? modelGainEstimate(directivity) : designGain;
   return {
     measurements,
     assumptions: [

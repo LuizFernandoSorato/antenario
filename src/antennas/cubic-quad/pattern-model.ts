@@ -57,14 +57,23 @@ export function quadImpedance(result: Pick<CalcResult, 'measurements'>, fMHz: nu
   return complex(z.re, z.im);
 }
 
-/** Impedância em f0 e Q (core/q-bandwidth.ts, Yaghjian e Best) da espira excitada, para a banda de ROE. */
+/**
+ * Impedância em f0 e Q (core/q-bandwidth.ts, Yaghjian e Best) da espira excitada, para a banda de ROE, e a diretividade na frente
+ * (+z) da mesma solução em f0.
+ */
 export function quadQ(
   result: Pick<CalcResult, 'measurements'>,
   f0MHz: number,
   directorCount: number,
   wireDiameter: number,
-): { z0: Complex; q: number } {
+): { z0: Complex; q: number; directivity: number } {
   const at = (x: number) => quadImpedance(result, f0MHz * x, directorCount, wireDiameter);
-  const z0 = at(1);
-  return { z0, q: impedanceQ(at(1 - Q_DELTA), z0, at(1 + Q_DELTA), f0MHz, f0MHz * Q_DELTA) };
+  const center = solveQuad(result, f0MHz, directorCount, wireDiameter);
+  const zc = center.inputImpedance(0);
+  const z0 = complex(zc.re, zc.im);
+  return {
+    z0,
+    q: impedanceQ(at(1 - Q_DELTA), z0, at(1 + Q_DELTA), f0MHz, f0MHz * Q_DELTA),
+    directivity: center.directivity([0, 0, 1]),
+  };
 }

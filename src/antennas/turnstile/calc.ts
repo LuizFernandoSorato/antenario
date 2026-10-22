@@ -3,7 +3,7 @@
  *
  * Fontes:
  *  - Princípio (dois dipolos idênticos em ângulo reto, correntes defasadas de 90°, sentido da polarização dado pelo
- *    sinal da defasagem; refletor plano a 1/4 de onda atrás dos elementos soma as ondas direta e refletida e dá +3 dB;
+ *    sinal da defasagem; refletor plano a 1/4 de onda atrás dos elementos soma as ondas direta e refletida e dá +3 dB, valor que o estudo do refletor por momentos não confirma;
  *    modo normal: diagrama horizontal quase omni, desvio de ±5 %): Wikipedia, "Turnstile antenna",
  *    https://en.wikipedia.org/wiki/Turnstile_antenna (consultada em 2026-10-16), que cita Kraus, "Antennas", 2ª ed.,
  *    1988, pp. 726–729; Milligan, "Modern Antenna Design", 2ª ed., 2005, pp. 231–237; G. Brown, US 2.086.976.
@@ -23,6 +23,7 @@
 import { type Complex, abs, complex } from '../../core/complex';
 import { reflectionCoefficient, swrFromGamma } from '../../core/reflection';
 import { assertFrequencyMHz, assertPositive, formatNumber } from '../../core/units';
+import { crossedDipoleDirectivity } from '../../core/pattern';
 import { assertFactor, physicalLength, wavelength } from '../../core/wave';
 import { axialText, swrBandwidthEstimate } from '../bandwidth';
 import { DIPOLE_SWEEP, type DipoleReflector, dipoleBandModel } from '../dipole/band-model';
@@ -176,6 +177,9 @@ export function calc(params: TurnstileParams): CalcResult {
       ? { kind: 'tube', distanceM: spacing, lengthM: TUBE_LENGTH_LAMBDA * lambda, diameterM: 2 * ROD_RADIUS_LAMBDA * lambda }
       : { kind: 'plane', distanceM: spacing };
   const band = dipoleBandModel(f, d, reflectorModel);
+  const rModel = band.impedanceAt(f).re;
+  const modelFeed = quadratureFeed(rModel, DIPOLE_RESISTANCE_OHMS);
+  const modelSwr50 = swrFromGamma(abs(reflectionCoefficient(modelFeed.feedImpedance, 50)));
   const quad = quadratureSweep({
     centerMHz: f,
     ...DIPOLE_SWEEP,
@@ -197,24 +201,28 @@ export function calc(params: TurnstileParams): CalcResult {
       '; razão axial < 3 dB: critério usual (IntechOpen)',
   });
 
-  const gain: Estimate = withReflector
+  // Ganho no zênite com quadratura ideal. Sem refletor: dipolos cruzados analíticos (core/pattern.ts). Com refletor: o estudo por
+  // momentos de reflector-model.ts (tela do lado recomendado ou um tubo de 0,5λ por dipolo). O "+3 dB do refletor" da Wikipedia
+  // (Milligan), usado antes, não confere com o estudo (≈ +5,7 dB com a tela). TODO(fonte): sem medida.
+  const reflectorRow = withReflector
+    ? tubes
+      ? TUBE_STUDY.find((r) => r.sideLambda === TUBE_LENGTH_LAMBDA)!
+      : REFLECTOR_STUDY.find((r) => r.sideLambda === REFLECTOR_SIDE_LAMBDA)!
+    : null;
+  const gain: Estimate = reflectorRow
     ? {
+        typical: reflectorRow.directivityDbi,
         unit: 'dBic',
         note:
-          'O refletor a 1/4 de onda soma 3 dB ao ganho do turnstile sem refletor (fonte: Wikipedia, citando Milligan). Não há valor absoluto ' +
-          // TODO(fonte): ganho em dBic.
-          'com fonte aqui.',
-        // TODO(fonte): fonte pendente para o texto abaixo.
-        source: 'Wikipedia, "Turnstile antenna" (Milligan, 2005).',
+          `No zênite, com ${tubes ? `um tubo de ${formatNumber(TUBE_LENGTH_LAMBDA, 1)}λ sob cada dipolo` : `tela de ${formatNumber(REFLECTOR_SIDE_LAMBDA, 0)}λ de lado`} ` +
+          `a λ/4, quadratura ideal e sem perdas. Relação frente–costas ≈ ${formatNumber(reflectorRow.frontToBackDb, 0)} dB.`,
+        source: 'Estudo do refletor por momentos desta ferramenta (reflector-model.ts); sem medida',
       }
     : {
-        unit: 'dBi',
-        note:
-          'Sem refletor, o diagrama horizontal é quase omnidirecional (desvio de ±5 % segundo Kraus, via Wikipedia). Não há valor de ganho ' +
-          // TODO(fonte): fonte pendente para o texto abaixo.
-          'com fonte aqui.',
-        // TODO(fonte): fonte pendente para o texto abaixo.
-        source: 'Wikipedia, "Turnstile antenna" (Kraus, 1988).',
+        typical: 10 * Math.log10(crossedDipoleDirectivity(total / lambda, false)),
+        unit: 'dBic',
+        note: 'No zênite (eixo da cruz), com quadratura ideal e sem perdas. Irradia igualmente para baixo; no horizonte a polarização é linear.',
+        source: 'Dipolos cruzados em quadratura (Balanis §4.2), por integração numérica',
       };
 
   const warnings: CalcWarning[] = [];
@@ -306,14 +314,18 @@ export function calc(params: TurnstileParams): CalcResult {
       { name: 'Refletor', value: withReflector ? 'Plano, a 1/4 de onda atrás dos dipolos' : 'Sem refletor', source: 'Wikipedia (Milligan, 2005)' },
     ],
     expected: {
+      // R ∥ (Z0²/R) fica perto de Z0/2 enquanto R não se afasta muito de Z0: o refletor muda R, mas pouco a junção. TODO(fonte): sem medida.
       impedance: {
-        typical: zFeed,
+        typical: modelFeed.feedImpedance.re,
         unit: 'Ω',
         note:
-          `Dois dipolos de ${DIPOLE_RESISTANCE_OHMS} Ω em paralelo (um pela linha de 1/4 de onda de ${DIPOLE_RESISTANCE_OHMS} Ω), sem refletor` +
-          (withReflector ? '. Com refletor o valor muda: meça.' : '.'),
-        // TODO(fonte): valor medido ou modelado.
-        source: 'Derivação de linhas (Pozar) com R de Balanis',
+          `Cada dipolo, ajustado para ressoar, tem ≈ ${formatNumber(rModel, 0)} Ω no modelo` +
+          (withReflector ? (tubes ? ' (com o tubo do refletor)' : ' (refletor como plano infinito)') : '') +
+          `. A linha de 1/4 de onda de ${DIPOLE_RESISTANCE_OHMS} Ω inverte a impedância de um deles e a junção fica perto de ` +
+          `${formatNumber(DIPOLE_RESISTANCE_OHMS / 2, 1)} Ω: ROE ≈ ${formatNumber(modelSwr50, 1)}:1 em 50 Ω.`,
+        source:
+          'Momentos desta ferramenta (dipolo conferido com Cebik); linha de 1/4 de onda (Pozar)' +
+          (withReflector && !tubes ? '; plano por imagens (Balanis)' : ''),
       },
       gain,
       bandwidth,
@@ -341,6 +353,6 @@ function assemblyFor(sense: Sense): AssemblyGuide {
   };
 }
 
-// TODO(fonte) [guide.md]: fonte pendente: «- **Ganho:** o refletor a 1/4 de onda soma 3 dB ao turnstile sem refletor (Wikipedia, cita…»
+// TODO(fonte) [guide.md]: sem medida: «- **Ganho:** no zênite, ≈ 2,1 dBic sem refletor e ≈ 7,8 dBic com a tela de 1λ (modelo desta ferramenta)…»
 // TODO(fonte) [guide.md]: fonte pendente: «- **Aviso importante:** esta ferramenta calcula os dipolos, a linha de fase e a distância …»
 // TODO(fonte) [guide.md]: fonte pendente: «para o sentido que você escolher. Esta regra é derivada do atraso de fase, não de uma font…»

@@ -79,7 +79,7 @@ export interface QfhModel {
 
 /** Resolve a QFH por momentos a partir das cotas do cálculo (B, C: espira maior; F, G: espira menor). */
 export function solveQfh(
-  result: CalcResult,
+  result: Pick<CalcResult, 'measurements'>,
   frequencyMHz: number,
   wireDiameter: number = WIRE_DIAMETER,
   winding: Winding = 'right',
