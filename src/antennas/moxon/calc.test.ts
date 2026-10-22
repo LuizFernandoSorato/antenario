@@ -32,7 +32,7 @@ describe('Moxon: calc', { timeout: 60_000 }, () => {
   });
 
   it('E = B + C + D; fios esticados: metade do excitado F = (A + 2B)/2 e refletor G = A + 2D', () => {
-    const r = calc(defaultParams);
+    const r = calc({ ...defaultParams, centerGap: 0 });
     expect(measure(r, 'E')).toBeCloseTo(measure(r, 'B') + measure(r, 'C') + measure(r, 'D'), 9);
     expect(measure(r, 'F')).toBeCloseTo((measure(r, 'A') + 2 * measure(r, 'B')) / 2, 9);
     expect(measure(r, 'G')).toBeCloseTo(measure(r, 'A') + 2 * measure(r, 'D'), 9);
@@ -44,7 +44,8 @@ describe('Moxon: calc', { timeout: 60_000 }, () => {
     const half = cutList({ ...defaultParams, centerGap: 0.01 }).find((i) => i.label === 'F')!;
     expect(half.quantity).toBe(2);
     expect(half.meters).toBeCloseTo((measure(r, 'A') + 2 * measure(r, 'B') - 0.01) / 2, 9);
-    expect(calc(defaultParams).measurements.some((m) => m.label === 'H')).toBe(false);
+    expect(defaultParams.centerGap).toBe(0.01);
+    expect(calc({ ...defaultParams, centerGap: 0 }).measurements.some((m) => m.label === 'H')).toBe(false);
   });
 
   it('valores esperados do modelo: ≈ 50 Ω, ≈ 6 dBi e banda de 2:1 em MHz no 2 m', () => {

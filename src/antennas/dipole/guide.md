@@ -36,11 +36,11 @@ estanho, multímetro, e um **NanoVNA** ou um **medidor de ROE** para o ajuste.
 
 1. Calcule as medidas na ferramenta. A cota **A** é o comprimento total de ponta a ponta,
    **B** é cada braço e **C** é o espaço central (isolador), se houver. Informe o diâmetro
-   **real** do condutor: por padrão a ferramenta calcula o fator de encurtamento **K** a partir
-   dele (condutor mais grosso, antena mais curta). O K calculado é o de um fio nu no espaço
-   livre e dá um dipolo um pouco mais comprido que a regra 468/f do ARRL (K ≈ 0,95), que
-   já embute efeitos práticos como isoladores e isolamento do fio. Se preferir a regra, escolha
-   "Digitar" e use 0,95.
+   **real** do condutor: a ferramenta calcula o fator de encurtamento **K** a partir dele
+   (condutor mais grosso, antena mais curta). O K calculado é o de um fio nu no espaço livre.
+   Em HF ele dá um dipolo até uns 3 % mais comprido que a regra 468/f do ARRL (K ≈ 0,95),
+   que já embute efeitos práticos como isoladores e isolamento do fio. Essa sobra é útil: o
+   ajuste é sempre encurtando.
 2. Corte os dois braços um pouco **mais compridos** que **B**, por exemplo 5 % a mais.
    Isso deixa margem para o ajuste. Em HF, deixe ainda uns centímetros para a volta no isolador.
 3. Prenda cada braço ao isolador central, respeitando a distância **C** entre eles.

@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import { dipoleShorteningFactor } from '../../core/dipole-resonance';
 import { parallelWireImpedance } from '../../lines/parallel-wire';
 import { calc, defaultParams } from './calc';
 
 // Referências:
 // - Radiador de λ/2 alimentado na ponta + seção de casamento de λ/4 em curto
 //   (ARRL Antenna Book, J-pole / Zepp alimentada por stub).
-// - Comprimentos: fração × λ × K, com λ = 299,792458/f (CLAUDE.md).
+// - Comprimentos: fração × λ × fator, com λ = 299,792458/f (CLAUDE.md); o radiador usa o K do diâmetro
+//   (core/dipole-resonance.ts) e a seção de casamento, o fator digitado.
 // - O ponto de alimentação NÃO é calculado (TODO(fonte)); o teste garante que a
 //   ferramenta avisa isso em vez de inventar um número.
 
@@ -18,18 +20,28 @@ function measure(result: ReturnType<typeof calc>, label: string): number {
 }
 
 describe('J-pole: calc', () => {
-  it('145 MHz, K = 0,95 nos dois trechos', () => {
+  it('145 MHz, tubo de 12,7 mm: radiador com o K do diâmetro (≈ 0,937), seção com 0,95', () => {
     const r = calc({ ...defaultParams, frequencyMHz: 145 });
-    const radiator = (0.5 * C * 0.95) / 145; // ≈ 982 mm
+    const k = dipoleShorteningFactor(0.0127 / (C / 145));
+    expect(k).toBeGreaterThan(0.93);
+    expect(k).toBeLessThan(0.945);
+    const radiator = (0.5 * C * k) / 145; // ≈ 968 mm
     const stub = (0.25 * C * 0.95) / 145; // ≈ 491 mm
     expect(measure(r, 'A')).toBeCloseTo(radiator + stub, 9);
     expect(measure(r, 'B')).toBeCloseTo(radiator, 9);
     expect(measure(r, 'C')).toBeCloseTo(stub, 9);
   });
 
-  it('elemento longo ≈ 3/4 λ quando os fatores são iguais', () => {
-    const r = calc({ ...defaultParams, frequencyMHz: 435, shorteningFactor: 0.96, stubFactor: 0.96 });
-    expect(measure(r, 'A')).toBeCloseTo((0.75 * C * 0.96) / 435, 9);
+  it('elemento longo ≈ 3/4 λ quando o fator da seção é igual ao K', () => {
+    const k = dipoleShorteningFactor(0.004 / (C / 435));
+    const r = calc({ ...defaultParams, frequencyMHz: 435, conductorDiameter: 0.004, spacing: 0.02, stubFactor: k });
+    expect(measure(r, 'A')).toBeCloseTo((0.75 * C * k) / 435, 9);
+  });
+
+  it('tubo grosso demais para o modelo (435 MHz, 12,7 mm): K do limite e aviso', () => {
+    const r = calc({ ...defaultParams, frequencyMHz: 435 });
+    expect(measure(r, 'B')).toBeCloseTo((0.5 * C * dipoleShorteningFactor(0.015)) / 435, 9);
+    expect(r.warnings.some((w) => /^O tubo tem/.test(w.message))).toBe(true);
   });
 
   it('fator da seção de casamento independente do radiador', () => {
@@ -59,5 +71,12 @@ describe('J-pole: calc', () => {
     expect(() => calc({ ...defaultParams, frequencyMHz: 0 })).toThrow(RangeError);
     expect(() => calc({ ...defaultParams, stubFactor: 1.5 })).toThrow(RangeError);
     expect(() => calc({ ...defaultParams, spacing: 0.001, conductorDiameter: 0.002 })).toThrow(RangeError);
+  });
+
+  it('banda: sem valor calculado, só a referência medida de Fong (8 MHz em 146 MHz) como ordem de grandeza', () => {
+    const b = calc(defaultParams).expected.bandwidth!;
+    expect(b.typical).toBeUndefined();
+    expect(b.note).toMatch(/8 MHz/);
+    expect(b.source).toMatch(/Fong/);
   });
 });

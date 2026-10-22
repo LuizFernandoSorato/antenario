@@ -40,7 +40,9 @@ trena, chave para as abraçadeiras e um NanoVNA ou medidor de ROE.
 
 1. Calcule as medidas na ferramenta. **A** é o elemento longo, **B** é o radiador (parte do
    elemento longo acima do topo do elemento curto), **C** é a seção de casamento (elemento
-   curto) e **D** é o espaçamento entre os centros dos condutores.
+   curto) e **D** é o espaçamento entre os centros dos condutores. O diâmetro do tubo define o
+   fator de encurtamento K do radiador (tubo mais grosso, radiador mais curto). A seção de
+   casamento é uma linha de transmissão e usa o fator próprio que você informar.
 2. Corte o elemento longo um pouco **mais comprido** que **A**, por exemplo 5 %, e o curto na
    medida **C**.
 3. Monte a base em "U" unindo os dois tubos com o espaçamento **D**. A base é o curto da seção.

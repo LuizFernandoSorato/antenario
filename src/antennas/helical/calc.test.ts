@@ -59,6 +59,8 @@ describe('helicoidal: calc', () => {
     expect(r.expected.gain.typical).toBeCloseTo(10 * Math.log10(30), 12);
     expect(r.expected.bandwidth!.min).toBeCloseTo(0.75 * 437, 9);
     expect(r.expected.bandwidth!.max).toBeCloseTo((4 / 3) * 437, 9);
+    // C/λ = 1: R vai de 105 a 187 Ω na faixa; casada em 140 Ω, a ROE nas bordas é 4/3 ≈ 1,33.
+    expect(r.expected.bandwidth!.note).toContain('≈ 1,33:1');
   });
 
   it('o ângulo de passo padrão (≈ 14,04°) não gera aviso; um passo grande gera', () => {

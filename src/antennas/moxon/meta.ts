@@ -30,7 +30,7 @@ export const meta: AntennaMeta = {
       key: 'centerGap',
       label: 'Espaço central do excitado (isolador)',
       unit: 'mm',
-      defaultValue: 0,
+      defaultValue: 10,
       toSi: 0.001,
       min: 0,
       help: 'Distância entre as duas metades do excitado no ponto de alimentação. Fica dentro da largura A.',

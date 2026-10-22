@@ -22,32 +22,24 @@ export const meta: AntennaMeta = {
   params: [
     { key: 'frequencyMHz', label: 'Frequência de projeto', unit: 'MHz', defaultValue: 137.5, toSi: 1, min: 0 },
     {
-      key: 'shorteningFactor',
-      label: 'Fator de encurtamento dos dipolos (K)',
-      unit: '',
-      defaultValue: 0.95,
-      toSi: 1,
-      min: 0,
-      max: 1,
-      help: 'Típico 0,95 (ver o dipolo). Condutores mais grossos pedem K menor.',
-    },
-    {
       key: 'conductorDiameter',
       label: 'Diâmetro do condutor dos dipolos',
       unit: 'mm',
       defaultValue: 2,
       toSi: 0.001,
       min: 0,
-      help: 'Como no dipolo: o K continua manual (curva do ARRL sem fonte). Condutores mais grossos pedem K menor.',
+      help: 'Define o fator de encurtamento K, como no dipolo: condutor mais grosso, dipolos mais curtos.',
     },
     {
       key: 'centerGap',
       label: 'Espaço central (isolador) de cada dipolo',
       unit: 'mm',
-      defaultValue: 0,
+      defaultValue: 10,
       toSi: 0.001,
       min: 0,
-      help: 'Distância entre os dois braços de cada dipolo no ponto de alimentação. Conta dentro do comprimento total A.',
+      help:
+        'Distância entre os dois braços de cada dipolo no ponto de alimentação. Conta dentro do comprimento total A. Precisa ser maior que o ' +
+        'diâmetro do condutor: os braços dos dois dipolos se cruzam no centro.',
     },
     {
       key: 'velocityFactor',

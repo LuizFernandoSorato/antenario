@@ -29,7 +29,18 @@ export const meta: AntennaMeta = {
       min: 0,
       help:
         'As medidas da calculadora de Coppens valem para 4,1 mm e NÃO mudam com este campo (entre 4,1 e 7 mm variam menos de 1 %). ' +
-        'Ele entra só no padrão de irradiação (modelo por momentos). Não há gap central: a alimentação é no topo, sem fonte para o arranjo real.',
+        'Ele entra só no padrão de irradiação (modelo por momentos) e no limite do espaço central.',
+    },
+    {
+      key: 'centerGap',
+      label: 'Espaço central (alimentação no topo)',
+      unit: 'mm',
+      defaultValue: 10,
+      toSi: 0.001,
+      min: 0,
+      help:
+        'Abertura no meio do braço de cima de cada espira, onde liga o cabo. Conta dentro do comprimento da espira. Precisa ser maior que o ' +
+        'diâmetro do condutor: os braços de cima das duas espiras se cruzam no centro.',
     },
     circularSenseParam(
       'O sentido de ENROLAMENTO define a polarização: a ferramenta mostra qual enrolamento dá RHCP ou LHCP. Satélites meteorológicos de 137 MHz ' +

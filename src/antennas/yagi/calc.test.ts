@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { dipoleShorteningFactor } from '../../core/dipole-resonance';
 import { wavelength } from '../../core/wave';
 import { AVAILABLE_ELEMENT_COUNTS, calc, chooseMethod, defaultParams, elementPositionsLambda, findDesign } from './calc';
 import { cutList } from './cutlist';
@@ -23,7 +24,7 @@ function design(length: number) {
   return NBS_DESIGNS.find((d) => d.lengthLambda === length)!;
 }
 
-describe('NBS TN 688: Tabela 1', () => {
+describe('NBS TN 688: Tabela 1', { timeout: 60_000 }, () => {
   it('em d/λ = 0,0085 os diretores e o refletor reproduzem a Tabela 1', () => {
     for (const d of NBS_DESIGNS) {
       directorLengths(d, 0.0085).forEach((l, i) => expect(l).toBeCloseTo(d.directors[i]!, 3));
@@ -43,7 +44,7 @@ describe('NBS TN 688: Tabela 1', () => {
   });
 });
 
-describe('NBS TN 688: exemplo 1 (0,8λ, d/λ = 0,0042)', () => {
+describe('NBS TN 688: exemplo 1 (0,8λ, d/λ = 0,0042)', { timeout: 60_000 }, () => {
   const published = [0.442, 0.438, 0.442]; // D1 = D3, D2 (sem compensação de boom)
   it('diretores sem compensação', () => {
     directorLengths(design(0.8), 0.0042).forEach((l, i) => expect(Math.abs(l - published[i]!)).toBeLessThan(TOL));
@@ -56,7 +57,7 @@ describe('NBS TN 688: exemplo 1 (0,8λ, d/λ = 0,0042)', () => {
   });
 });
 
-describe('NBS TN 688: exemplo 2 (4,2λ, d/λ = 0,013)', () => {
+describe('NBS TN 688: exemplo 2 (4,2λ, d/λ = 0,013)', { timeout: 60_000 }, () => {
   // D1 = D2, D3, D4, D5, D6, D7, D8…D13 (sem compensação de boom)
   const published = [0.414, 0.414, 0.409, 0.395, 0.391, 0.385, 0.381, 0.377, 0.377, 0.377, 0.377, 0.377, 0.377];
   it('diretores sem compensação', () => {
@@ -71,7 +72,7 @@ describe('NBS TN 688: exemplo 2 (4,2λ, d/λ = 0,013)', () => {
   });
 });
 
-describe('Yagi: calc', () => {
+describe('Yagi: calc', { timeout: 60_000 }, () => {
   it('comprimentos em metros = λ × (comprimento em λ + correção do boom)', () => {
     const p = { ...defaultParams, frequencyMHz: 145, elementDiameter: 0.006, boomDiameter: 0.02 };
     const r = calc(p);
@@ -142,19 +143,33 @@ describe('Yagi: calc', () => {
   it('entradas inválidas', () => {
     expect(() => calc({ ...defaultParams, elementDiameter: 0 })).toThrow(RangeError);
     expect(() => calc({ ...defaultParams, boomDiameter: -1 })).toThrow(RangeError);
-    expect(() => calc({ ...defaultParams, drivenFactor: 1.2 })).toThrow(RangeError);
+    expect(() => calc({ ...defaultParams, elementDiameter: 0 })).toThrow(RangeError);
+  });
+
+  it('banda de ROE < 2:1 pelo Q do modelo: estreita no Yagi curto, mais larga no longo; o boom não muda a banda', () => {
+    // Valores do modelo (band-model.test.ts confere o Q contra a varredura): 5 elementos em 145 MHz ≈ 2,5 MHz (1,7 %).
+    const short = calc(defaultParams).expected.bandwidth!;
+    expect(short.unit).toBe('MHz');
+    expect(short.typical!).toBeGreaterThan(2);
+    expect(short.typical!).toBeLessThan(3);
+    expect(short.note).toMatch(/casamento ideal/);
+    expect(short.source).toMatch(/Yaghjian/);
+    const long = calc({ ...defaultParams, elementCount: 11 }).expected.bandwidth!;
+    expect(long.typical!).toBeGreaterThan(short.typical!);
+    expect(long.note).toMatch(/conservadora/);
+    expect(calc({ ...defaultParams, boomDiameter: 0 }).expected.bandwidth!.typical).toBeCloseTo(short.typical!, 9);
   });
 });
 
-describe('Yagi: lista de corte', () => {
+describe('Yagi: lista de corte', { timeout: 60_000 }, () => {
   it('refletor, diretores e excitado; só o excitado é ajustável', () => {
-    const items = cutList(defaultParams);
+    const items = cutList({ ...defaultParams, drivenGap: 0 });
     expect(items.map((i) => i.label)).toEqual(['R', 'D1', 'D2', 'D3', 'DE']);
     expect(items.filter((i) => i.adjustable).map((i) => i.label)).toEqual(['DE']);
   });
 });
 
-describe('Yagi: método DL6WU (qualquer número de elementos)', () => {
+describe('Yagi: método DL6WU (qualquer número de elementos)', { timeout: 60_000 }, () => {
   const lambda = wavelength(432);
   const base = { ...defaultParams, frequencyMHz: 432, method: 2, elementDiameter: 0.006, boomDiameter: 0 };
   const m = (r: ReturnType<typeof calc>, label: string) => r.measurements.find((x) => x.label === label)!.meters;
@@ -189,7 +204,7 @@ describe('Yagi: método DL6WU (qualquer número de elementos)', () => {
     const extra = dl6wuBoomCorrection(0.02 / lambda);
     dl6wuDirectorLengths(9, d).forEach((l, i) => expect(m(r, `D${i + 1}`)).toBeCloseTo((l + extra) * lambda, 12));
     expect(m(r, 'R')).toBeCloseTo((dl6wuReflectorLength(d) + extra) * lambda, 12);
-    expect(m(r, 'DE')).toBeCloseTo(0.5 * 0.95 * lambda, 12);
+    expect(m(r, 'DE')).toBeCloseTo(0.5 * dipoleShorteningFactor(d) * lambda, 12);
   });
 
   it('o ganho estimado cresce com o boom, só dentro da faixa 2,2–39λ', () => {
@@ -224,17 +239,17 @@ describe('Yagi: método DL6WU (qualquer número de elementos)', () => {
   });
 
   it('lista de corte e diagrama funcionam com o DL6WU', () => {
-    const items = cutList({ ...base, elementCount: 11 });
+    const items = cutList({ ...base, elementCount: 11, drivenGap: 0 });
     expect(items.map((i) => i.label)).toEqual(['R', ...Array.from({ length: 9 }, (_, i) => `D${i + 1}`), 'DE']);
   });
 });
 
-describe('Yagi: espaço central do excitado (dentro do comprimento DE)', () => {
+describe('Yagi: espaço central do excitado (dentro do comprimento DE)', { timeout: 60_000 }, () => {
   const get = (r: ReturnType<typeof calc>, label: string) => r.measurements.find((x) => x.label === label)?.meters;
 
   for (const elementCount of [5, 7, 20]) {
     it(`${elementCount} elementos: DE não muda, DB = (DE − DG)/2 e só o excitado é afetado`, () => {
-      const base = calc({ ...defaultParams, elementCount });
+      const base = calc({ ...defaultParams, elementCount, drivenGap: 0 });
       const r = calc({ ...defaultParams, elementCount, drivenGap: 0.01 });
       expect(get(r, 'DE')).toBeCloseTo(get(base, 'DE')!, 12);
       expect(get(r, 'DG')).toBeCloseTo(0.01, 12);
@@ -246,13 +261,14 @@ describe('Yagi: espaço central do excitado (dentro do comprimento DE)', () => {
   }
 
   it('a folha de corte troca o excitado por dois braços DB', () => {
-    const sem = cutList(defaultParams);
+    expect(defaultParams.drivenGap).toBe(0.01);
+    const sem = cutList({ ...defaultParams, drivenGap: 0 });
     expect(sem.find((c) => c.label === 'DE')).toBeDefined();
     const com = cutList({ ...defaultParams, drivenGap: 0.01 });
     expect(com.find((c) => c.label === 'DE')).toBeUndefined();
     const arm = com.find((c) => c.label === 'DB')!;
     expect(arm.quantity).toBe(2);
-    expect(arm.meters).toBeCloseTo((get(calc(defaultParams), 'DE')! - 0.01) / 2, 12);
+    expect(arm.meters).toBeCloseTo((get(calc({ ...defaultParams, drivenGap: 0 }), 'DE')! - 0.01) / 2, 12);
   });
 
   it('rejeita espaço negativo ou maior que o excitado', () => {

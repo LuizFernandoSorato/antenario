@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { dipoleShorteningFactor } from '../../core/dipole-resonance';
 import { coaxCables } from '../../data/coax-cables';
 import { calc, defaultParams } from './calc';
 import { cutList } from './cutlist';
@@ -27,10 +28,10 @@ describe('double bazooka: calc', () => {
     expect(Math.abs(m(r, 'C') / 0.3048 - feet) / feet).toBeLessThan(0.001);
   });
 
-  it('A = K·λ/2; C = λ/4 × VF; B = 2C + espaço; D = (A − B)/2', () => {
+  it('A = K·λ/2 (K do fio das pontas); C = λ/4 × VF; B = 2C + espaço; D = (A − B)/2', () => {
     const lambda = 299.792458 / 7.1;
     const r = calc({ ...defaultParams, frequencyMHz: 7.1, cable: rg58, centerGap: 0.01 });
-    expect(m(r, 'A')).toBeCloseTo((lambda / 2) * 0.95, 12);
+    expect(m(r, 'A')).toBeCloseTo((lambda / 2) * dipoleShorteningFactor(0.002 / lambda), 9);
     expect(m(r, 'C')).toBeCloseTo((lambda / 4) * 0.66, 12);
     expect(m(r, 'B')).toBeCloseTo(2 * m(r, 'C') + 0.01, 12);
     expect(m(r, 'D')).toBeCloseTo((m(r, 'A') - m(r, 'B')) / 2, 12);
@@ -70,8 +71,9 @@ describe('double bazooka: calc', () => {
     expect(() => calc({ ...defaultParams, velocityFactor: 1.2 })).toThrow(RangeError);
     expect(() => calc({ ...defaultParams, velocityFactor: -0.1 })).toThrow(RangeError);
     expect(() => calc({ ...defaultParams, centerGap: -0.001 })).toThrow(RangeError);
-    // K menor que o VF: o coaxial ficaria mais comprido que a antena inteira.
-    expect(() => calc({ ...defaultParams, shorteningFactor: 0.6, cable: rg58 })).toThrow(RangeError);
+    expect(() => calc({ ...defaultParams, wireDiameter: 0 })).toThrow(RangeError);
+    // VF maior que K: o coaxial ficaria mais comprido que a antena inteira.
+    expect(() => calc({ ...defaultParams, velocityFactor: 0.99, cable: rg58 })).toThrow(RangeError);
   });
 
   it('avisos: choke, ajuste pelos fios das pontas e tensão alta (TX)', () => {

@@ -13,8 +13,6 @@ export type AdsbParams = GroundPlaneParams;
 
 export const defaultParams: AdsbParams = {
   frequencyMHz: 1090,
-  shorteningFactor: 0.95,
-  radialFactor: 0.95,
   radialCount: 4,
   droopAngleDeg: 45,
   conductorDiameter: 0.002,

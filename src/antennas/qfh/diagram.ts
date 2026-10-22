@@ -75,6 +75,16 @@ function loops(result: CalcResult, params: QfhParams): Diagram {
     ),
   );
 
+  parts.push(
+    text(
+      320,
+      bottom + 120,
+      `Fio a cortar: ${dimLabel(result, 'I', res)} (maior), ${dimLabel(result, 'J', res)} (menor); espaço central ${dimLabel(result, 'K', res)}`,
+      'dg-note',
+      'middle',
+    ),
+  );
+
   return {
     id,
     title: 'As duas espiras (esquema)',
@@ -82,11 +92,12 @@ function loops(result: CalcResult, params: QfhParams): Diagram {
       'Duas hélices de meia volta: a maior (altura B, diâmetro interno C) e a menor (F e G), cruzadas a 90° em torno do mesmo cilindro. ' +
       `Para ${SENSE_NAME[senseOf(params.circularSense)]} o enrolamento é à ${winding === 'left' ? 'esquerda' : 'direita'}: o braço da frente (linha cheia) sobe da ` +
       `${winding === 'left' ? 'direita para a esquerda' : 'esquerda para a direita'}; o de trás (tracejado) tem a inclinação oposta. ` +
-      'Esquema: a curva da torção é só ilustrativa; alturas e diâmetros guardam a proporção.',
+      'Esquema: a curva da torção é só ilustrativa; alturas e diâmetros guardam a proporção. ' +
+      'A e E: comprimento de cada espira; I e J: fio a cortar, descontado o espaço central K da alimentação no topo.',
     svg: svgDoc(
       id,
       640,
-      Math.round(bottom + 130),
+      Math.round(bottom + 150),
       'QFH: espiras',
       'Duas hélices de meia volta com altura e diâmetro interno cotados.',
       parts.join(''),

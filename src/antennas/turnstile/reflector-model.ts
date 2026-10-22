@@ -29,7 +29,8 @@ export const REFLECTOR_TUBES = 2;
 export const TUBE_LENGTH_LAMBDA = 0.5;
 
 const DIPOLE_HALF_LAMBDA = 0.235;
-const ROD_RADIUS_LAMBDA = 0.0014;
+/** Raio das hastes e tubos do refletor no modelo, em λ (3 mm a 137,5 MHz; premissa). */
+export const ROD_RADIUS_LAMBDA = 0.0014;
 const LAYER_OFFSET_LAMBDA = 0.01;
 const DIPOLE_SEGMENTS = 12;
 

@@ -116,6 +116,7 @@ efeito perceptível no desempenho.
   of Inverted-Vee Patterns" (série *Antennas from the Ground Up*).
 - C. A. Balanis, *Antenna Theory: Analysis and Design*, 4ª ed., §4.6 (dipolo de meia onda).
 - R. F. Harrington, *Field Computation by Moment Methods* (1968): método usado no modelo.
-- ARRL Antenna Book: fator K do dipolo (curva não implementada na ferramenta).
+- ARRL Antenna Book: fator K do dipolo (curva não consultada; a ferramenta calcula o K pelo
+  diâmetro com o mesmo modelo por momentos, conferido com o NEC-4 do Cebik).
 - Anatel: regulamentação do Serviço de Radioamador (versão vigente).
 - LABRE: plano de bandas (versão vigente).

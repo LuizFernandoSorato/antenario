@@ -8,7 +8,7 @@
  *    https://en.wikipedia.org/wiki/Turnstile_antenna (consultada em 2026-10-16), que cita Kraus, "Antennas", 2ª ed.,
  *    1988, pp. 726–729; Milligan, "Modern Antenna Design", 2ª ed., 2005, pp. 231–237; G. Brown, US 2.086.976.
  *    Os livros NÃO foram consultados diretamente.
- *  - Dipolo: comprimento K·λ/2 e Z ≈ 73 Ω, como em antennas/dipole (Balanis, §4.6).
+ *  - Dipolo: comprimento K·λ/2, com K do diâmetro (`k-factor.ts`), e Z ≈ 73 Ω, como em antennas/dipole (Balanis, §4.6).
  *  - Fase por linha de 1/4 de onda: teoria de linhas de transmissão (Pozar, "Microwave Engineering", cap. 2).
  *
  * Derivação da alimentação (sem coeficiente empírico): com o acoplamento mútuo desprezado (os dipolos são ortogonais),
@@ -24,6 +24,11 @@ import { type Complex, abs, complex } from '../../core/complex';
 import { reflectionCoefficient, swrFromGamma } from '../../core/reflection';
 import { assertFrequencyMHz, assertPositive, formatNumber } from '../../core/units';
 import { assertFactor, physicalLength, wavelength } from '../../core/wave';
+import { bandText, swrBandwidthEstimate } from '../bandwidth';
+import { DIPOLE_SWEEP, type DipoleReflector, dipoleBandModel } from '../dipole/band-model';
+import { BAND_SOURCE } from '../dipole/calc';
+import { K_FIELD_NOTE, kAssumption, kWarning, shorteningFactorFor } from '../k-factor';
+import { quadratureSweep } from '../quadrature-feed';
 import { type AssemblyGuide, type CalcResult, type CalcWarning, type Estimate, type Measurement, rangeWarning } from '../types';
 import { RHCP, SENSE_NAME, type Sense, senseOf } from '../circular';
 import { meta } from './meta';
@@ -34,15 +39,14 @@ import {
   REFLECTOR_SIDE_LAMBDA,
   REFLECTOR_STUDY,
   REFLECTOR_TUBES,
+  ROD_RADIUS_LAMBDA,
   TUBE_LENGTH_LAMBDA,
   TUBE_STUDY,
 } from './reflector-model';
 
 export interface TurnstileParams {
   frequencyMHz: number;
-  /** Fator de encurtamento K dos dipolos, em (0, 1]. */
-  shorteningFactor: number;
-  /** Diâmetro do condutor dos dipolos, em metros (informativo: o K é manual). */
+  /** Diâmetro do condutor dos dipolos, em metros; define o K. */
   conductorDiameter: number;
   /** Espaço central de cada dipolo, em metros; conta dentro do comprimento total. */
   centerGap: number;
@@ -58,9 +62,8 @@ export interface TurnstileParams {
 
 export const defaultParams: TurnstileParams = {
   frequencyMHz: 137.5,
-  shorteningFactor: 0.95,
   conductorDiameter: 0.002,
-  centerGap: 0,
+  centerGap: 0.01,
   velocityFactor: 0.66,
   reflector: 1,
   reflectorKind: REFLECTOR_PLATE,
@@ -91,12 +94,19 @@ export function quadratureFeed(r: number, zLine: number): QuadratureFeed {
 }
 
 export function calc(params: TurnstileParams): CalcResult {
-  const { frequencyMHz: f, shorteningFactor: k, velocityFactor: vf, conductorDiameter: d, centerGap: gap } = params;
+  const { frequencyMHz: f, velocityFactor: vf, conductorDiameter: d, centerGap: gap } = params;
   assertFrequencyMHz(f);
-  assertFactor(k, 'O fator de encurtamento K');
   assertPositive(d, 'O diâmetro do condutor');
   if (!Number.isFinite(gap) || gap < 0) {
     throw new RangeError(`O espaço central deve ser ≥ 0 (recebido: ${gap}).`);
+  }
+  // Os dois dipolos se cruzam no mesmo centro: a ponta de dentro de um braço fica a gap/2 do centro, e o braço do outro dipolo ocupa
+  // d/2 para cada lado do eixo dele. Com gap ≤ d, as pontas encostam no outro dipolo (geometria; regra pedida pelo usuário).
+  if (!(gap > d)) {
+    throw new RangeError(
+      `O espaço central (${formatNumber(gap * 1000, 1)} mm) precisa ser maior que o diâmetro do condutor (${formatNumber(d * 1000, 1)} mm): ` +
+        'os braços dos dois dipolos se cruzam no centro e encostariam um no outro.',
+    );
   }
   assertFactor(vf, 'O fator de velocidade');
   if (params.reflector !== 0 && params.reflector !== 1) {
@@ -110,7 +120,8 @@ export function calc(params: TurnstileParams): CalcResult {
   const sense = senseOf(params.circularSense);
 
   const lambda = wavelength(f);
-  const total = physicalLength(0.5, f, k);
+  const sf = shorteningFactorFor(d, f);
+  const total = physicalLength(0.5, f, sf.k);
   if (gap >= total) {
     throw new RangeError('O espaço central é maior que o comprimento total do dipolo.');
   }
@@ -158,6 +169,38 @@ export function calc(params: TurnstileParams): CalcResult {
   const zFeed = feed.feedImpedance.re;
   const swr50 = swrFromGamma(abs(reflectionCoefficient(feed.feedImpedance, 50)));
 
+  // Banda: cada dipolo pelo método dos momentos, reajustado para ressoar (com o refletor, se houver), e a junção pela linha de 1/4 de
+  // onda de 73 Ω (quadrature-feed.ts). Chapa/tela = plano infinito (imagem); tubos = um tubo parasita sob cada dipolo.
+  const reflectorModel: DipoleReflector | undefined = !withReflector
+    ? undefined
+    : tubes
+      ? { kind: 'tube', distanceM: spacing, lengthM: TUBE_LENGTH_LAMBDA * lambda, diameterM: 2 * ROD_RADIUS_LAMBDA * lambda }
+      : { kind: 'plane', distanceM: spacing };
+  const band = dipoleBandModel(f, d, reflectorModel);
+  const quad = quadratureSweep({
+    centerMHz: f,
+    ...DIPOLE_SWEEP,
+    impedanceAt: band.impedanceAt,
+    zLine: DIPOLE_RESISTANCE_OHMS,
+    referenceOhms: 50,
+  });
+  const spanPercent = DIPOLE_SWEEP.span * 100;
+  const bandwidth = swrBandwidthEstimate(quad.swr, {
+    reference: 'em 50 Ω',
+    spanPercent,
+    note:
+      `Mas a polarização só fica circular (razão axial < 3 dB: ${bandText(quad.axialBand, 'MHz', spanPercent)}) perto da frequência de projeto: ` +
+      'fora dela a linha de fase deixa de dar 90° e as correntes ficam desiguais. A ROE do conjunto é mais larga que a de um dipolo porque as ' +
+      'reflexões dos dois dipolos chegam à junção com 180° de diferença e se cancelam. ' +
+      `Modelo: cada dipolo ajustado para ressoar (R ≈ ${formatNumber(band.impedanceAt(f).re, 0)} Ω` +
+      (withReflector ? (tubes ? ', com o tubo do refletor' : ', com o refletor como plano infinito') : '') +
+      `), linha de fase de ${DIPOLE_RESISTANCE_OHMS} Ω sem perdas, acoplamento entre os dipolos cruzados desprezado; razão axial na direção do feixe.`,
+    source:
+      `${BAND_SOURCE}; linha de 1/4 de onda pela matriz ABCD (Pozar)` +
+      (withReflector && !tubes ? '; plano pela teoria das imagens (Balanis, §4.7)' : '') +
+      '; razão axial < 3 dB: critério usual (IntechOpen, fonte secundária)',
+  });
+
   const gain: Estimate = withReflector
     ? {
         unit: 'dBic',
@@ -181,6 +224,9 @@ export function calc(params: TurnstileParams): CalcResult {
   const warnings: CalcWarning[] = [];
   const outOfRange = rangeWarning(meta, f);
   if (outOfRange) warnings.push(outOfRange);
+  const clampWarning = kWarning(sf);
+  if (clampWarning) warnings.push(clampWarning);
+  warnings.push({ level: 'info', message: K_FIELD_NOTE });
   if (vf < 0.6 || vf > 0.9) {
     warnings.push({
       level: 'warning',
@@ -253,8 +299,8 @@ export function calc(params: TurnstileParams): CalcResult {
     measurements,
     assumptions: [
       { name: 'Comprimento de onda (λ)', value: `${formatNumber(lambda, 4)} m`, source: 'λ = 299,792458 / f(MHz)' },
-      { name: 'Fator de encurtamento dos dipolos (K)', value: formatNumber(k, 3), source: 'Como no dipolo; dado do usuário' },
-      { name: 'Diâmetro do condutor', value: `${formatNumber(d * 1000, 2)} mm`, source: 'Dado do usuário; não altera as cotas (o K é manual)' },
+      kAssumption(sf, 'dos dipolos'),
+      { name: 'Diâmetro do condutor', value: `${formatNumber(d * 1000, 2)} mm` },
       { name: 'Espaço central de cada dipolo', value: `${formatNumber(gap * 1000, 1)} mm (dentro do comprimento total)`, source: 'Dado do usuário; comprimento de ponta a ponta, como no dipolo' },
       { name: 'Fator de velocidade do coaxial de fase (VF)', value: formatNumber(vf, 3), source: 'Dado do usuário; datasheet do cabo' },
       { name: 'Resistência de cada dipolo', value: `${DIPOLE_RESISTANCE_OHMS} Ω (espaço livre)`, source: 'Balanis, Antenna Theory, §4.6' },
@@ -274,7 +320,7 @@ export function calc(params: TurnstileParams): CalcResult {
         source: 'Derivação de linhas (Pozar) com R de Balanis',
       },
       gain,
-      bandwidth: null,
+      bandwidth,
     },
     warnings,
     assembly: assemblyFor(sense),

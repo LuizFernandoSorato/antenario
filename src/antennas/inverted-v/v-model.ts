@@ -12,7 +12,7 @@
 
 import { type Complex, complex } from '../../core/complex';
 import { type Vec3, solveWires } from '../../core/mom';
-import { swrFromImpedance } from '../../core/reflection';
+import { type SwrBand, type SwrPoint, swrSweep } from '../../core/swr-band';
 import { wavelength } from '../../core/wave';
 
 export interface InvertedVModelInput {
@@ -27,17 +27,8 @@ export interface InvertedVModelInput {
   segments?: number;
 }
 
-export interface VBand {
-  lowMHz: number;
-  highMHz: number;
-  /** true quando a ROE não chegou ao limite dentro da varredura. */
-  open: boolean;
-}
-
-export interface VSweepPoint {
-  fMHz: number;
-  swr: number;
-}
+export type VBand = SwrBand;
+export type VSweepPoint = SwrPoint;
 
 export interface InvertedVModel {
   /** Comprimento total ressonante do V (ponta a ponta pelo fio), em λ. */
@@ -53,6 +44,8 @@ export interface InvertedVModel {
   band2: VBand | null;
   band15: VBand | null;
   sweep: VSweepPoint[];
+  minSwr: number;
+  minAtMHz: number;
   /** Campo distante do V ressonante: potência relativa na direção `dir` (x ao longo da projeção dos braços, z para cima). */
   power: (dir: Vec3) => number;
 }
@@ -107,35 +100,6 @@ function resonantLength(apexRad: number, radiusM: number, fMHz: number, segments
   return l1;
 }
 
-/** Interpolação de Lagrange de 4 pontos numa grade uniforme (valores complexos). */
-function interpolate(grid: readonly number[], values: readonly Complex[], f: number): Complex {
-  const step = grid[1]! - grid[0]!;
-  const i = Math.min(Math.max(Math.floor((f - grid[0]!) / step) - 1, 0), grid.length - 4);
-  let re = 0;
-  let im = 0;
-  for (let a = i; a < i + 4; a++) {
-    let w = 1;
-    for (let b = i; b < i + 4; b++) if (b !== a) w *= (f - grid[b]!) / (grid[a]! - grid[b]!);
-    re += w * values[a]!.re;
-    im += w * values[a]!.im;
-  }
-  return complex(re, im);
-}
-
-function bandAround(fs: readonly number[], swr: readonly number[], center: number, limit: number): VBand | null {
-  if (swr[center]! > limit) return null;
-  let lo = center;
-  while (lo > 0 && swr[lo - 1]! <= limit) lo--;
-  let hi = center;
-  while (hi < fs.length - 1 && swr[hi + 1]! <= limit) hi++;
-  const cross = (i: number, j: number) => fs[i]! + ((limit - swr[i]!) * (fs[j]! - fs[i]!)) / (swr[j]! - swr[i]!);
-  return {
-    lowMHz: lo === 0 ? fs[0]! : cross(lo, lo - 1),
-    highMHz: hi === fs.length - 1 ? fs[hi]! : cross(hi, hi + 1),
-    open: lo === 0 || hi === fs.length - 1,
-  };
-}
-
 export function bandWidthMHz(band: VBand): number {
   return band.highMHz - band.lowMHz;
 }
@@ -162,21 +126,14 @@ export function invertedVModel(input: InvertedVModelInput): InvertedVModel {
   const dipoleSol = solve(dipoleLambda * lambda, Math.PI, input.radiusM, f0, segments);
   const dipoleDirectivity = dipoleSol.directivity([0, 1, 0]);
 
-  const grid: number[] = [];
-  const zs: Complex[] = [];
-  for (let i = 0; i <= COARSE_STEPS; i++) {
-    const f = f0 * (1 - SPAN + (2 * SPAN * i) / COARSE_STEPS);
-    grid.push(f);
-    zs.push(impedance(lengthM, apex, input.radiusM, f, segments));
-  }
-  const fs: number[] = [];
-  const swr: number[] = [];
-  for (let i = 0; i <= FINE_STEPS; i++) {
-    const f = f0 * (1 - SPAN + (2 * SPAN * i) / FINE_STEPS);
-    fs.push(f);
-    swr.push(swrFromImpedance(interpolate(grid, zs, f), input.referenceOhms));
-  }
-  const center = FINE_STEPS / 2;
+  const swr = swrSweep({
+    centerMHz: f0,
+    span: SPAN,
+    coarseSteps: COARSE_STEPS,
+    fineSteps: FINE_STEPS,
+    impedanceAt: (f) => impedance(lengthM, apex, input.radiusM, f, segments),
+    referenceOhms: input.referenceOhms,
+  });
 
   const model: InvertedVModel = {
     resonantLengthLambda: lengthLambda,
@@ -184,9 +141,11 @@ export function invertedVModel(input: InvertedVModelInput): InvertedVModel {
     z: complex(z0.re, z0.im),
     directivityDbi: 10 * Math.log10(directivity),
     dipoleDirectivityDbi: 10 * Math.log10(dipoleDirectivity),
-    band2: bandAround(fs, swr, center, 2),
-    band15: bandAround(fs, swr, center, 1.5),
-    sweep: fs.map((f, i) => ({ fMHz: f, swr: swr[i]! })),
+    band2: swr.band2,
+    band15: swr.band15,
+    sweep: swr.sweep,
+    minSwr: swr.minSwr,
+    minAtMHz: swr.minAtMHz,
     power: sol.power,
   };
   if (cache.size > 16) cache.clear();

@@ -11,21 +11,23 @@
  *   B = radiador de λ/2, acima do topo da seção de casamento
  *   C = seção de casamento de λ/4 (= elemento curto), medida a partir do curto
  *   D = espaçamento centro a centro entre os dois condutores da seção
+ *
+ * O radiador usa o K do dipolo do mesmo condutor (`k-factor.ts`): é a primeira ressonância do elemento de meia onda, a mesma
+ * do dipolo. A seção de casamento é uma linha de transmissão (dois condutores em curto) e tem fator próprio, digitado.
  */
 
 import { assertFrequencyMHz, assertPositive, formatNumber } from '../../core/units';
 import { assertFactor, physicalLength, wavelength } from '../../core/wave';
+import { kAssumption, kWarning, shorteningFactorFor } from '../k-factor';
 import { parallelWireImpedance } from '../../lines/parallel-wire';
 import { type CalcResult, type CalcWarning, rangeWarning } from '../types';
 import { meta } from './meta';
 
 export interface JPoleParams {
   frequencyMHz: number;
-  /** Fator de encurtamento do radiador de λ/2, em (0, 1]. */
-  shorteningFactor: number;
   /** Fator de encurtamento (ou de velocidade) da seção de casamento de λ/4, em (0, 1]. */
   stubFactor: number;
-  /** Diâmetro dos condutores, em metros. */
+  /** Diâmetro dos condutores, em metros; define o K do radiador. */
   conductorDiameter: number;
   /** Espaçamento centro a centro entre os condutores da seção, em metros. */
   spacing: number;
@@ -33,24 +35,26 @@ export interface JPoleParams {
 
 export const defaultParams: JPoleParams = {
   frequencyMHz: 145,
-  shorteningFactor: 0.95,
   stubFactor: 0.95,
   // Tubo de cobre de 1/2" (12,7 mm), comum em J-poles de VHF. Valor de entrada, não constante física.
   conductorDiameter: 0.0127,
   spacing: 0.05,
 };
 
+/** Banda medida por Fong (QST, fev. 2003) num J-pole de 2 m de cano de cobre: "an 8 MHz bandwidth", em 146 MHz. Critério não declarado. */
+const FONG_BANDWIDTH_FRACTION = 8 / 146;
+
 export function calc(params: JPoleParams): CalcResult {
-  const { frequencyMHz: f, shorteningFactor: k, stubFactor: ks, conductorDiameter: d, spacing } = params;
+  const { frequencyMHz: f, stubFactor: ks, conductorDiameter: d, spacing } = params;
   assertFrequencyMHz(f);
-  assertFactor(k, 'O fator de encurtamento do radiador');
   assertFactor(ks, 'O fator da seção de casamento');
   assertPositive(d, 'O diâmetro do condutor');
   // Valida também espaçamento > diâmetro.
   const stubZ0 = parallelWireImpedance(spacing, d);
 
   const lambda = wavelength(f);
-  const radiator = physicalLength(0.5, f, k);
+  const sf = shorteningFactorFor(d, f);
+  const radiator = physicalLength(0.5, f, sf.k);
   const stub = physicalLength(0.25, f, ks);
 
   const warnings: CalcWarning[] = [
@@ -71,7 +75,9 @@ export function calc(params: JPoleParams): CalcResult {
     },
     {
       level: 'warning',
-      message: 'Corte o radiador um pouco mais comprido e encurte aos poucos medindo a ROE.',
+      message:
+        'O fator K do radiador vem do diâmetro do tubo, para condutor nu no espaço livre. Corte o radiador um pouco mais comprido e ' +
+        'encurte aos poucos medindo a ROE.',
     },
     {
       level: 'danger',
@@ -80,6 +86,8 @@ export function calc(params: JPoleParams): CalcResult {
         'alta de RF. Instale fora do alcance de pessoas.',
     },
   ];
+  const clampWarning = kWarning(sf, 'o tubo');
+  if (clampWarning) warnings.unshift(clampWarning);
   const outOfRange = rangeWarning(meta, f);
   if (outOfRange) warnings.unshift(outOfRange);
 
@@ -92,7 +100,7 @@ export function calc(params: JPoleParams): CalcResult {
     ],
     assumptions: [
       { name: 'Comprimento de onda (λ)', value: `${formatNumber(lambda, 4)} m`, source: 'λ = 299,792458 / f(MHz)' },
-      { name: 'Fator de encurtamento do radiador (K)', value: formatNumber(k, 3) },
+      kAssumption(sf, 'do radiador'),
       { name: 'Fator da seção de casamento', value: formatNumber(ks, 3) },
       { name: 'Diâmetro do condutor', value: `${formatNumber(d * 1000, 2)} mm` },
       {
@@ -117,7 +125,16 @@ export function calc(params: JPoleParams): CalcResult {
           'pouco abaixo por causa da radiação da seção de casamento e do cabo; sem valor típico com fonte.',
         source: 'Balanis, Antenna Theory, 4ª ed., §4.6 (dipolo de λ/2)',
       },
-      bandwidth: null,
+      // Sem modelo: o MoM desta ferramenta não tem junções nem alimentação na ponta, e a seção de casamento também irradia.
+      // TODO(fonte): curva de ROE medida com o diâmetro e o critério declarados.
+      bandwidth: {
+        unit: 'MHz',
+        note:
+          `Sem estimativa calculada. Referência medida: um J-pole de 2 m de cano de cobre teve banda de ≈ 8 MHz (≈ ${formatNumber(FONG_BANDWIDTH_FRACTION * 100, 1)} % de 146 MHz), ` +
+          `o dobro da versão de fita de 300 Ω, porque o condutor é mais grosso (aqui, a mesma fração daria ≈ ${formatNumber(FONG_BANDWIDTH_FRACTION * f, 1)} MHz). ` +
+          'O artigo não diz o critério de ROE nem o diâmetro do cano: use só como ordem de grandeza e meça.',
+        source: 'E. Fong, WB6IQN, "The DBJ-1: A VHF-UHF Dual-Band J-Pole", QST, fev. 2003 (cópia em repeater-builder.com)',
+      },
     },
     warnings,
   };

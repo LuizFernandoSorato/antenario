@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { dipoleShorteningFactor } from '../../core/dipole-resonance';
 import { calc as groundPlaneCalc } from '../ground-plane/calc';
 import { calc, defaultParams } from './calc';
 
-// Referência: λ/4 × K com λ = 299,792458/f (CLAUDE.md). A 1090 MHz, K = 0,95:
-// 0,25 × 299,792458 × 0,95 / 1090 = 65,32 mm. Tolerância declarada: 1e-9 m.
+// Referência: λ/4 × K com λ = 299,792458/f (CLAUDE.md) e K do diâmetro (core/dipole-resonance.ts). A 1090 MHz com fio de 2 mm
+// (d/λ ≈ 0,0073) K ≈ 0,935: ≈ 64,3 mm. Tolerância declarada: 1e-9 m.
 
 function measure(result: ReturnType<typeof calc>, label: string): number {
   const m = result.measurements.find((x) => x.label === label);
@@ -12,10 +13,12 @@ function measure(result: ReturnType<typeof calc>, label: string): number {
 }
 
 describe('ADS-B 1090 MHz: calc', () => {
-  it('radiador e radiais ≈ 65,3 mm', () => {
+  it('radiador e radiais ≈ 64 mm', () => {
     const r = calc(defaultParams);
-    expect(measure(r, 'A')).toBeCloseTo((0.25 * 299.792458 * 0.95) / 1090, 9);
-    expect(measure(r, 'A') * 1000).toBeCloseTo(65.32, 2);
+    const k = dipoleShorteningFactor(0.002 / (299.792458 / 1090));
+    expect(measure(r, 'A')).toBeCloseTo((0.25 * 299.792458 * k) / 1090, 9);
+    expect(measure(r, 'A') * 1000).toBeGreaterThan(63.5);
+    expect(measure(r, 'A') * 1000).toBeLessThan(65);
   });
 
   it('mesmas cotas do ground plane na mesma frequência', () => {

@@ -41,8 +41,9 @@ Trena, serra, furadeira, estilete, ferro de solda, alicate e NanoVNA ou medidor 
 2. Corte duas varetas por espira, de comprimento **E** (a diagonal da espira do refletor).
 3. Cruze as duas varetas de cada espira no centro e prenda-as no boom, formando um "X" visto de frente.
    Prenda as espiras no boom a **D** de distância, na ordem: refletor, excitada, diretores.
-4. Corte os fios: **G** para o refletor, **H** para a espira excitada (corte alguns centímetros mais
-   comprido) e **I** para cada diretor. Deixe uma sobra para fechar a espira.
+4. Corte os fios: **G** para o refletor, **J** para a espira excitada (o perímetro **H** menos o espaço
+   de alimentação **K**; corte alguns centímetros mais comprido) e **I** para cada diretor. Deixe uma
+   sobra para fechar a espira.
 5. Passe o fio pelas quatro pontas das varetas (um furo ou ranhura em cada ponta), formando um quadrado
    de lado **A**, **B** ou **C**. As quatro pontas definem os cantos.
 6. Feche cada espira soldando as duas pontas do fio. Na espira excitada, deixe a abertura no meio do

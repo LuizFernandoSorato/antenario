@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { CalcResult } from '../types';
-import { calc } from './calc';
-import { solveQuad } from './pattern-model';
+import { complex } from '../../core/complex';
+import { matchedFractionalBandwidth } from '../../core/q-bandwidth';
+import { bandWidthMHz, swrSweep } from '../../core/swr-band';
+import { calc, defaultParams } from './calc';
+import { quadImpedance, quadQ, solveQuad } from './pattern-model';
 
 // Sem referência primária de ganho/diagrama da quadra neste repositório (a estimativa aditiva do calc.ts não tem fonte).
 // O solver de momentos foi validado no dipolo, no arranjo de dois dipolos e no Yagi contra o NBS (ver core/mom.test.ts e
@@ -62,4 +65,34 @@ describe('quadra por momentos', () => {
     const grosso = solveQuad(q.result, q.frequencyMHz, 1, 0.01).inputImpedance(0);
     expect(Math.hypot(fino.re - grosso.re, fino.im - grosso.im)).toBeGreaterThan(1);
   });
+});
+
+// Referência: o Q (Yaghjian e Best) tem de prever a faixa da varredura do próprio modelo, com a espira excitada sintonizada em f0 por
+// uma reatância em série ideal e a ROE medida contra a resistência em f0. Tolerância: 10 %. Com 2 diretores o modelo tem uma segunda
+// ressonância logo acima de f0 (a reatância fica quase plana de 1,01 a 1,03·f0) e a faixa real sai maior que a do Q: ali o teste só confere
+// que o Q é conservador.
+describe('quadra: banda pelo Q', { timeout: 60_000 }, () => {
+  for (const directorCount of [0, 1, 2, 3]) {
+    it(`${directorCount} diretor(es): (S − 1)/(Q·√S) a 10 % da varredura sintonizada (2: só conservador)`, () => {
+      const p = { ...defaultParams, directorCount };
+      const r = calc(p);
+      const f0 = p.frequencyMHz;
+      const { z0, q } = quadQ(r, f0, directorCount, p.wireDiameter);
+      const tune = (f: number) => (z0.im > 0 ? -z0.im * (f0 / f) : -z0.im * (f / f0));
+      const s = swrSweep({
+        centerMHz: f0,
+        span: 0.06,
+        coarseSteps: 24,
+        fineSteps: 600,
+        impedanceAt: (f) => {
+          const z = quadImpedance(r, f, directorCount, p.wireDiameter);
+          return complex(z.re, z.im + tune(f));
+        },
+        referenceOhms: z0.re,
+      });
+      const ratio = matchedFractionalBandwidth(q, 2) / (bandWidthMHz(s.band2!) / f0);
+      if (directorCount !== 2) expect(ratio).toBeGreaterThan(0.9);
+      expect(ratio).toBeLessThan(1.1);
+    });
+  }
 });

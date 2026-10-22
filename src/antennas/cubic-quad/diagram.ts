@@ -22,6 +22,7 @@ function frontView(result: CalcResult, params: CubicQuadParams): Diagram {
   const hr = half(sideR);
   const hd = half(measure(result, 'B'));
   const hdir = hasDirector ? half(measure(result, 'C')) : 0;
+  const hasGap = result.measurements.some((m) => m.label === 'K');
 
   const square = (h: number, cls: string) => rect(cx - h, cy - h, 2 * h, 2 * h, cls);
   const body = [
@@ -42,6 +43,9 @@ function frontView(result: CalcResult, params: CubicQuadParams): Diagram {
     hasDirector ? dimension(id, cx + hr, cy - hdir, cx + hr, cy + hdir, -34, dimLabel(result, 'C', res), { anchor: 'start' }) : '',
     text(cx - hr - 6, cy - hr + 12, `E = ${formatLength(measure(result, 'E'), res)}`, 'dg-label', 'end'),
     text(20, 400, 'Fio (perímetro): ' + ['G', 'H', ...(hasDirector ? ['I'] : [])].map((l) => dimLabel(result, l, res)).join('   '), 'dg-label'),
+    hasGap
+      ? text(20, 420, `Excitada aberta embaixo: fio a cortar ${dimLabel(result, 'J', res)}, espaço ${dimLabel(result, 'K', res)}`, 'dg-label')
+      : '',
   ].join('');
 
   return {
@@ -50,8 +54,9 @@ function frontView(result: CalcResult, params: CubicQuadParams): Diagram {
     caption:
       'Espiras quadradas de perímetro cerca de uma onda, presas em duas varetas cruzadas (spreaders, E). ' +
       'A: lado do refletor (a maior espira). B: lado da espira excitada. G, H, I: fio do refletor, da excitada e dos diretores. ' +
-      `${hasDirector ? 'C: lado dos diretores (a menor). ' : ''}Os tamanhos relativos estão em escala; as diferenças entre as espiras são pequenas.`,
-    svg: svgDoc(id, 560, 420, 'Quadra cúbica: vista de frente', 'Espiras quadradas concêntricas montadas em varetas cruzadas, alimentadas no meio do lado de baixo.', body),
+      `${hasDirector ? 'C: lado dos diretores (a menor). ' : ''}Os tamanhos relativos estão em escala; as diferenças entre as espiras são pequenas.` +
+      (hasGap ? ' J: fio a cortar da excitada (H menos o espaço K de alimentação).' : ''),
+    svg: svgDoc(id, 560, hasGap ? 440 : 420, 'Quadra cúbica: vista de frente', 'Espiras quadradas concêntricas montadas em varetas cruzadas, alimentadas no meio do lado de baixo.', body),
   };
 }
 

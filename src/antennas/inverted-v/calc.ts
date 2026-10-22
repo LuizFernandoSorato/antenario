@@ -1,22 +1,21 @@
 /**
  * V invertido: dipolo de meia onda com o centro no alto de um mastro e os braços descendo em linha reta até as pontas.
  *
- * Comprimento total: A = K·λ/2 × alongamento. K é o do dipolo reto (CLAUDE.md, ajustável); o alongamento é a razão entre o
+ * Comprimento total: A = K·λ/2 × alongamento. K é o do dipolo reto do mesmo fio (`k-factor.ts`); o alongamento é a razão entre o
  * comprimento ressonante do V e o do dipolo reto do mesmo fio, no espaço livre, pelo método dos momentos (`v-model.ts`).
  * Validação: L. B. Cebik, W4RNL, "80-Meter Dipoles and Inverted-Vs: A Graphical Scrapbook" (NEC-4): 0,8 % mais comprido com
  * 120° entre os braços e 1,9 % com 90° (teste de `v-model.ts`). Impedância, ganho e banda vêm do mesmo modelo.
  */
 
 import { assertFrequencyMHz, assertPositive, formatNumber } from '../../core/units';
-import { assertFactor, physicalLength, wavelength } from '../../core/wave';
+import { physicalLength, wavelength } from '../../core/wave';
+import { K_FIELD_NOTE, kAssumption, kWarning, shorteningFactorFor } from '../k-factor';
 import { type CalcResult, type CalcWarning, type Estimate, type Measurement, rangeWarning } from '../types';
 import { type InvertedVModel, type VBand, bandWidthMHz, invertedVModel } from './v-model';
 import { meta } from './meta';
 
 export interface InvertedVParams {
   frequencyMHz: number;
-  /** Fator de encurtamento K do dipolo reto, em (0, 1]. */
-  shorteningFactor: number;
   /** Ângulo entre os braços, em graus (180 = dipolo reto). */
   apexAngleDeg: number;
   /** Diâmetro do fio, em metros. */
@@ -29,10 +28,9 @@ export interface InvertedVParams {
 
 export const defaultParams: InvertedVParams = {
   frequencyMHz: 7.1,
-  shorteningFactor: 0.95,
   apexAngleDeg: 120,
   conductorDiameter: 0.002,
-  centerGap: 0,
+  centerGap: 0.01,
   apexHeight: 10,
 };
 
@@ -61,9 +59,8 @@ function bandText(band: VBand | null, unit: 'kHz' | 'MHz'): string {
 }
 
 export function calc(params: InvertedVParams): CalcResult {
-  const { frequencyMHz: f, shorteningFactor: k, apexAngleDeg: apex, conductorDiameter: d, centerGap: gap, apexHeight: h } = params;
+  const { frequencyMHz: f, apexAngleDeg: apex, conductorDiameter: d, centerGap: gap, apexHeight: h } = params;
   assertFrequencyMHz(f);
-  assertFactor(k, 'O fator de encurtamento K');
   assertPositive(d, 'O diâmetro do fio');
   if (!Number.isFinite(apex) || apex < MIN_APEX_DEG || apex > 180) {
     throw new RangeError(`O ângulo entre os braços deve estar entre ${MIN_APEX_DEG}° e 180° (recebido: ${apex}).`);
@@ -78,7 +75,8 @@ export function calc(params: InvertedVParams): CalcResult {
   const lambda = wavelength(f);
   const model = modelFor(params);
   const stretch = model.resonantLengthLambda / model.dipoleLengthLambda;
-  const dipole = physicalLength(0.5, f, k);
+  const sf = shorteningFactorFor(d, f);
+  const dipole = physicalLength(0.5, f, sf.k);
   const total = dipole * stretch;
   if (gap >= total) {
     throw new RangeError('O espaço central é maior que o comprimento total do V.');
@@ -129,6 +127,8 @@ export function calc(params: InvertedVParams): CalcResult {
   const warnings: CalcWarning[] = [];
   const outOfRange = rangeWarning(meta, f);
   if (outOfRange) warnings.push(outOfRange);
+  const clampWarning = kWarning(sf, 'o fio');
+  if (clampWarning) warnings.push(clampWarning);
   if (apex < MIN_CHECKED_APEX_DEG) {
     warnings.push({
       level: 'warning',
@@ -144,13 +144,7 @@ export function calc(params: InvertedVParams): CalcResult {
         'O cálculo é no espaço livre. Perto do solo (pontas baixas), a frequência de ressonância e a impedância mudam: nos V, ' +
         'quanto mais perto do chão, menor a impedância (Cebik). Corte os braços com sobra e encurte aos poucos medindo a ROE na altura final.',
     },
-    {
-      level: 'info',
-      message:
-        'K foi informado manualmente, como no dipolo. Ele depende da razão comprimento/diâmetro do fio (curva no ARRL Antenna Book), ' +
-        // TODO(fonte): digitalizar a curva do ARRL Antenna Book (mesma pendência do dipolo).
-        'que ainda não foi implementada. O alongamento do V é calculado por cima desse K.',
-    },
+    { level: 'info', message: `${K_FIELD_NOTE} O alongamento do V é calculado por cima desse K.` },
     {
       level: 'info',
       message:
@@ -170,7 +164,7 @@ export function calc(params: InvertedVParams): CalcResult {
     measurements,
     assumptions: [
       { name: 'Comprimento de onda (λ)', value: `${formatNumber(lambda, 4)} m`, source: 'λ = 299,792458 / f(MHz)' },
-      { name: 'Fator de encurtamento (K)', value: formatNumber(k, 3), source: 'Dipolo de meia onda reto, L = K·λ/2' },
+      kAssumption(sf, 'do dipolo reto'),
       {
         name: 'Alongamento do V',
         value: `${formatNumber((stretch - 1) * 100, 2)} % (A = K·λ/2 × ${formatNumber(stretch, 4)})`,

@@ -5,7 +5,8 @@
  */
 
 import { assertFrequencyMHz, assertPositive, formatNumber } from '../../core/units';
-import { assertFactor, wavelength } from '../../core/wave';
+import { wavelength } from '../../core/wave';
+import { kAssumption, kWarning, shorteningFactorFor } from '../k-factor';
 import { type CalcResult, type CalcWarning, type Measurement, rangeWarning } from '../types';
 import type { YagiParams } from './calc';
 import {
@@ -33,10 +34,9 @@ import { meta } from './meta';
 export const DL6WU_MAX_ELEMENTS = 40;
 
 export function calcDl6wu(params: YagiParams): CalcResult {
-  const { frequencyMHz: f, elementCount: n, elementDiameter: d, boomDiameter: boom, drivenFactor: k } = params;
+  const { frequencyMHz: f, elementCount: n, elementDiameter: d, boomDiameter: boom } = params;
   assertFrequencyMHz(f);
   assertPositive(d, 'O diâmetro dos elementos');
-  assertFactor(k, 'O fator de encurtamento do excitado');
   if (!Number.isFinite(boom) || boom < 0) {
     throw new RangeError(`O diâmetro do boom deve ser ≥ 0 (recebido: ${boom}).`);
   }
@@ -50,7 +50,8 @@ export function calcDl6wu(params: YagiParams): CalcResult {
   const boomExtra = boom > 0 ? boomCorrection(boomOverLambda, true) : 0;
   const directors = directorLengths(directorCount, dOverLambda).map((l) => (l + boomExtra) * lambda);
   const reflector = (reflectorLength(dOverLambda) + boomExtra) * lambda;
-  const driven = (k * lambda) / 2;
+  const sf = shorteningFactorFor(d, f);
+  const driven = (sf.k * lambda) / 2;
   const positions = directorPositions(directorCount);
   const boomLambda = boomLength(directorCount);
   const foldedRef = foldedDrivenLength(dOverLambda) * lambda;
@@ -91,6 +92,8 @@ export function calcDl6wu(params: YagiParams): CalcResult {
   const warnings: CalcWarning[] = [];
   const outOfRange = rangeWarning(meta, f);
   if (outOfRange) warnings.push(outOfRange);
+  const clampWarning = kWarning(sf, 'o elemento excitado');
+  if (clampWarning) warnings.push(clampWarning);
   if (!inRange) {
     warnings.push({
       level: 'warning',
@@ -155,7 +158,7 @@ export function calcDl6wu(params: YagiParams): CalcResult {
         source: 'DL6WU.BAS, linha 890',
       },
       { name: 'Reatância do refletor', value: `${DL6WU_REFLECTOR_REACTANCE} Ω`, source: 'Recomendada pelo DL6WU (DL6WU.BAS, linha 1520)' },
-      { name: 'Fator do excitado (K)', value: formatNumber(k, 3), source: 'λ/2 × K, ponto de partida (CLAUDE.md)' },
+      kAssumption(sf, 'do excitado'),
       {
         name: 'Larguras de feixe estimadas',
         value: `E ≈ ${formatNumber(beams.e, 0)}°, H ≈ ${formatNumber(beams.h, 0)}°`,

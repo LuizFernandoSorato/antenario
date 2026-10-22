@@ -11,7 +11,9 @@
  * (largura zero), sem efeito no modelo. Um fio mais grosso ou mais fino muda a ressonância de cada espira de forma pequena.
  */
 
+import { type Complex, complex } from '../../core/complex';
 import { type MomSolution, type Vec3, type Wire, solveWires } from '../../core/mom';
+import { Q_DELTA, impedanceQ } from '../../core/q-bandwidth';
 import type { CalcResult } from '../types';
 
 /** Diâmetro do fio assumido no modelo, em metros (≈ fio de cobre de 2,5 mm²). Não vem de fonte: premissa do modelo. */
@@ -32,7 +34,7 @@ function loop(side: number, z: number, radius: number): Wire {
 
 /** Resolve a quadra por momentos: refletor, excitado (1 V) e diretores, a partir das cotas do cálculo. */
 export function solveQuad(
-  result: CalcResult,
+  result: Pick<CalcResult, 'measurements'>,
   frequencyMHz: number,
   directorCount: number,
   wireDiameter: number = WIRE_DIAMETER,
@@ -47,4 +49,22 @@ export function solveQuad(
   const wires: Wire[] = [loop(get('A'), 0, radius), loop(get('B'), spacing, radius)];
   for (let i = 0; i < directorCount; i++) wires.push(loop(get('C'), spacing * (2 + i), radius));
   return solveWires(wires, frequencyMHz, [{ wire: 1, node: SEGMENTS_PER_SIDE / 2, volts: { re: 1, im: 0 } }]);
+}
+
+/** Impedância da espira excitada em `fMHz` (as espiras têm sempre a mesma divisão em trechos, então serve para varrer a frequência). */
+export function quadImpedance(result: Pick<CalcResult, 'measurements'>, fMHz: number, directorCount: number, wireDiameter: number): Complex {
+  const z = solveQuad(result, fMHz, directorCount, wireDiameter).inputImpedance(0);
+  return complex(z.re, z.im);
+}
+
+/** Impedância em f0 e Q (core/q-bandwidth.ts, Yaghjian e Best) da espira excitada, para a banda de ROE. */
+export function quadQ(
+  result: Pick<CalcResult, 'measurements'>,
+  f0MHz: number,
+  directorCount: number,
+  wireDiameter: number,
+): { z0: Complex; q: number } {
+  const at = (x: number) => quadImpedance(result, f0MHz * x, directorCount, wireDiameter);
+  const z0 = at(1);
+  return { z0, q: impedanceQ(at(1 - Q_DELTA), z0, at(1 + Q_DELTA), f0MHz, f0MHz * Q_DELTA) };
 }

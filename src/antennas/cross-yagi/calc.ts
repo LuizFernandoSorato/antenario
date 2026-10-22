@@ -17,13 +17,18 @@
  * externa; vale com diagramas iguais e quadratura perfeita).
  */
 
-import { abs, complex } from '../../core/complex';
+import { type Complex, abs, complex } from '../../core/complex';
 import { reflectionCoefficient, swrFromGamma } from '../../core/reflection';
 import { assertFrequencyMHz, assertPositive, formatNumber } from '../../core/units';
-import { assertFactor, physicalLength } from '../../core/wave';
+import { assertFactor, physicalLength, wavelength } from '../../core/wave';
+import { inputImpedance } from '../../lines/transmission-line';
+import { bandText, swrBandwidthEstimate } from '../bandwidth';
+import { quadratureSweep } from '../quadrature-feed';
 import { type AssemblyGuide, type CalcResult, type CalcWarning, type Measurement, rangeWarning } from '../types';
 import { quadratureFeed } from '../turnstile/calc';
-import { type YagiParams, calc as yagiCalc, defaultParams as yagiDefaults } from '../yagi/calc';
+import { yagiQ } from '../yagi/band-model';
+import { YAGI_BAND_SOURCE, type YagiParams, designCalc, defaultParams as yagiDefaults } from '../yagi/calc';
+import { yagiElements } from '../yagi/elements';
 import { RHCP, SENSE_NAME, type Sense, senseOf } from '../circular';
 import { meta } from './meta';
 
@@ -48,6 +53,9 @@ export const defaultParams: CrossYagiParams = {
 /** Impedância do cabo até o rádio (Ω). */
 export const SYSTEM_IMPEDANCE_OHMS = 50;
 
+/** Varredura da banda: ±20 % em 60 passos, interpolada para 1201 pontos (o modelo equivalente é analítico, então é barato). */
+const BAND_SWEEP = { span: 0.2, coarseSteps: 60, fineSteps: 1200 } as const;
+
 /** Dentro desta tolerância relativa a junção já está em 50 Ω e o transformador não vale a pena. */
 const NO_TRANSFORMER_TOLERANCE = 0.02;
 
@@ -58,7 +66,6 @@ function yagiParamsOf(p: CrossYagiParams): YagiParams {
     elementCount: p.elementCount,
     elementDiameter: p.elementDiameter,
     boomDiameter: p.boomDiameter,
-    drivenFactor: p.drivenFactor,
     ...(p.drivenGap !== undefined ? { drivenGap: p.drivenGap } : {}),
     ...(p.method !== undefined ? { method: p.method } : {}),
   };
@@ -71,7 +78,8 @@ export function calc(params: CrossYagiParams): CalcResult {
   assertFactor(vf, 'O fator de velocidade');
   assertPositive(zy, 'A impedância do Yagi');
 
-  const yagi = yagiCalc(yagiParamsOf(params));
+  const yagiParams = yagiParamsOf(params);
+  const yagi = designCalc(yagiParams);
   const quarter = physicalLength(0.25, f, vf);
 
   const feed = quadratureFeed(zy, zy);
@@ -79,6 +87,34 @@ export function calc(params: CrossYagiParams): CalcResult {
   const needsTransformer = Math.abs(zJunction - SYSTEM_IMPEDANCE_OHMS) / SYSTEM_IMPEDANCE_OHMS > NO_TRANSFORMER_TOLERANCE;
   const zTransformer = Math.sqrt(SYSTEM_IMPEDANCE_OHMS * zJunction);
   const swrJunction = swrFromGamma(abs(reflectionCoefficient(complex(zJunction, 0), SYSTEM_IMPEDANCE_OHMS)));
+
+  // Banda: cada Yagi como um circuito ressonante série de R = zy (o casamento que o usuário escolheu) e o Q do modelo por momentos da
+  // Yagi (yagi/band-model.ts), a junção pela linha de 1/4 de onda (quadrature-feed.ts) e, se houver, o transformador T sem perdas.
+  const isolated = params.boomDiameter === 0 ? yagi : designCalc({ ...yagiParams, boomDiameter: 0 });
+  const elements = yagiElements(isolated);
+  const { q } = yagiQ(elements, params.elementDiameter, f);
+  const transformerLine = { z0: zTransformer, lengthM: wavelength(f) / 4, velocityFactor: 1 };
+  const quad = quadratureSweep({
+    centerMHz: f,
+    ...BAND_SWEEP,
+    impedanceAt: (fi) => complex(zy, zy * q * (fi / f - f / fi)),
+    zLine: zy,
+    ...(needsTransformer ? { afterJunction: (z: Complex, fi: number) => inputImpedance(z, transformerLine, fi) } : {}),
+    referenceOhms: SYSTEM_IMPEDANCE_OHMS,
+  });
+  const spanPercent = BAND_SWEEP.span * 100;
+  const bandwidth = swrBandwidthEstimate(quad.swr, {
+    reference: 'em 50 Ω',
+    spanPercent,
+    note:
+      `Mas a polarização só fica circular (razão axial < 3 dB: ${bandText(quad.axialBand, 'MHz', spanPercent)}) perto da frequência de projeto: ` +
+      'fora dela a linha defasadora deixa de dar 90° e as correntes ficam desiguais. A ROE do conjunto é mais larga que a de um Yagi só porque as ' +
+      'reflexões dos dois chegam à junção com 180° de diferença e se cancelam. ' +
+      `Modelo: cada Yagi como circuito ressonante de ${formatNumber(zy, 0)} Ω com o Q do modelo por momentos (${formatNumber(q, 0)}), linhas sem perdas, ` +
+      'acoplamento entre os Yagis desprezado.' +
+      (elements.length >= 11 ? ' Em Yagis longas o Q é conservador (a faixa de ROE do Yagi no modelo é maior).' : ''),
+    source: `${YAGI_BAND_SOURCE}; linhas pela matriz ABCD (Pozar); razão axial < 3 dB: critério usual (IntechOpen, fonte secundária)`,
+  });
 
   const measurements: Measurement[] = [
     ...yagi.measurements,
@@ -192,7 +228,7 @@ export function calc(params: CrossYagiParams): CalcResult {
           'Ganho circular no eixo ≈ ganho do Yagi isolado (dBi do Yagi = dBic da cross Yagi, com quadratura perfeita). ' + yagiGain.note,
         source: `Derivação (potência dividida entre as polarizações); ${yagiGain.source}`,
       },
-      bandwidth: null,
+      bandwidth,
     },
     warnings,
     assembly: assemblyFor(sense),

@@ -54,6 +54,8 @@ src/
     mom.ts         # método dos momentos para fios finos (Yagi, quadra, QFH, discone), validado contra NBS TN 688 e Balanis
     exposure.ts    # exposição a RF em campo distante (estimativa)
     dipole-resonance.ts  # fator K do dipolo pelo diâmetro (MoM), conferido com o Cebik
+    swr-band.ts    # varredura de ROE e faixa abaixo de um limite
+    q-bandwidth.ts # Q pela impedância (Yaghjian e Best) e banda de ROE prevista
   antennas/
     <antenna-id>/
       calc.ts      # entrada → medidas (função pura)
@@ -95,9 +97,9 @@ e a ferramenta deve deixar isso claro.
 4. Arredondar só na exibição (mm para VHF/UHF, cm para HF). Nunca arredondar no meio do cálculo.
 5. Fórmulas de base:
    - λ(m) = 299,792458 / f(MHz)
-   - Dipolo de meia onda: L ≈ K·λ/2, com K ≈ 0,95 típico (depende da razão
-     comprimento/diâmetro). Isso dá ≈ 142,5/f(MHz) m. Permitir o ajuste de K.
-   - Monopolo de 1/4 de onda: ≈ 71,3/f(MHz) m (mesma ressalva).
+   - Dipolo de meia onda: L = K·λ/2, com K SEMPRE calculado pelo diâmetro do condutor (`antennas/k-factor.ts`;
+     decisão do usuário em 2026-10-21: sem campo de K manual). K ≈ 0,95 (≈ 142,5/f(MHz) m) é só a regra prática do ARRL.
+   - Monopolo de 1/4 de onda: L = K·λ/4 com o K do dipolo do mesmo condutor (teoria das imagens).
    - Γ = (Z_L − Z_0)/(Z_L + Z_0); ROE = (1+|Γ|)/(1−|Γ|);
      perda de retorno = −20·log10|Γ|; perda por descasamento = −10·log10(1−|Γ|²).
    - Transformador de 1/4 de onda: Z_t = √(Z_0·Z_L). O comprimento físico usa o fator de velocidade do cabo.
@@ -159,8 +161,28 @@ Cada guia segue o mesmo modelo:
 
 ### Estado atual (atualizado em 2026-10-17)
 
-Para retomar: `git log --oneline` mostra o que foi feito. 786 testes passando e build ok em 2026-10-21 (depois da Moxon e do K do dipolo pelo diâmetro;
+Para retomar: `git log --oneline` mostra o que foi feito. 826 testes passando e build ok em 2026-10-22 (depois da largura de banda de todas as antenas;
 o último commit está em `git log`).
+
+**Largura de banda (2026-10-22, pedido do usuário: "estimar a largura de banda de todas as antenas"):** `expected.bandwidth` com ROE < 2:1 e
+< 1,5:1 no texto. Ferramentas: `core/swr-band.ts` (varredura grossa + Lagrange + faixa a partir do mínimo; usada também pelo V invertido),
+`core/q-bandwidth.ts` (Q de Yaghjian e Best, IEEE TAP 2005, lido via arXiv 1909.08019: Q_Z = (ω/2R)·√(R'² + (X' + |X|/ω)²) e banda
+(S − 1)/(Q·√S), antena casada em f0 com rede ideal; 3 soluções do MoM em vez de ~30), `antennas/bandwidth.ts` (textos) e
+`antennas/quadrature-feed.ts` (linha de 1/4 de onda pela matriz ABCD e razão axial < 3 dB, critério de fonte secundária: IntechOpen). Por antena:
+- Dipolo (`dipole/band-model.ts`, MoM ressonante, opcionalmente com refletor plano por imagem ou tubo): 156 kHz no 80 m com #12; o Cebik diz 150–200 kHz.
+- Ground plane/ADS-B: dipolo escalado para `estimateImpedance` (mesmo Q; exato a 0° e 90°): INDICATIVA, TODO(fonte).
+- Turnstile: dipolos do MoM (refletor plano = imagem infinita; tubos = tubo parasita) + linha de 73 Ω; ≈ 25 MHz de ROE em 137,5 MHz, mas a razão
+  axial < 3 dB é bem mais estreita (a nota mostra as duas).
+- Yagi (`yagi/band-model.ts`, `elements.ts`; `calc` = `designCalc` + banda): Q do excitado, casamento ideal. Conferido contra a varredura sintonizada:
+  NBS 3/5/6 elementos a ±10 %; DL6WU 11/20 a varredura dá MAIS banda (impedância ondulada): conservador, dito na nota. Até ≈ 0,5 s com 40 elementos.
+- Cross Yagi: cada Yagi como RLC (R = `yagiImpedance`, Q do modelo) pela linha de 1/4 e pelo T; ≈ 17 MHz de ROE e ≈ 4,3 MHz de razão axial em 436,5 MHz.
+- Quadra: Q da espira excitada (`quadQ`); a ±10 % da varredura com 0, 1 e 3 diretores; com 2 há outra ressonância perto e o Q é conservador.
+- Helicoidal: faixa do modo axial (Kraus) + ROE nas bordas pela R ≈ 140·C/λ (≈ 1,33:1 com C/λ = 1).
+- J-pole: sem valor calculado; nota com a medida de E. Fong, WB6IQN (QST, fev. 2003): ≈ 8 MHz em 146 MHz com cano de cobre, critério não dito.
+- Já tinham: double bazooka, V invertido, Moxon (MoM), loop magnética (RLC), flowerpot (medida), discone (só a menor frequência).
+- SEM banda (TODO(fonte)): colinear de coaxial (nenhuma curva medida achada) e QFH (o modelo autofaseado, espiras em paralelo no topo, dá a melhor
+  quadratura em ≈ 0,98·f, com correntes 2,7:1 em f: não conferido, não usado). Discone: o MoM de hastes dá picos de ROE de até 5:1 entre 1,6 e 2,5×
+  a menor frequência, com saltos quando muda o número de trechos; não usado.
 
 **Navegação (`src/main.ts`, `src/ui/`):** roteamento por hash. Vazio = página inicial com cartões
 (`home-page.ts`, ícones SVG em `icons.ts`; todo id de antena do registro precisa de ícone, há teste). `#id` = página
@@ -239,11 +261,16 @@ sem junções, 200 trechos/λ; com 100 os fios grossos ficam 3 Ω abaixo) confer
 146 MHz 1/8"): ganho ±0,1 dB, R ±5 %, X ±3 Ω. Cotas: A largura, B cauda do excitado, C folga, D cauda do refletor, E profundidade, F cada metade
 do excitado esticada, G refletor esticado, H espaço central. Os testes com MoM pesado usam `{ timeout: 60_000 }` no `describe`.
 
-**K do dipolo pelo diâmetro (`core/dipole-resonance.ts`, 2026-10-21):** K = comprimento ressonante do dipolo reto no espaço livre / (λ/2),
-pelo MoM (40 trechos, só depende de d/λ). Conferido com o NEC-4 do Cebik (AWG #12 a 3,75 MHz: 0,15 %). Fica 0,1 % (fio fino) a 1,1 % (λ/2d = 100)
-abaixo do ajuste K = 1 − 0,225/ln(λ/2d) do webantenna (curva do ARRL lida por eles; o livro não foi consultado). Faixa: 1e-6 a 5e-3 λ (acima disso o
-fio fino falha; o dipolo usa então o K digitado e avisa). No dipolo é o padrão (`kMode`: 1 pelo diâmetro, 2 digitado). Em HF dá ≈ 2,5 % a mais que a
-regra 468/f (que embute isoladores e isolamento). Ainda não aplicado ao ground plane, J-pole, turnstile, bazooka nem ao V invertido.
+**Fator K pelo diâmetro (`core/dipole-resonance.ts` + `antennas/k-factor.ts`, 2026-10-21):** K = comprimento ressonante do dipolo reto no espaço
+livre / (λ/2), pelo MoM (só depende de d/λ). Trechos de pelo menos 3 raios (o núcleo reduzido dispara com trechos menores), até 80: 80 nos fios finos,
+20 no limite de 1,5e-2 λ (λ/2d = 33). Conferido com o NEC-4 do Cebik (AWG #12 a 3,75 MHz: 0,12 %; o V invertido também confere em comprimento absoluto
+a 0,3 %). Fica 0,1 % (fio fino) a ≈ 1,3 % (λ/2d = 33) abaixo do ajuste K = 1 − 0,225/ln(λ/2d) do webantenna (curva do ARRL lida por eles; o livro
+não foi consultado). Faixa: 1e-8 a 1,5e-2 λ; fora dela usa o K do limite e avisa (condutor grosso: K do limite é maior que o real, a medida sai
+comprida, o lado seguro). SEMPRE calculado, sem K manual, em: dipolo, ground plane (radiador por imagens e radiais com o mesmo K: premissa, o MoM não
+tem junções), ADS-B, J-pole (radiador; a seção de casamento é linha e mantém o fator digitado), turnstile, V invertido (K × alongamento), Yagi e
+cross Yagi (excitado) e double bazooka (K do fio das pontas, novo campo `wireDiameter`: dá o comprimento mais longo; o K com o diâmetro do coaxial
+aparece no aviso). Não se aplica a: colinear (fator de ponta 0,97 da fonte do projeto), Moxon, quadra, flowerpot, discone, QFH e helicoidal (equações
+próprias). Em HF, com fio de 2 mm, dá até ≈ 3 % a mais que a regra 468/f (que embute isoladores e isolamento).
 
 **Exposição a RF:** conferida em 2026-10-17. A Resolução Anatel 700/2018 (Art. 4º § 1º) adota a ICNIRP via Ato; o Ato
 458/2019 foi revogado e substituído pelo Ato 17.865 (em vigor desde 01/03/2024, fonte secundária
@@ -257,13 +284,17 @@ que dá 436,5 MHz, Yagis de 100 Ω e 113 mm de linha (teste: VF 0,66), mas NÃO 
 comentário cita RG-62 com VF 0,83 e 142 mm. A impedância de cada Yagi é entrada do usuário (default 100 Ω). Padrão por momentos.
 
 **Diâmetro do condutor e gap central (2026-10-20):** REGRA: o comprimento de um elemento partido ao meio é SEMPRE de ponta a ponta e já inclui o
-espaço central (como no dipolo); cada braço mede (total − espaço)/2; o espaço é uma entrada em mm com padrão 0 e só vale para o elemento excitado
-(refletor e diretores seguem inteiros). Onde há entrada: dipolo (`conductorDiameter`, `centerGap`: A total, B braço, C espaço); turnstile (`conductorDiameter`,
-`centerGap`; B braço, E espaço); Yagi e cross Yagi (`elementDiameter`, `boomDiameter`, `drivenGap`; DE total, DB braço, DG espaço; cross Yagi: 4 braços na folha de
-corte); quadra cúbica (`wireDiameter`, `feedGap`: H perímetro, J fio a cortar = H − espaço, K espaço); QFH (`wireDiameter`: só no padrão, as medidas são as de 4,1 mm); discone
-(`rodDiameter`, `centerGap`: folga F, 0 = proporção do exemplo de Stearns; EXCEÇÃO à regra: a folga fica ENTRE as hastes e não entra em A nem E, porque R + L = λ/2 é das hastes).
-Sem gap: ground plane, J-pole, helicoidal, loop magnética, colinear de coaxial, QFH (alimentação no topo, arranjo real sem fonte). O diâmetro só muda as cotas na Yagi (correção
-NBS/DL6WU) e na impedância do stub do J-pole; no dipolo, ele dá o K (padrão "calcular pelo diâmetro", ver abaixo); no turnstile e na quadra é informativo (K e perímetros para fio fino).
+espaço central (como no dipolo); cada braço mede (total − espaço)/2; o espaço é uma entrada em mm com padrão 10 mm (pedido do usuário, 2026-10-21; 0 = elemento inteiro) e só vale para o elemento excitado
+(refletor e diretores seguem inteiros). Onde há entrada: dipolo (`conductorDiameter`, `centerGap`: A total, B braço, C espaço); V invertido (C espaço); double bazooka (`centerGap` = corte da malha, E);
+Moxon (`centerGap`, H); turnstile (`conductorDiameter`, `centerGap`; B braço, E espaço; o espaço PRECISA ser maior que o diâmetro do condutor, senão o calc
+recusa: os braços dos dois dipolos se cruzam no centro e encostariam); Yagi e cross Yagi (`elementDiameter`, `boomDiameter`, `drivenGap`; DE total, DB braço, DG espaço; cross Yagi: 4 braços na folha de
+corte); quadra cúbica (`wireDiameter`, `feedGap`: H perímetro, J fio a cortar = H − espaço, K espaço); QFH (`wireDiameter`: só no padrão, as medidas são as de 4,1 mm;
+`centerGap`: abertura no meio do braço de cima de cada espira, onde liga a alimentação, dentro do comprimento da espira: A e E espira, I e J fio a cortar = espira − K,
+K espaço; também PRECISA ser maior que o diâmetro do condutor, porque os braços de cima das duas espiras se cruzam no centro; o padrão por momentos não modela a abertura);
+discone (`rodDiameter`, `centerGap`: folga F, 0 = proporção do exemplo de Stearns; EXCEÇÃO à regra: a folga fica ENTRE as hastes e não entra em A nem E, porque
+R + L = λ/2 é das hastes; o padrão continua 0 = automática, porque é outra grandeza). Sem gap: ground plane, J-pole, helicoidal, loop magnética, colinear de coaxial.
+A cross Yagi tem o mesmo cruzamento no centro que a turnstile, mas a regra "espaço > diâmetro" não foi pedida para ela (não aplicada). O diâmetro muda os parasitas da Yagi (correção
+NBS/DL6WU) e a impedância do stub do J-pole; em todas as antenas com elementos de meia onda ele dá o K (ver acima); na quadra é informativo (perímetros para fio fino).
 A regra "gap dentro do comprimento total" é a convenção usual de comprimento ponta a ponta, não foi conferida em livro (ARRL Antenna Book e NBS TN 688 não consultados).
 
 **Polarização circular (2026-10-20):** cross Yagi, turnstile, QFH e helicoidal têm o campo `circularSense` (RHCP/LHCP, botões de opção; `antennas/circular.ts`)
@@ -299,10 +330,13 @@ projeto). A página do YO5OSF com saída do AntMaker não bate com o DL6WU.BAS (
 - Hairpin: sem efeito de cantos e barra de curto; faixa de uso (25 a 35 Ω) vem de relatos de radioamadores.
 - Ground plane: curva ângulo × impedância (ver acima). ADS-B: ganho e alcance típicos.
 - Double bazooka: ler o ARRL Antenna Book (p. 9.6–9.7) e o W2DU para saber o caso do 1,14× e conferir o modelo.
-- V invertido: só espaço livre (o solo muda ressonância e impedância; o Cebik tem tabelas sobre solo médio, não implementadas). K manual como no dipolo.
+- V invertido: só espaço livre (o solo muda ressonância e impedância; o Cebik tem tabelas sobre solo médio, não implementadas).
 - Flowerpot: só um projeto (VK2ZOI), sem fórmula; fatores dependem do RG-58 sólido e do conduíte cinza. Bobinas fora de 47–160 MHz sem tabela.
   Frequências das ROE mínimas lidas nas curvas (±0,3 MHz). Ganho e perda da bobina não medidos.
 - Moxon: tolerância da folga C escalada do 1/4" do 2 m (Cebik); sem perdas no modelo; o QST de Lumpkin e Cerrito (jan. 2000) não foi lido.
+- Banda (ver "Largura de banda"): colinear, QFH e discone sem estimativa de ROE; J-pole só com a medida de Fong; ground plane indicativa; Yagi,
+  quadra e cross Yagi sem comparação com medida (só com o próprio modelo); o artigo original de Yaghjian e Best e o Balanis/IEEE 145 (razão axial
+  de 3 dB) não foram lidos.
 
 **Antenas sugeridas para adicionar (ordem recomendada):**
 1. V-dipolo para satélites meteorológicos (137 MHz). O `v-model.ts` do V invertido serve de base (é o mesmo fio dobrado, deitado).

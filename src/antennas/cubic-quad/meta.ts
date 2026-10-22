@@ -51,7 +51,7 @@ export const meta: AntennaMeta = {
       key: 'feedGap',
       label: 'Espaço de alimentação da espira excitada',
       unit: 'mm',
-      defaultValue: 0,
+      defaultValue: 10,
       toSi: 0.001,
       min: 0,
       help: 'Abertura do fio no meio do lado de baixo, onde liga o cabo. Conta dentro do perímetro H; o fio a cortar é H menos o espaço.',

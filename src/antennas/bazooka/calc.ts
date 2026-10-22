@@ -8,35 +8,40 @@
  *   com comprimento físico λ/4 × VF (mesma regra em Ham Radio Base: (246/f) × VF pés);
  * - fios (ou linha) nas pontas completam o comprimento do dipolo de meia onda, L = K·λ/2 (CLAUDE.md).
  *
+ * K vem do diâmetro (`k-factor.ts`), mas a antena mistura dois condutores: o coaxial (grosso) e os fios das pontas (finos). O modelo
+ * de K é de condutor uniforme; como condutor mais fino pede K maior, o K do FIO dá o comprimento mais longo possível (lado seguro
+ * para cortar) e o do coaxial, o mais curto. A ferramenta corta pelo do fio e mostra o outro como referência.
+ *
  * Banda, impedância e perda nos tocos vêm do modelo em `feed-model.ts` (MoM + tocos com perda do datasheet).
  */
 
-import { assertFrequencyMHz, formatNumber } from '../../core/units';
-import { assertFactor, physicalLength, wavelength } from '../../core/wave';
+import { assertFrequencyMHz, assertPositive, formatNumber } from '../../core/units';
+import { physicalLength, wavelength } from '../../core/wave';
 import { type CoaxCable, coaxCables } from '../../data/coax-cables';
 import { attenuationDbPer100m } from '../../lines/coax';
+import { K_FIELD_NOTE, kAssumption, kWarning, shorteningFactorFor } from '../k-factor';
 import { type CalcResult, type CalcWarning, type Estimate, type Measurement, rangeWarning } from '../types';
 import { type Band, type BazookaModel, bandWidthMHz, bazookaModel } from './feed-model';
 import { DEFAULT_CABLE, meta } from './meta';
 
 export interface BazookaParams {
   frequencyMHz: number;
-  /** Fator de encurtamento K do comprimento total, em (0, 1]. */
-  shorteningFactor: number;
   /** Índice do cabo em `coaxCables`. */
   cable: number;
   /** Fator de velocidade medido; 0 = o do datasheet. */
   velocityFactor: number;
   /** Trecho sem malha no centro, em metros. */
   centerGap: number;
+  /** Diâmetro do fio das pontas, em metros; define o K. */
+  wireDiameter: number;
 }
 
 export const defaultParams: BazookaParams = {
   frequencyMHz: 7.1,
-  shorteningFactor: 0.95,
   cable: DEFAULT_CABLE,
   velocityFactor: 0,
-  centerGap: 0,
+  centerGap: 0.01,
+  wireDiameter: 0.002,
 };
 
 /** Impedância do cabo de alimentação usada como referência da ROE (rádio de 50 Ω). */
@@ -68,9 +73,9 @@ function bandText(band: Band | null, unit: 'kHz' | 'MHz'): string {
 }
 
 export function calc(params: BazookaParams): CalcResult {
-  const { frequencyMHz: f, shorteningFactor: k, cable: cableIndex, velocityFactor: vfInput, centerGap: gap } = params;
+  const { frequencyMHz: f, cable: cableIndex, velocityFactor: vfInput, centerGap: gap, wireDiameter: wd } = params;
   assertFrequencyMHz(f);
-  assertFactor(k, 'O fator de encurtamento K');
+  assertPositive(wd, 'O diâmetro do fio das pontas');
   const cable = Number.isInteger(cableIndex) ? coaxCables[cableIndex] : undefined;
   if (!cable) throw new RangeError(`Cabo inválido (índice ${cableIndex}).`);
   if (!Number.isFinite(vfInput) || vfInput < 0 || vfInput > 1) {
@@ -82,13 +87,15 @@ export function calc(params: BazookaParams): CalcResult {
   const vf = vfInput > 0 ? vfInput : cable.velocityFactor;
 
   const lambda = wavelength(f);
-  const total = physicalLength(0.5, f, k);
+  const sf = shorteningFactorFor(wd, f);
+  const sfCoax = shorteningFactorFor(cable.outerDiameterMm / 1000, f);
+  const total = physicalLength(0.5, f, sf.k);
   const stub = physicalLength(0.25, f, vf);
   const coax = 2 * stub + gap;
   if (coax >= total) {
     throw new RangeError(
       `A seção de coaxial (${formatNumber(coax, 3)} m) ficou maior que a antena (${formatNumber(total, 3)} m): ` +
-        'o fator K precisa ser maior que o fator de velocidade do cabo.',
+        `o fator de velocidade do cabo (${formatNumber(vf, 3)}) precisa ser menor que K (${formatNumber(sf.k, 3)}).`,
     );
   }
   const endWire = (total - coax) / 2;
@@ -131,6 +138,15 @@ export function calc(params: BazookaParams): CalcResult {
   const warnings: CalcWarning[] = [];
   const outOfRange = rangeWarning(meta, f);
   if (outOfRange) warnings.push(outOfRange);
+  const clampWarning = kWarning(sf, 'o fio das pontas');
+  if (clampWarning) warnings.push(clampWarning);
+  warnings.push({
+    level: 'info',
+    message:
+      `${K_FIELD_NOTE} Aqui o K é o do fio das pontas (${formatNumber(sf.k, 4)}). Com tudo no diâmetro do ${cable.name}, K seria ` +
+      `${formatNumber(sfCoax.k, 4)} (A = ${formatNumber(physicalLength(0.5, f, sfCoax.k), 2)} m): a antena real fica entre os dois, e a ` +
+      'diferença sai no ajuste dos fios D.',
+  });
   if (!model.lossKnown) {
     warnings.push({
       level: 'warning',
@@ -179,7 +195,8 @@ export function calc(params: BazookaParams): CalcResult {
     measurements,
     assumptions: [
       { name: 'Comprimento de onda (λ)', value: `${formatNumber(lambda, 4)} m`, source: 'λ = 299,792458 / f(MHz)' },
-      { name: 'Fator de encurtamento (K)', value: formatNumber(k, 3), source: 'Dipolo de meia onda, L = K·λ/2' },
+      kAssumption(sf, 'pelo fio das pontas'),
+      { name: 'Fio das pontas', value: `${formatNumber(wd * 1000, 2)} mm` },
       { name: 'Cabo', value: `${cable.name}, ${formatNumber(cable.impedanceOhms, 0)} Ω, Ø ${formatNumber(cable.outerDiameterMm, 2)} mm`, source: cable.source.document },
       {
         name: 'Fator de velocidade (VF)',

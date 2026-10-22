@@ -4,7 +4,8 @@ import { antennas } from './index';
 // Teste de consistência: a UI monta o formulário a partir de meta.params, então
 // cada campo precisa existir em defaultParams com o mesmo valor (em SI).
 
-describe('registro de antenas', () => {
+// Antenas com método dos momentos (Moxon, discone, QFH, Yagi) podem passar dos 5 s padrão com a suíte toda em paralelo.
+describe('registro de antenas', { timeout: 60_000 }, () => {
   it('ids únicos', () => {
     const ids = antennas.map((a) => a.meta.id);
     expect(new Set(ids).size).toBe(ids.length);

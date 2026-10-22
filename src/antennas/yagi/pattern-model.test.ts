@@ -60,7 +60,7 @@ describe('Yagi por momentos: DL6WU', () => {
 
   it('posições dos elementos: refletor em 0 e crescentes', () => {
     const p = { ...defaultParams, method: 2, elementCount: 14, frequencyMHz: 432, elementDiameter: 0.006, boomDiameter: 0 };
-    const els = yagiElements(calc(p), 432);
+    const els = yagiElements(calc(p));
     expect(els).toHaveLength(14);
     expect(els[0]!.position).toBe(0);
     for (let i = 1; i < els.length; i++) expect(els[i]!.position).toBeGreaterThan(els[i - 1]!.position);

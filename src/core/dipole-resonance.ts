@@ -11,15 +11,30 @@ import { type Vec3, solveWires } from './mom';
 import { SPEED_OF_LIGHT_M_PER_S } from './units';
 
 /**
- * Faixa conferida (teste de convergência). Acima de 5e-3 λ (λ/2d < 100) o trecho fica curto perto do raio e a aproximação de fio
- * fino falha: em 1e-2 λ, 40 e 80 trechos já diferem 0,6 %, em sentidos opostos. Abaixo de 1e-6 λ não foi testado (em 1,8 MHz, 1e-6 λ
- * é um fio de 0,17 mm).
+ * Faixa conferida (testes de convergência). O núcleo reduzido de fio fino só vale com trechos de pelo menos ≈ 3 raios: com trechos
+ * menores o resultado dispara (em 1e-2 λ, 60 trechos já sobem K e 120 dão lixo). Por isso o número de trechos cai com o diâmetro
+ * (ver `segmentsFor`), e o limite de cima é onde ainda cabem 20 trechos. Abaixo de 1e-8 λ não foi testado (1e-8 λ é um fio de
+ * 0,02 mm em 160 m).
  */
-export const DIPOLE_K_MIN_DIAMETER_LAMBDA = 1e-6;
-export const DIPOLE_K_MAX_DIAMETER_LAMBDA = 5e-3;
+export const DIPOLE_K_MIN_DIAMETER_LAMBDA = 1e-8;
+export const DIPOLE_K_MAX_DIAMETER_LAMBDA = 1.5e-2;
 
-/** Trechos do fio (par, para haver um nó no centro). Com 40, K muda ≤ 0,12 % em relação a 80 em toda a faixa (teste). */
-const SEGMENTS = 40;
+/** Máximo de trechos (fios finos): com 80, K fica a < 0,03 % do valor com 120. */
+const MAX_SEGMENTS = 80;
+/** Trecho mínimo, em raios (ver acima). */
+const MIN_SEGMENT_RADII = 3;
+/** Comprimento ressonante mínimo esperado na faixa (≈ 0,46 λ), usado só para escolher o número de trechos. */
+const SHORTEST_LAMBDA = 0.46;
+
+/**
+ * Número de trechos (par) para o diâmetro: o maior possível até 80, com trechos de pelo menos 3 raios. No limite de cima dá 20;
+ * com 20 trechos K sai ≈ 0,2 % acima do convergido (antena um pouco comprida, o lado seguro para o ajuste).
+ */
+export function segmentsFor(diameterLambda: number): number {
+  const byRadius = SHORTEST_LAMBDA / (MIN_SEGMENT_RADII * (diameterLambda / 2));
+  return Math.min(MAX_SEGMENTS, 2 * Math.floor(byRadius / 2));
+}
+
 /** Frequência em que λ = 1 m. */
 const F_UNIT_LAMBDA_MHZ = SPEED_OF_LIGHT_M_PER_S / 1e6;
 
@@ -37,8 +52,9 @@ const cache = new Map<string, number>();
 /**
  * K = L_ressonante / (λ/2) para um condutor de diâmetro `diameterLambda` (em λ).
  * Fora de [DIPOLE_K_MIN_DIAMETER_LAMBDA, DIPOLE_K_MAX_DIAMETER_LAMBDA] lança RangeError.
+ * `segments` (par) só serve aos testes de convergência; o padrão vem de `segmentsFor`.
  */
-export function dipoleShorteningFactor(diameterLambda: number, segments = SEGMENTS): number {
+export function dipoleShorteningFactor(diameterLambda: number, segments = segmentsFor(diameterLambda)): number {
   if (!(diameterLambda >= DIPOLE_K_MIN_DIAMETER_LAMBDA && diameterLambda <= DIPOLE_K_MAX_DIAMETER_LAMBDA)) {
     throw new RangeError(
       `O diâmetro de ${diameterLambda} λ está fora da faixa do modelo (${DIPOLE_K_MIN_DIAMETER_LAMBDA} a ${DIPOLE_K_MAX_DIAMETER_LAMBDA} λ).`,
@@ -48,14 +64,14 @@ export function dipoleShorteningFactor(diameterLambda: number, segments = SEGMEN
   const hit = cache.get(key);
   if (hit !== undefined) return hit;
 
-  // Secante sobre a reatância, entre 0,44 e 0,5 λ (a ressonância de um fio fino fica em ≈ 0,47–0,49 λ).
+  // Secante sobre a reatância (a ressonância fica entre ≈ 0,46 e 0,495 λ na faixa).
   const radius = diameterLambda / 2;
   const x = (l: number) => reactance(l, radius, segments);
   let l0 = 0.46;
   let l1 = 0.49;
   let x0 = x(l0);
   let x1 = x(l1);
-  for (let it = 0; it < 30 && Math.abs(x1) > 1e-4; it++) {
+  for (let it = 0; it < 30 && Math.abs(x1) > 1e-4 && x1 !== x0; it++) {
     const l2 = l1 - (x1 * (l1 - l0)) / (x1 - x0);
     l0 = l1;
     x0 = x1;

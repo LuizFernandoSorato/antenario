@@ -34,7 +34,9 @@ transferidor (para a inclinação) e um NanoVNA ou medidor de ROE.
 ## 4. Passo a passo
 
 1. Calcule as medidas na ferramenta. **A** é o radiador, **B** é cada radial,
-   **C** é o alcance horizontal de cada radial e **D** é a queda da ponta do radial.
+   **C** é o alcance horizontal de cada radial e **D** é a queda da ponta do radial. Informe o
+   diâmetro real do condutor: ele define o fator de encurtamento K (o do dipolo do mesmo
+   condutor, pela teoria das imagens). Os radiais usam o mesmo K.
 2. Corte o radiador um pouco **mais comprido** que **A** (por exemplo 5 %) e os radiais na
    medida **B**.
 3. Solde o radiador no pino central do conector de painel.

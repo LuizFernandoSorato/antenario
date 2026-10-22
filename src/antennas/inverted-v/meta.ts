@@ -19,16 +19,6 @@ export const meta: AntennaMeta = {
   params: [
     { key: 'frequencyMHz', label: 'Frequência de projeto', unit: 'MHz', defaultValue: 7.1, toSi: 1, min: 0 },
     {
-      key: 'shorteningFactor',
-      label: 'Fator de encurtamento (K) do dipolo reto',
-      unit: '',
-      defaultValue: 0.95,
-      toSi: 1,
-      min: 0,
-      max: 1,
-      help: 'O mesmo K do dipolo (típico 0,95). A ferramenta aplica por cima dele o alongamento que o V precisa.',
-    },
-    {
       key: 'apexAngleDeg',
       label: 'Ângulo entre os braços (no ápice)',
       unit: '°',
@@ -51,7 +41,7 @@ export const meta: AntennaMeta = {
       key: 'centerGap',
       label: 'Espaço central (isolador)',
       unit: 'mm',
-      defaultValue: 0,
+      defaultValue: 10,
       toSi: 0.001,
       min: 0,
       help: 'Distância entre os dois braços no ponto de alimentação.',

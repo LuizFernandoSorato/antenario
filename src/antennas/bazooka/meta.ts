@@ -22,16 +22,6 @@ export const meta: AntennaMeta = {
   params: [
     { key: 'frequencyMHz', label: 'Frequência de projeto', unit: 'MHz', defaultValue: 7.1, toSi: 1, min: 0 },
     {
-      key: 'shorteningFactor',
-      label: 'Fator de encurtamento (K)',
-      unit: '',
-      defaultValue: 0.95,
-      toSi: 1,
-      min: 0,
-      max: 1,
-      help: 'Define o comprimento total, como no dipolo. Típico 0,95. Precisa ser maior que o fator de velocidade do cabo.',
-    },
-    {
       key: 'cable',
       kind: 'choice',
       label: 'Cabo coaxial da seção central',
@@ -55,10 +45,19 @@ export const meta: AntennaMeta = {
       key: 'centerGap',
       label: 'Corte da malha no centro',
       unit: 'mm',
-      defaultValue: 0,
+      defaultValue: 10,
       toSi: 0.001,
       min: 0,
       help: 'Largura do trecho em que a malha é removida (o vivo e o dielétrico continuam). Entra na seção de coaxial, entre os dois tocos.',
+    },
+    {
+      key: 'wireDiameter',
+      label: 'Diâmetro do fio das pontas',
+      unit: 'mm',
+      defaultValue: 2,
+      toSi: 0.001,
+      min: 0,
+      help: 'Define o fator de encurtamento K do comprimento total (fio mais grosso, antena mais curta).',
     },
   ],
 };

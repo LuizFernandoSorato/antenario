@@ -7,24 +7,29 @@
  * aproximação desse plano. Com poucos radiais elevados o resultado real se afasta
  * desses limites teóricos, por isso o ganho aparece só como referência. A impedância é
  * estimada por interpolação indicativa em função da inclinação (ver estimateImpedance).
+ *
+ * Comprimentos: pela mesma teoria das imagens, o radiador de λ/4 ressoa com metade do comprimento do dipolo do mesmo condutor,
+ * então usa o K do dipolo (`k-factor.ts`). Os radiais usam o mesmo K (premissa: o método dos momentos desta ferramenta não tem
+ * junções e não modela o ground plane inteiro).
  */
 
-import { degToRad } from '../../core/complex';
+import { degToRad, scale } from '../../core/complex';
+import { swrSweep } from '../../core/swr-band';
 import { assertFrequencyMHz, assertPositive, formatNumber } from '../../core/units';
-import { assertFactor, physicalLength, wavelength } from '../../core/wave';
+import { physicalLength, wavelength } from '../../core/wave';
+import { swrBandwidthEstimate } from '../bandwidth';
+import { DIPOLE_SWEEP, dipoleBandModel } from '../dipole/band-model';
+import { BAND_SOURCE } from '../dipole/calc';
+import { K_FIELD_NOTE, kAssumption, kWarning, shorteningFactorFor } from '../k-factor';
 import { type CalcResult, type CalcWarning, type Measurement, rangeWarning } from '../types';
 import { meta } from './meta';
 
 export interface GroundPlaneParams {
   frequencyMHz: number;
-  /** Fator de encurtamento do radiador vertical, em (0, 1]. */
-  shorteningFactor: number;
-  /** Fator de encurtamento dos radiais, em (0, 1]. */
-  radialFactor: number;
   radialCount: number;
   /** Inclinação dos radiais abaixo da horizontal, em graus, em [0, 90). */
   droopAngleDeg: number;
-  /** Diâmetro do condutor, em metros. */
+  /** Diâmetro do condutor (radiador e radiais), em metros; define o K. */
   conductorDiameter: number;
 }
 
@@ -47,10 +52,11 @@ export function estimateImpedance(droopAngleDeg: number): number {
   return z0 + b * droopAngleDeg + c * droopAngleDeg * droopAngleDeg;
 }
 
+/** Impedância do cabo de alimentação usada como referência da ROE (rádio de 50 Ω). */
+const FEED_OHMS = 50;
+
 export const defaultParams: GroundPlaneParams = {
   frequencyMHz: 145,
-  shorteningFactor: 0.95,
-  radialFactor: 0.95,
   radialCount: 4,
   droopAngleDeg: 45,
   conductorDiameter: 0.002,
@@ -59,15 +65,11 @@ export const defaultParams: GroundPlaneParams = {
 export function calc(params: GroundPlaneParams): CalcResult {
   const {
     frequencyMHz: f,
-    shorteningFactor: k,
-    radialFactor: kr,
     radialCount: n,
     droopAngleDeg: angle,
     conductorDiameter: d,
   } = params;
   assertFrequencyMHz(f);
-  assertFactor(k, 'O fator de encurtamento do radiador');
-  assertFactor(kr, 'O fator de encurtamento dos radiais');
   assertPositive(d, 'O diâmetro do condutor');
   if (!Number.isInteger(n) || n < 2) {
     throw new RangeError(`O número de radiais deve ser um inteiro ≥ 2 (recebido: ${n}).`);
@@ -77,8 +79,9 @@ export function calc(params: GroundPlaneParams): CalcResult {
   }
 
   const lambda = wavelength(f);
-  const radiator = physicalLength(0.25, f, k);
-  const radial = physicalLength(0.25, f, kr);
+  const sf = shorteningFactorFor(d, f);
+  const radiator = physicalLength(0.25, f, sf.k);
+  const radial = physicalLength(0.25, f, sf.k);
   const theta = degToRad(angle);
   const reach = radial * Math.cos(theta);
   const drop = radial * Math.sin(theta);
@@ -92,6 +95,28 @@ export function calc(params: GroundPlaneParams): CalcResult {
     measurements.push({ label: 'D', name: 'Queda do radial', meters: drop, description: 'Quanto a ponta do radial fica abaixo do ponto de alimentação.' });
   }
 
+  // Banda INDICATIVA: impedância do dipolo ressonante do mesmo condutor, escalada para a resistência estimada acima. Mantém o Q
+  // do dipolo, o que é exato nos dois extremos (0°: monopolo sobre plano infinito = meio dipolo pela teoria das imagens, Balanis
+  // §4.7; 90°: o próprio dipolo vertical). Entre eles, e com poucos radiais em vez de plano: TODO(fonte).
+  const z = estimateImpedance(angle);
+  const band = dipoleBandModel(f, d);
+  const ratio = z / band.impedanceAt(f).re;
+  const sweep = swrSweep({
+    centerMHz: f,
+    ...DIPOLE_SWEEP,
+    impedanceAt: (fi) => scale(band.impedanceAt(fi), ratio),
+    referenceOhms: FEED_OHMS,
+  });
+  const bandwidth = swrBandwidthEstimate(sweep, {
+    reference: 'em 50 Ω',
+    spanPercent: DIPOLE_SWEEP.span * 100,
+    note:
+      `Estimativa indicativa: a impedância do dipolo do mesmo condutor, escalada para os ${formatNumber(z, 0)} Ω estimados acima ` +
+      '(mesmo Q do dipolo, exato só com radiais horizontais sobre plano infinito e com radiais a 90°). Antena já ajustada para ' +
+      'ressoar na frequência de projeto. Com poucos radiais e o cabo por perto, meça.',
+    source: `${BAND_SOURCE}; teoria das imagens (Balanis, Antenna Theory, 4ª ed., §4.7)`,
+  });
+
   const warnings: CalcWarning[] = [
     {
       level: 'warning',
@@ -103,10 +128,7 @@ export function calc(params: GroundPlaneParams): CalcResult {
         '(36,5 Ω a 0°, 50 Ω a 45°, 73 Ω a 90°). ' +
         'Ajuste a inclinação medindo a ROE.',
     },
-    {
-      level: 'warning',
-      message: 'Corte o radiador um pouco mais comprido e encurte aos poucos medindo a ROE.',
-    },
+    { level: 'warning', message: K_FIELD_NOTE },
     {
       level: 'info',
       message:
@@ -120,6 +142,8 @@ export function calc(params: GroundPlaneParams): CalcResult {
         'do alcance de pessoas.',
     },
   ];
+  const clampWarning = kWarning(sf);
+  if (clampWarning) warnings.unshift(clampWarning);
   const outOfRange = rangeWarning(meta, f);
   if (outOfRange) warnings.unshift(outOfRange);
 
@@ -127,8 +151,11 @@ export function calc(params: GroundPlaneParams): CalcResult {
     measurements,
     assumptions: [
       { name: 'Comprimento de onda (λ)', value: `${formatNumber(lambda, 4)} m`, source: 'λ = 299,792458 / f(MHz)' },
-      { name: 'Fator de encurtamento do radiador (K)', value: formatNumber(k, 3) },
-      { name: 'Fator de encurtamento dos radiais', value: formatNumber(kr, 3) },
+      kAssumption(sf, 'do radiador e dos radiais'),
+      {
+        name: 'K do radiador',
+        value: 'O do dipolo do mesmo condutor (monopolo sobre plano ideal = meio dipolo, Balanis §4.7); radiais com o mesmo K',
+      },
       { name: 'Número de radiais', value: String(n) },
       { name: 'Inclinação dos radiais', value: `${formatNumber(angle, 0)}°` },
       { name: 'Diâmetro do condutor', value: `${formatNumber(d * 1000, 2)} mm` },
@@ -136,7 +163,7 @@ export function calc(params: GroundPlaneParams): CalcResult {
     ],
     expected: {
       impedance: {
-        typical: estimateImpedance(angle),
+        typical: z,
         unit: 'Ω',
         note:
           'Estimativa por interpolação entre 36,5 Ω (0°, plano perfeito), ≈ 50 Ω (45°) e ≈ 73 Ω (90°). ' +
@@ -151,7 +178,7 @@ export function calc(params: GroundPlaneParams): CalcResult {
           'radiais elevados o ganho real é menor; não há valor típico com fonte confiável aqui.',
         source: 'Balanis, Antenna Theory, 4ª ed., §4.7',
       },
-      bandwidth: null,
+      bandwidth,
     },
     warnings,
   };

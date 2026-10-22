@@ -74,6 +74,18 @@ export function topView(result: CalcResult, params: YagiParams): Diagram {
     text(xs[xs.length - 1]! + 14, cy + 4, 'frente →', 'dg-note'),
     text(xs[0]! - 8, cy + 4, 'costas', 'dg-note', 'end'),
   );
+  // Excitado partido ao meio (espaço central): braços e espaço em texto, porque o espaço some na escala do desenho.
+  const hasGap = result.measurements.some((m) => m.label === 'DG');
+  if (hasGap) {
+    parts.push(
+      text(
+        left,
+        baseY + 118,
+        `Excitado partido ao meio: cada braço DB = ${formatLength(measure(result, 'DB'), res)}, espaço central DG = ${formatLength(measure(result, 'DG'), res)}`,
+        'dg-label',
+      ),
+    );
+  }
 
   return {
     id,
@@ -86,11 +98,12 @@ export function topView(result: CalcResult, params: YagiParams): Diagram {
         ? 'S: espaçamento dos diretores. '
         : 'O espaçamento entre diretores cresce até o 14º; as posições P1, P2… (a partir do refletor) estão na tabela de medidas. ') +
       (showLabels ? '' : 'Com muitos elementos os rótulos de cada um ficam só na tabela. ') +
-      'L: comprimento do boom.',
+      'L: comprimento do boom.' +
+      (hasGap ? ' DB e DG: braço e espaço central do excitado (DE = 2·DB + DG).' : ''),
     svg: svgDoc(
       id,
       680,
-      Math.round(baseY + 118),
+      Math.round(baseY + (hasGap ? 136 : 118)),
       'Yagi: vista de cima',
       `Yagi de ${directorCount + 2} elementos: refletor, excitado e ${directorCount} diretores num boom.`,
       parts.join(''),

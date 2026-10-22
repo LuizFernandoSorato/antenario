@@ -7,9 +7,13 @@
  */
 
 import { assertFrequencyMHz, assertPositive, formatNumber } from '../../core/units';
-import { assertFactor, wavelength } from '../../core/wave';
-import { type CalcResult, type CalcWarning, type Measurement, rangeWarning } from '../types';
+import { wavelength } from '../../core/wave';
+import { qBandwidthEstimate } from '../bandwidth';
+import { kAssumption, kWarning, shorteningFactorFor } from '../k-factor';
+import { type CalcResult, type CalcWarning, type Estimate, type Measurement, rangeWarning } from '../types';
+import { yagiQ } from './band-model';
 import { calcDl6wu } from './dl6wu-calc';
+import { type YagiElement, yagiElements } from './elements';
 import { meta } from './meta';
 import {
   NBS_CUT_TOLERANCE_LAMBDA,
@@ -39,8 +43,6 @@ export interface YagiParams {
   elementDiameter: number;
   /** Diâmetro do boom condutor, em metros; 0 = boom isolante. */
   boomDiameter: number;
-  /** Fator de encurtamento do elemento excitado, em (0, 1]. */
-  drivenFactor: number;
   /** Espaço central (isolador) do elemento excitado, em metros; conta dentro do comprimento total DE. Omitido = 0. */
   drivenGap?: number;
 }
@@ -50,8 +52,7 @@ export const defaultParams: YagiParams = {
   elementCount: 5,
   elementDiameter: 0.006,
   boomDiameter: 0.02,
-  drivenFactor: 0.95,
-  drivenGap: 0,
+  drivenGap: 0.01,
 };
 
 /** Números de elementos disponíveis (refletor + excitado + diretores), em ordem crescente. */
@@ -115,7 +116,7 @@ function withDrivenGap(result: CalcResult, gap: number | undefined): CalcResult 
   };
 }
 
-export function calc(params: YagiParams): CalcResult {
+export function designCalc(params: YagiParams): CalcResult {
   const auto = params.method === undefined;
   const method = params.method ?? chooseMethod(params.elementCount);
   if (method === 2) return withDrivenGap(withAutoNote(calcDl6wu(params), auto, 'DL6WU'), params.drivenGap);
@@ -123,6 +124,38 @@ export function calc(params: YagiParams): CalcResult {
     throw new RangeError(`O método deve ser 1 (NBS TN 688) ou 2 (DL6WU); recebido: ${params.method}.`);
   }
   return withDrivenGap(withAutoNote(calcNbs(params), auto, 'NBS TN 688'), params.drivenGap);
+}
+
+/** Cálculo completo: as medidas (`designCalc`) mais a banda de ROE do modelo por momentos (`band-model.ts`) nos valores esperados. */
+export function calc(params: YagiParams): CalcResult {
+  const result = designCalc(params);
+  // O modelo não tem boom: usa os elementos sem a correção do boom (ver pattern-model.ts, isolatedElements).
+  const isolated = params.boomDiameter === 0 ? result : designCalc({ ...params, boomDiameter: 0 });
+  const elements = yagiElements(isolated);
+  return { ...result, expected: { ...result.expected, bandwidth: yagiBandwidth(elements, params.elementDiameter, params.frequencyMHz) } };
+}
+
+export const YAGI_BAND_SOURCE =
+  'Modelo desta ferramenta: método dos momentos sem boom (core/mom.ts, conferido com o ganho medido do NBS TN 688) e Q da impedância de ' +
+  'Yaghjian e Best (IEEE Trans. Antennas Propag., 2005; fórmulas via arXiv 1909.08019)';
+
+/** Banda de ROE < 2:1 com casamento ideal em f0, pelo Q do excitado; para Yagis longas o Q é conservador (teste de band-model). */
+export function yagiBandwidth(elements: readonly YagiElement[], diameterM: number, f0: number): Estimate {
+  const { z0, q } = yagiQ(elements, diameterM, f0);
+  const direct = Math.max(z0.re / 50, 50 / z0.re);
+  const long = elements.length >= DL6WU_MIN_ELEMENTS;
+  return qBandwidthEstimate(f0, q, {
+    reference: 'com casamento ideal na frequência de projeto',
+    note:
+      `No modelo o excitado tem Z ≈ ${formatNumber(z0.re, 0)} ${z0.im < 0 ? '−' : '+'} j${formatNumber(Math.abs(z0.im), 0)} Ω; ` +
+      `ajustado para ressoar e ligado direto em 50 Ω, a ROE mínima seria ≈ ${formatNumber(direct, 1)}:1. A rede de casamento ideal não tem ` +
+      'perdas nem banda própria: gamma, hairpin e dipolo dobrado estreitam um pouco a faixa. Espaço livre, condutor perfeito, sem boom.' +
+      (long
+        ? ' Em Yagis longas a impedância varia em ondulações e, no modelo, a faixa de ROE < 2:1 é maior que esta (estimativa conservadora). ' +
+          'O ganho e a relação frente–costas também mudam dentro da faixa; não foram calculados aqui.'
+        : ''),
+    source: YAGI_BAND_SOURCE,
+  });
 }
 
 /** Em modo automático, informa na tela qual método foi usado e por quê. */
@@ -144,10 +177,9 @@ function withAutoNote(result: CalcResult, auto: boolean, name: string): CalcResu
 }
 
 function calcNbs(params: YagiParams): CalcResult {
-  const { frequencyMHz: f, elementCount, elementDiameter: d, boomDiameter: boom, drivenFactor: k } = params;
+  const { frequencyMHz: f, elementCount, elementDiameter: d, boomDiameter: boom } = params;
   assertFrequencyMHz(f);
   assertPositive(d, 'O diâmetro dos elementos');
-  assertFactor(k, 'O fator de encurtamento do excitado');
   if (!Number.isFinite(boom) || boom < 0) {
     throw new RangeError(`O diâmetro do boom deve ser ≥ 0 (recebido: ${boom}).`);
   }
@@ -159,7 +191,8 @@ function calcNbs(params: YagiParams): CalcResult {
   const boomExtra = boom > 0 ? boomCorrection(boomOverLambda) : 0;
   const directors = directorLengths(design, dOverLambda).map((l) => (l + boomExtra) * lambda);
   const reflector = (reflectorLength(design, dOverLambda) + boomExtra) * lambda;
-  const driven = (k * lambda) / 2;
+  const sf = shorteningFactorFor(d, f);
+  const driven = (sf.k * lambda) / 2;
   const spacing = design.spacing * lambda;
   const overall = (NBS_REFLECTOR_SPACING + design.directorCount * design.spacing) * lambda;
 
@@ -186,6 +219,8 @@ function calcNbs(params: YagiParams): CalcResult {
   const warnings: CalcWarning[] = [];
   const outOfRange = rangeWarning(meta, f);
   if (outOfRange) warnings.push(outOfRange);
+  const clampWarning = kWarning(sf, 'o elemento excitado');
+  if (clampWarning) warnings.push(clampWarning);
   if (dOverLambda < NBS_D_OVER_LAMBDA_RANGE.min || dOverLambda > NBS_D_OVER_LAMBDA_RANGE.max) {
     warnings.push({
       level: 'warning',
@@ -214,7 +249,7 @@ function calcNbs(params: YagiParams): CalcResult {
       message:
         'O NBS não dá a medida do elemento excitado: ele depende do casamento escolhido. O valor mostrado é ' +
         // TODO(fonte): fonte pendente para o texto abaixo.
-        'λ/2 × K como ponto de partida. Corte comprido e ajuste medindo a ROE. Para o hairpin, use a ferramenta "Hairpin". Gamma match ainda não tem equações com fonte aqui.',
+        'λ/2 × K (K do diâmetro, como no dipolo isolado) como ponto de partida: os elementos vizinhos mudam a ressonância. Corte comprido e ajuste medindo a ROE. Para o hairpin, use a ferramenta "Hairpin". Gamma match ainda não tem equações com fonte aqui.',
     },
     {
       level: 'info',
@@ -250,7 +285,7 @@ function calcNbs(params: YagiParams): CalcResult {
         value: boom > 0 ? `condutor, ${formatNumber(boom * 1000, 1)} mm (D/λ = ${formatNumber(boomOverLambda, 4)}): +${formatNumber(boomExtra, 4)}λ nos parasitas` : 'isolante, sem correção',
         source: 'NBS TN 688, Fig. 10 (digitalizada)',
       },
-      { name: 'Fator do excitado (K)', value: formatNumber(k, 3), source: 'λ/2 × K, ponto de partida (CLAUDE.md); NBS não especifica' },
+      kAssumption(sf, 'do excitado'),
       { name: 'Posição dos elementos', value: 'Refletor em 0; excitado a 0,2λ; diretores a cada S a partir do excitado', source: 'NBS TN 688, Tabela 1' },
     ],
     expected: {

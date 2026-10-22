@@ -13,8 +13,10 @@
 
 import { assertFrequencyMHz, assertPositive, formatNumber, metersToInches } from '../../core/units';
 import { wavelength } from '../../core/wave';
+import { qBandwidthEstimate } from '../bandwidth';
 import { type CalcResult, type CalcWarning, type Measurement, rangeWarning } from '../types';
 import { meta } from './meta';
+import { quadQ } from './pattern-model';
 
 export interface CubicQuadParams {
   frequencyMHz: number;
@@ -34,7 +36,7 @@ export const defaultParams: CubicQuadParams = {
   spacingLambda: 0.2,
   // Premissa do modelo de padrão (era fixa em 2 mm); fio rígido comum, sem fonte.
   wireDiameter: 0.002,
-  feedGap: 0,
+  feedGap: 0.01,
 };
 
 const FT_IN_METERS = 0.3048;
@@ -141,6 +143,21 @@ export function calc(params: CubicQuadParams): CalcResult {
     },
   );
 
+  // Banda pelo Q da espira excitada no modelo por momentos (pattern-model.ts; o teste de lá confere o Q contra a varredura).
+  const { z0, q } = quadQ({ measurements }, f, nDir, wd);
+  const direct = Math.max(z0.re / 50, 50 / z0.re);
+  const bandwidth = qBandwidthEstimate(f, q, {
+    reference: 'com casamento ideal na frequência de projeto',
+    note:
+      `No modelo a espira excitada tem Z ≈ ${formatNumber(z0.re, 0)} ${z0.im < 0 ? '−' : '+'} j${formatNumber(Math.abs(z0.im), 0)} Ω; ` +
+      `ajustada para ressoar e ligada direto em 50 Ω, a ROE mínima seria ≈ ${formatNumber(direct, 1)}:1. ` +
+      'Pelo Q da impedância, que vale para uma ressonância isolada: quando outra espira ressoa perto (no modelo, com 2 diretores), a faixa ' +
+      'real é maior (estimativa conservadora). Espaço livre, fio de cobre ideal, sem varetas nem boom.',
+    source:
+      'Modelo desta ferramenta: método dos momentos (core/mom.ts) e Q da impedância de Yaghjian e Best (IEEE Trans. Antennas Propag., 2005; ' +
+      'fórmulas via arXiv 1909.08019). A quadra não tem comparação com medida.',
+  });
+
   const gainDbd = estimatedGainDbd(nDir);
   return {
     measurements,
@@ -174,7 +191,7 @@ export function calc(params: CubicQuadParams): CalcResult {
         // TODO(fonte): ARRL Antenna Book.
         source: 'Electronics Notes (fonte secundária).',
       },
-      bandwidth: null,
+      bandwidth,
     },
     warnings,
   };

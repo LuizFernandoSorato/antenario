@@ -31,7 +31,6 @@ export const meta: AntennaMeta = {
     yagiParam('elementCount'),
     { ...yagiParam('elementDiameter'), defaultValue: 3.2, help: 'LY3H cita varetas de alumínio de 3,2 mm (comentário na página); o comprimento depende do diâmetro.' },
     yagiParam('boomDiameter'),
-    yagiParam('drivenFactor'),
     yagiParam('drivenGap'),
     circularSenseParam(),
     {

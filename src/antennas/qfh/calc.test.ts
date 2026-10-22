@@ -49,8 +49,35 @@ describe('QFH: calc', () => {
 });
 
 describe('QFH: lista de corte', () => {
-  it('duas espiras ajustáveis', () => {
-    expect(cutList(defaultParams).map((i) => i.label)).toEqual(['A', 'E']);
+  it('duas espiras ajustáveis, cortadas com o fio já descontado do espaço central', () => {
+    const items = cutList(defaultParams);
+    expect(items.map((i) => i.label)).toEqual(['I', 'J']);
+    expect(items[0]!.meters).toBeCloseTo(2.3912 - 0.01, 9);
+    expect(items[1]!.meters).toBeCloseTo(2.2723 - 0.01, 9);
+  });
+});
+
+describe('QFH: espaço central (alimentação no topo)', () => {
+  it('padrão de 10 mm, dentro do comprimento da espira: A e E não mudam, I = A − K, J = E − K', () => {
+    const r = calc(defaultParams);
+    expect(defaultParams.centerGap).toBe(0.01);
+    expect(mm(r, 'K')).toBeCloseTo(10, 9);
+    expect(mm(r, 'I')).toBeCloseTo(2391.2 - 10, 6);
+    expect(mm(r, 'J')).toBeCloseTo(2272.3 - 10, 6);
+    const wider = calc({ ...defaultParams, centerGap: 0.02 });
+    expect(mm(wider, 'A')).toBeCloseTo(mm(r, 'A'), 9);
+    expect(mm(wider, 'I')).toBeCloseTo(2391.2 - 20, 6);
+  });
+
+  it('precisa ser maior que o diâmetro do condutor (os braços de cima das duas espiras se cruzam no centro)', () => {
+    expect(() => calc({ ...defaultParams, centerGap: 0 })).toThrow(/maior que o diâmetro/);
+    expect(() => calc({ ...defaultParams, centerGap: 0.0041 })).toThrow(RangeError);
+    expect(() => calc({ ...defaultParams, wireDiameter: 0.012, centerGap: 0.01 })).toThrow(RangeError);
+    expect(() => calc({ ...defaultParams, centerGap: 0.0042 })).not.toThrow();
+  });
+
+  it('não pode passar do braço de cima da espira menor', () => {
+    expect(() => calc({ ...defaultParams, centerGap: 0.31 })).toThrow(RangeError);
   });
 });
 

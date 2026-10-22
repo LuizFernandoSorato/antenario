@@ -37,12 +37,17 @@ export interface QfhParams {
   circularSense: number;
   /** Diâmetro do condutor, em metros (só entra no modelo de padrão; as medidas são as de 4,1 mm). */
   wireDiameter: number;
+  /**
+   * Espaço central, em metros: abertura no meio do braço de cima de cada espira, onde liga a alimentação. Conta dentro do comprimento
+   * da espira (A, E), como no dipolo; precisa ser maior que o diâmetro do condutor.
+   */
+  centerGap: number;
 }
 
 /** Diâmetro do condutor da saída de referência da calculadora de Coppens, em metros. */
 export const REFERENCE_WIRE_DIAMETER = 0.0041;
 
-export const defaultParams: QfhParams = { frequencyMHz: 137.5, wireDiameter: REFERENCE_WIRE_DIAMETER, circularSense: RHCP };
+export const defaultParams: QfhParams = { frequencyMHz: 137.5, wireDiameter: REFERENCE_WIRE_DIAMETER, circularSense: RHCP, centerGap: 0.01 };
 
 /** Frequência de referência dos dados, MHz. */
 export const REFERENCE_FREQUENCY_MHZ = 137.5;
@@ -95,7 +100,7 @@ export function scaleFromReference(mm: number, fMHz: number): number {
 }
 
 export function calc(params: QfhParams): CalcResult {
-  const { frequencyMHz: f, wireDiameter: wd } = params;
+  const { frequencyMHz: f, wireDiameter: wd, centerGap: gap } = params;
   const sense = senseOf(params.circularSense);
   const winding = windingFor(sense);
   assertFrequencyMHz(f);
@@ -103,16 +108,30 @@ export function calc(params: QfhParams): CalcResult {
   const s = (mm: number) => scaleFromReference(mm, f);
   const { large, small } = REFERENCE_MM;
   const lambda = wavelength(f);
+  // Os braços de cima das duas espiras se cruzam no centro (a 90°, na mesma altura): a ponta de um braço fica a gap/2 do eixo, e o braço
+  // da outra espira ocupa d/2 para cada lado do eixo dela. Com gap ≤ d, as pontas encostam na outra espira (geometria; regra pedida pelo usuário).
+  if (!Number.isFinite(gap) || !(gap > wd)) {
+    throw new RangeError(
+      `O espaço central (${formatNumber(gap * 1000, 1)} mm) precisa ser maior que o diâmetro do condutor (${formatNumber(wd * 1000, 1)} mm): ` +
+        'os braços de cima das duas espiras se cruzam no centro e encostariam um no outro.',
+    );
+  }
+  if (gap >= s(small.horizontalSeparator)) {
+    throw new RangeError('O espaço central é maior que o braço de cima da espira menor (separador horizontal H).');
+  }
 
   const measurements: Measurement[] = [
-    { label: 'A', name: 'Espira maior: comprimento do fio', meters: s(large.wire), description: 'Fio total da espira maior.' },
+    { label: 'A', name: 'Espira maior: comprimento da espira', meters: s(large.wire), description: 'Comprimento total da espira maior, incluindo o espaço central K.' },
     { label: 'B', name: 'Espira maior: altura', meters: s(large.height), description: 'Altura da hélice da espira maior.' },
     { label: 'C', name: 'Espira maior: diâmetro interno', meters: s(large.innerDiameter), description: 'Diâmetro interno do cilindro da espira maior.' },
     { label: 'D', name: 'Espira maior: separador horizontal', meters: s(large.horizontalSeparator), description: SEPARATOR_NOTE },
-    { label: 'E', name: 'Espira menor: comprimento do fio', meters: s(small.wire), description: 'Fio total da espira menor.' },
+    { label: 'E', name: 'Espira menor: comprimento da espira', meters: s(small.wire), description: 'Comprimento total da espira menor, incluindo o espaço central K.' },
     { label: 'F', name: 'Espira menor: altura', meters: s(small.height), description: 'Altura da hélice da espira menor.' },
     { label: 'G', name: 'Espira menor: diâmetro interno', meters: s(small.innerDiameter), description: 'Diâmetro interno do cilindro da espira menor.' },
     { label: 'H', name: 'Espira menor: separador horizontal', meters: s(small.horizontalSeparator), description: SEPARATOR_NOTE },
+    { label: 'I', name: 'Espira maior: fio a cortar', meters: s(large.wire) - gap, description: 'A menos o espaço central K: a espira fica aberta no meio do braço de cima.' },
+    { label: 'J', name: 'Espira menor: fio a cortar', meters: s(small.wire) - gap, description: 'E menos o espaço central K: a espira fica aberta no meio do braço de cima.' },
+    { label: 'K', name: 'Espaço central (alimentação no topo)', meters: gap, description: 'Abertura no meio do braço de cima de cada espira, onde liga a alimentação; já conta dentro de A e de E.' },
   ];
 
   const sens = diameterSensitivity();
@@ -168,6 +187,11 @@ export function calc(params: QfhParams): CalcResult {
       { name: 'Condutor de referência', value: '4,1 mm, raio de curvatura 13 mm, razão largura/altura 0,44', source: 'Coppens, via IK1HGI' },
       { name: 'Sentido da polarização', value: `${SENSE_NAME[sense]}: hélices enroladas ${winding === 'left' ? 'à esquerda' : 'à direita'}`, source: 'Modelo por momentos (feixe para cima, espira menor adiantada); patente US 10511099 concorda (fonte secundária)' },
       { name: 'Diâmetro do condutor informado', value: `${formatNumber(wd * 1000, 2)} mm (só no padrão de irradiação)` },
+      {
+        name: 'Espaço central',
+        value: `${formatNumber(gap * 1000, 1)} mm, dentro do comprimento de cada espira (fio a cortar = espira − espaço)`,
+        source: 'Convenção da ferramenta (comprimento de ponta a ponta, como no dipolo); o padrão de irradiação não modela a abertura',
+      },
       { name: 'Sensibilidade ao condutor (4,1 → 7 mm)', value: `até ${formatNumber(worst * 100, 1)} % nas medidas`, source: 'Coppens, via rfwireless-world.com' },
       { name: 'Comprimento de onda de referência', value: `${formatEngineering(REFERENCE_MM.wavelength / 1000, 'm')} (a 137,5 MHz, c = 3×10⁸ m/s)`, source: 'Coppens: usa c = 3×10⁸ m/s' },
     ],
@@ -186,6 +210,8 @@ export function calc(params: QfhParams): CalcResult {
         // TODO(fonte): fonte pendente para o texto abaixo.
         source: 'Sem fonte citada',
       },
+      // TODO(fonte): sem medida. O modelo por momentos com as espiras em paralelo no topo (autofaseada) dá a melhor quadratura em
+      // ≈ 0,98·f (correntes 2,7:1 em f) e não foi conferido; não é usado (2026-10-22).
       bandwidth: null,
     },
     warnings,

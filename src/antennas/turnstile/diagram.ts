@@ -23,9 +23,15 @@ function crossed(result: CalcResult, params: TurnstileParams): Diagram {
   const h = (total * scale) / 2;
   const gapPx = ((result.measurements.find((m) => m.label === 'E')?.meters ?? 0) * scale) / 2;
   const parts: string[] = [];
-  // Dipolo 1 (horizontal, "A") e dipolo 2 (vertical, "B"), vistos pelo eixo.
-  parts.push(line(cx - h, cy, cx + h, cy, 'dg-conductor'), line(cx, cy - h, cx, cy + h, 'dg-conductor'));
+  // Dipolo 1 (horizontal, "A") e dipolo 2 (vertical, "B"), vistos pelo eixo, cada um partido no centro pelo espaço E.
+  parts.push(
+    line(cx - h, cy, cx - gapPx, cy, 'dg-conductor'),
+    line(cx + gapPx, cy, cx + h, cy, 'dg-conductor'),
+    line(cx, cy - h, cx, cy - gapPx, 'dg-conductor'),
+    line(cx, cy + gapPx, cx, cy + h, 'dg-conductor'),
+  );
   parts.push(circle(cx, cy, 5, 'dg-connector'));
+  if (gapPx > 0) parts.push(text(cx - 10, cy - 12, dimLabel(result, 'E', res), 'dg-label', 'end'));
   parts.push(text(cx + h + 8, cy + 4, 'dipolo 1 (direto)', 'dg-note'));
   parts.push(text(cx + 8, cy - h - 6, 'dipolo 2 (pela linha de fase)', 'dg-note'));
   parts.push(text(cx + 12, cy + 18, 'centro: isole um dipolo do outro', 'dg-note'));
@@ -40,7 +46,8 @@ function crossed(result: CalcResult, params: TurnstileParams): Diagram {
     title: 'Dipolos cruzados (vista pelo eixo)',
     caption:
       'Dois dipolos iguais a 90° no mesmo centro. A: comprimento de cada dipolo; B: braço. C: linha de fase de 1/4 de onda ' +
-      'entre o ponto de alimentação e o dipolo 2.',
+      'entre o ponto de alimentação e o dipolo 2.' +
+      (gapPx > 0 ? ' E: espaço central de cada dipolo; precisa ser maior que o diâmetro do condutor para os braços dos dois dipolos não se tocarem.' : ''),
     svg: svgDoc(
       id,
       640,

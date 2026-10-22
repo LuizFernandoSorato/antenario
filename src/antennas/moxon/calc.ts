@@ -32,7 +32,7 @@ export interface MoxonParams {
 export const defaultParams: MoxonParams = {
   frequencyMHz: 145,
   conductorDiameter: 0.004,
-  centerGap: 0,
+  centerGap: 0.01,
 };
 
 /** Impedância do cabo de alimentação usada como referência da ROE. */

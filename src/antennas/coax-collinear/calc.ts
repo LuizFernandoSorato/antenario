@@ -153,6 +153,7 @@ export function calc(params: CoaxCollinearParams): CalcResult {
         source: 'dmrhub.ru, guia de colinear de 70 cm.',
       },
       gain: gainEstimate,
+      // TODO(fonte): nenhuma curva de ROE medida achada (2026-10-22); os relatos só dizem que é estreita e sensível ao VF e ao corte.
       bandwidth: null,
     },
     warnings,

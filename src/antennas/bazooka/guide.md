@@ -50,7 +50,9 @@ estanho, multímetro, e um **NanoVNA** ou um **medidor de ROE** para o ajuste.
 
 1. Calcule as medidas na ferramenta. **A** é o comprimento total, **B** é a seção de
    coaxial, **C** é cada toco (do corte da malha até o curto), **D** é cada fio da ponta e
-   **E** é o trecho sem malha no centro (se você informar um).
+   **E** é o trecho sem malha no centro (se você informar um). O comprimento total usa o fator
+   de encurtamento K do fio das pontas: como o coaxial é mais grosso, a antena real fica um
+   pouco mais curta, e a diferença sai no ajuste dos fios **D**.
 2. Corte a seção de coaxial com a medida **B**, mais alguns centímetros em cada ponta para
    descascar e fazer o curto. **B** é medida de curto a curto.
 3. No meio da seção, tire a capa e corte a malha em volta do cabo, num trecho curto (**E**,

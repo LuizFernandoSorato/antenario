@@ -78,7 +78,8 @@ describe('quadra cúbica: calc', () => {
 describe('quadra cúbica: lista de corte', () => {
   it('só a espira excitada é ajustável; 2 varetas por espira', () => {
     const items = cutList({ ...defaultParams, directorCount: 2 });
-    expect(items.filter((i) => i.adjustable).map((i) => i.label)).toEqual(['H']);
+    // Com o espaço de alimentação padrão (10 mm), a excitada é cortada com J (= H − K).
+    expect(items.filter((i) => i.adjustable).map((i) => i.label)).toEqual(['J']);
     expect(items.find((i) => i.label === 'E')!.quantity).toBe(8);
     expect(items.find((i) => i.label === 'I')!.quantity).toBe(2);
   });
@@ -88,7 +89,7 @@ describe('quadra cúbica: diâmetro do fio e espaço de alimentação', () => {
   const lab = (r: ReturnType<typeof calc>, label: string) => r.measurements.find((x) => x.label === label)?.meters;
 
   it('o espaço conta dentro do perímetro H: H não muda, J = H − espaço, e a folha de corte usa J', () => {
-    const base = calc(defaultParams);
+    const base = calc({ ...defaultParams, feedGap: 0 });
     const r = calc({ ...defaultParams, feedGap: 0.01 });
     expect(lab(r, 'H')).toBeCloseTo(lab(base, 'H')!, 12);
     expect(lab(r, 'J')).toBeCloseTo(lab(base, 'H')! - 0.01, 12);
@@ -106,5 +107,18 @@ describe('quadra cúbica: diâmetro do fio e espaço de alimentação', () => {
     expect(() => calc({ ...defaultParams, wireDiameter: 0 })).toThrow(RangeError);
     expect(() => calc({ ...defaultParams, feedGap: -1 })).toThrow(RangeError);
     expect(() => calc({ ...defaultParams, feedGap: 5 })).toThrow(RangeError);
+  });
+});
+
+describe('quadra cúbica: banda de ROE', () => {
+  it('pelo Q do modelo: 1 diretor em 145 MHz ≈ 2,4 MHz; sem diretor a banda é maior', () => {
+    // Valores do modelo por momentos (pattern-model.test.ts confere o Q contra a varredura sintonizada).
+    const one = calc(defaultParams).expected.bandwidth!;
+    expect(one.unit).toBe('MHz');
+    expect(one.typical!).toBeGreaterThan(2);
+    expect(one.typical!).toBeLessThan(3);
+    expect(one.note).toMatch(/casamento ideal/);
+    expect(one.source).toMatch(/Yaghjian/);
+    expect(calc({ ...defaultParams, directorCount: 0 }).expected.bandwidth!.typical!).toBeGreaterThan(one.typical!);
   });
 });

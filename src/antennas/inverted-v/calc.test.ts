@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { dipoleShorteningFactor } from '../../core/dipole-resonance';
 import { cutList } from './cutlist';
 import { calc, defaultParams } from './calc';
 import { meta } from './meta';
@@ -18,22 +19,36 @@ function measure(result: ReturnType<typeof calc>, label: string): number {
 }
 
 const AWG12 = 0.0808 * 0.0254;
+const C = 299.792458;
+const kFor = (d: number, f: number) => dipoleShorteningFactor(d / (C / f));
 
 describe('V invertido: calc', () => {
-  it('ápice de 180° = dipolo reto: A = K·λ/2', () => {
+  it('ápice de 180° = dipolo reto: A = K·λ/2, com o K do diâmetro', () => {
     const r = calc({ ...defaultParams, frequencyMHz: 14.2, apexAngleDeg: 180 });
-    expect(Math.abs(measure(r, 'A') - (0.5 * 299.792458 * 0.95) / 14.2)).toBeLessThan(1e-9);
+    expect(Math.abs(measure(r, 'A') - (0.5 * C * kFor(0.002, 14.2)) / 14.2)).toBeLessThan(1e-9);
+    expect(r.assumptions.some((a) => /pelo diâmetro/.test(a.value))).toBe(true);
     expect(measure(r, 'E')).toBeCloseTo(0, 9);
   });
 
   it('alongamento do V conforme o Cebik (120° e 90°, 3,75 MHz, AWG #12)', () => {
-    const dipole = (0.5 * 299.792458 * 0.95) / 3.75;
+    const dipole = (0.5 * C * kFor(AWG12, 3.75)) / 3.75;
     for (const [apex, ft] of [
       [120, 128.7],
       [90, 130.1],
     ] as const) {
       const r = calc({ ...defaultParams, frequencyMHz: 3.75, apexAngleDeg: apex, conductorDiameter: AWG12, apexHeight: 30 });
       expect(Math.abs(measure(r, 'A') / dipole - ft / 127.7)).toBeLessThan(0.003);
+    }
+  });
+
+  it('comprimento absoluto conforme o Cebik (NEC-4, AWG #12 a 3,75 MHz): 127,7, 128,7 e 130,1 pés a 0,3 %', () => {
+    for (const [apex, ft] of [
+      [180, 127.7],
+      [120, 128.7],
+      [90, 130.1],
+    ] as const) {
+      const r = calc({ ...defaultParams, frequencyMHz: 3.75, apexAngleDeg: apex, conductorDiameter: AWG12, apexHeight: 30 });
+      expect(Math.abs(measure(r, 'A') / (ft * 0.3048) - 1)).toBeLessThan(0.003);
     }
   });
 
@@ -78,7 +93,7 @@ describe('V invertido: calc', () => {
 
   it('rejeita entradas inválidas', () => {
     expect(() => calc({ ...defaultParams, frequencyMHz: 0 })).toThrow(RangeError);
-    expect(() => calc({ ...defaultParams, shorteningFactor: 1.2 })).toThrow(RangeError);
+    expect(() => calc({ ...defaultParams, conductorDiameter: 0 })).toThrow(RangeError);
     expect(() => calc({ ...defaultParams, conductorDiameter: 0 })).toThrow(RangeError);
     expect(() => calc({ ...defaultParams, apexAngleDeg: 50 })).toThrow(RangeError);
     expect(() => calc({ ...defaultParams, apexAngleDeg: 190 })).toThrow(RangeError);

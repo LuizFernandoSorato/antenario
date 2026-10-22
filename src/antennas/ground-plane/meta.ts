@@ -17,24 +17,6 @@ export const meta: AntennaMeta = {
   outdoor: true,
   params: [
     { key: 'frequencyMHz', label: 'Frequência de projeto', unit: 'MHz', defaultValue: 145, toSi: 1, min: 0 },
-    {
-      key: 'shorteningFactor',
-      label: 'Fator de encurtamento do radiador (K)',
-      unit: '',
-      defaultValue: 0.95,
-      toSi: 1,
-      min: 0,
-      max: 1,
-    },
-    {
-      key: 'radialFactor',
-      label: 'Fator de encurtamento dos radiais',
-      unit: '',
-      defaultValue: 0.95,
-      toSi: 1,
-      min: 0,
-      max: 1,
-    },
     { key: 'radialCount', label: 'Número de radiais', unit: '', defaultValue: 4, toSi: 1, min: 2 },
     {
       key: 'droopAngleDeg',
@@ -46,6 +28,14 @@ export const meta: AntennaMeta = {
       max: 89,
       help: '0° = radiais horizontais. Inclinar para baixo eleva a impedância.',
     },
-    { key: 'conductorDiameter', label: 'Diâmetro do condutor', unit: 'mm', defaultValue: 2, toSi: 0.001, min: 0 },
+    {
+      key: 'conductorDiameter',
+      label: 'Diâmetro do condutor',
+      unit: 'mm',
+      defaultValue: 2,
+      toSi: 0.001,
+      min: 0,
+      help: 'Define o fator de encurtamento K do radiador e dos radiais: condutor mais grosso, medidas menores.',
+    },
   ],
 };

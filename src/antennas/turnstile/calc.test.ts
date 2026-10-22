@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { abs } from '../../core/complex';
+import { dipoleShorteningFactor } from '../../core/dipole-resonance';
 import { calc, defaultParams, quadratureFeed } from './calc';
+import { REFLECTOR_PLATE, REFLECTOR_TUBES } from './reflector-model';
 import { LHCP, RHCP } from '../circular';
 import { cutList } from './cutlist';
 
 // Referências:
-// - Dipolo: L = K·λ/2 (como em antennas/dipole); a 137,5 MHz, λ = 2,18032 m → A = 0,95·1,09016 = 1,03565 m.
+// - Dipolo: L = K·λ/2 com o K do diâmetro (como em antennas/dipole); a 137,5 MHz, λ = 2,18032 m; com 2 mm, K ≈ 0,958 → A ≈ 1,044 m.
 // - Linha de 1/4 de onda: λ/4 × VF; a 137,5 MHz com VF 0,66, 0,54508 × 0,66 = 0,35975 m.
 // - Refletor a λ/4 (Wikipedia, citando Milligan): 0,54508 m.
 // - Alimentação em quadratura: derivação por linha de 1/4 de onda, I_B/I_A = −j·R/Zq; Z = R/2 se Zq = R.
@@ -21,16 +23,20 @@ describe('turnstile: calc', () => {
 
   it('dipolos, linha de fase e refletor a 137,5 MHz', () => {
     const r = calc(defaultParams);
-    expect(m(r, 'A')).toBeCloseTo(0.95 * lambda / 2, 12);
-    expect(m(r, 'B')).toBeCloseTo(m(r, 'A') / 2, 12);
+    const k = dipoleShorteningFactor(0.002 / lambda);
+    expect(m(r, 'A')).toBeCloseTo((k * lambda) / 2, 12);
+    expect(m(r, 'B')).toBeCloseTo((m(r, 'A') - 0.01) / 2, 12);
+    expect(m(r, 'E')).toBeCloseTo(0.01, 12);
     expect(m(r, 'C')).toBeCloseTo((lambda / 4) * 0.66, 12);
     expect(m(r, 'D')).toBeCloseTo(lambda / 4, 12);
-    expect(m(r, 'A')).toBeCloseTo(1.03565, 4);
+    expect(m(r, 'A')).toBeGreaterThan(1.04);
+    expect(m(r, 'A')).toBeLessThan(1.05);
+    expect(r.assumptions.some((a) => /pelo diâmetro/.test(a.value))).toBe(true);
   });
 
   it('sem refletor não há cota D', () => {
     const r = calc({ ...defaultParams, reflector: 0 });
-    expect(r.measurements.map((x) => x.label)).toEqual(['A', 'B', 'C']);
+    expect(r.measurements.map((x) => x.label)).toEqual(['A', 'B', 'C', 'E']);
   });
 
   it('um erro de 10 % no VF muda a linha de fase em 10 %', () => {
@@ -43,14 +49,35 @@ describe('turnstile: calc', () => {
     expect(calc(defaultParams).expected.impedance.typical).toBeCloseTo(36.5, 9);
   });
 
+  it('banda: a quadratura alarga a ROE (bem mais que um dipolo só), mas a razão axial < 3 dB é bem mais estreita', () => {
+    // Um dipolo de 2 mm em 137,5 MHz cobre ≈ 9 MHz com ROE < 2:1 em 50 Ω (modelo de antennas/dipole).
+    for (const reflector of [0, 1]) {
+      for (const reflectorKind of [REFLECTOR_PLATE, REFLECTOR_TUBES]) {
+        const b = calc({ ...defaultParams, reflector, reflectorKind }).expected.bandwidth!;
+        expect(b.unit).toBe('MHz');
+        expect(b.typical!).toBeGreaterThan(18);
+        expect(b.typical!).toBeLessThan(30);
+        const ar = Number(/razão axial < 3 dB: ([\d,]+) MHz/.exec(b.note)![1]!.replace(',', '.'));
+        expect(ar).toBeGreaterThan(5);
+        expect(ar).toBeLessThan(b.typical! / 2);
+      }
+    }
+  });
+
   it('o espaço central conta dentro do comprimento total: A não muda, B = (A − gap)/2 e há cota E', () => {
     const base = calc(defaultParams);
     const r = calc({ ...defaultParams, centerGap: 0.02 });
     expect(m(r, 'A')).toBeCloseTo(m(base, 'A'), 12);
     expect(m(r, 'B')).toBeCloseTo((m(base, 'A') - 0.02) / 2, 12);
     expect(m(r, 'E')).toBeCloseTo(0.02, 12);
-    expect(base.measurements.some((x) => x.label === 'E')).toBe(false);
     expect(cutList({ ...defaultParams, centerGap: 0.02 }).find((c) => c.label === 'B')!.meters).toBeCloseTo(m(r, 'B'), 12);
+  });
+
+  it('o espaço central precisa ser maior que o diâmetro do condutor (os braços dos dois dipolos se cruzam no centro)', () => {
+    expect(defaultParams.centerGap).toBe(0.01);
+    expect(() => calc({ ...defaultParams, centerGap: 0 })).toThrow(/maior que o diâmetro/);
+    expect(() => calc({ ...defaultParams, conductorDiameter: 0.01, centerGap: 0.01 })).toThrow(RangeError);
+    expect(() => calc({ ...defaultParams, conductorDiameter: 0.01, centerGap: 0.0101 })).not.toThrow();
   });
 
   it('rejeita espaço central negativo ou maior que o dipolo e diâmetro não positivo', () => {
@@ -62,7 +89,7 @@ describe('turnstile: calc', () => {
   it('entradas inválidas', () => {
     expect(() => calc({ ...defaultParams, frequencyMHz: 0 })).toThrow(RangeError);
     expect(() => calc({ ...defaultParams, velocityFactor: 0 })).toThrow(RangeError);
-    expect(() => calc({ ...defaultParams, shorteningFactor: 1.2 })).toThrow(RangeError);
+    expect(() => calc({ ...defaultParams, conductorDiameter: 0 })).toThrow(RangeError);
     expect(() => calc({ ...defaultParams, reflector: 2 })).toThrow(RangeError);
   });
 

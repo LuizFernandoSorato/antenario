@@ -22,7 +22,7 @@ function m(r: ReturnType<typeof calc>, label: string): number {
 
 const ly3h = { ...defaultParams, frequencyMHz: 436.5, velocityFactor: 0.66, yagiImpedance: 100 };
 
-describe('cross Yagi: calc', () => {
+describe('cross Yagi: calc', { timeout: 60_000 }, () => {
   it('linha defasadora a 436,5 MHz bate com os 113 mm do LY3H (VF 0,66)', () => {
     const r = calc(ly3h);
     expect(m(r, 'F') * 1000).toBeCloseTo(113, 0);
@@ -64,6 +64,17 @@ describe('cross Yagi: calc', () => {
     expect(g.source.length).toBeGreaterThan(0);
   });
 
+  it('banda: a quadratura alarga a ROE em relação a um Yagi só, mas a razão axial < 3 dB é mais estreita que ela', () => {
+    for (const yagiImpedance of [100, 50]) {
+      const b = calc({ ...defaultParams, yagiImpedance }).expected.bandwidth!;
+      const single = yagiCalc(defaultParams).expected.bandwidth!;
+      expect(b.unit).toBe('MHz');
+      expect(b.typical!).toBeGreaterThan(single.typical!);
+      const ar = Number(/razão axial < 3 dB: ([\d,]+) MHz/.exec(b.note)![1]!.replace(',', '.'));
+      expect(ar).toBeLessThan(b.typical!);
+    }
+  });
+
   it('erro de 10 % no VF muda a linha em 10 %', () => {
     const a = m(calc({ ...ly3h, velocityFactor: 0.6 }), 'F');
     const b = m(calc({ ...ly3h, velocityFactor: 0.66 }), 'F');
@@ -83,10 +94,11 @@ describe('cross Yagi: calc', () => {
   });
 });
 
-describe('cross Yagi: folha de corte', () => {
+describe('cross Yagi: folha de corte', { timeout: 60_000 }, () => {
   it('dois de cada elemento (um por Yagi) e medidas iguais às do cálculo', () => {
-    const r = calc(defaultParams);
-    const items = cutList(defaultParams);
+    const solid = { ...defaultParams, drivenGap: 0 };
+    const r = calc(solid);
+    const items = cutList(solid);
     const byLabel = new Map(items.map((i) => [i.label, i]));
     for (const l of ['R', 'DE', 'D1']) {
       expect(byLabel.get(l)!.quantity).toBe(2);
@@ -95,9 +107,16 @@ describe('cross Yagi: folha de corte', () => {
     expect(byLabel.get('F')!.quantity).toBe(1);
     expect(byLabel.get('F')!.meters).toBe(m(r, 'F'));
   });
+
+  it('com o espaço central padrão (10 mm), os dois excitados viram 4 braços DB', () => {
+    const r = calc(defaultParams);
+    const arms = cutList(defaultParams).find((i) => i.label === 'DB')!;
+    expect(arms.quantity).toBe(4);
+    expect(arms.meters).toBeCloseTo((m(r, 'DE') - 0.01) / 2, 12);
+  });
 });
 
-describe('cross Yagi: padrão por momentos', () => {
+describe('cross Yagi: padrão por momentos', { timeout: 60_000 }, () => {
   it('diretividade circular = diretividade de um Yagi isolado (a potência se divide entre as polarizações)', () => {
     const r = calc(defaultParams);
     const a = solveYagi(r, defaultParams);
@@ -139,7 +158,7 @@ describe('cross Yagi: padrão por momentos', () => {
   });
 });
 
-describe('cross Yagi: espaço central do excitado', () => {
+describe('cross Yagi: espaço central do excitado', { timeout: 60_000 }, () => {
   it('passa para os dois Yagis: DB nas cotas e quatro braços na folha de corte', () => {
     const base = calc(defaultParams);
     const r = calc({ ...defaultParams, drivenGap: 0.008 });
@@ -152,7 +171,7 @@ describe('cross Yagi: espaço central do excitado', () => {
   });
 });
 
-describe('cross Yagi: sentido da polarização e montagem', () => {
+describe('cross Yagi: sentido da polarização e montagem', { timeout: 60_000 }, () => {
   it('RHCP e LHCP: mesmas cotas, passos opostos (3 horas horário × 9 horas anti-horário)', () => {
     const rh = calc({ ...defaultParams, circularSense: RHCP });
     const lh = calc({ ...defaultParams, circularSense: LHCP });

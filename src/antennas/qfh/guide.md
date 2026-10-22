@@ -27,8 +27,8 @@ Trena, paquímetro, serra, gabarito ou fita para marcar a torção, ferro de sol
 
 ## 4. Passo a passo
 
-1. Calcule as medidas com a sua frequência. **A** e **E** são o fio de cada espira; **B**/**F** são as alturas e **C**/**G** os diâmetros internos.
-2. Corte a espira maior com **A** e a menor com **E**, com sobra para ajuste.
+1. Calcule as medidas com a sua frequência. **A** e **E** são o comprimento de cada espira; **B**/**F** são as alturas e **C**/**G** os diâmetros internos. **K** é o espaço central: a abertura no meio do braço de cima de cada espira, onde liga o cabo. Ele precisa ser maior que o diâmetro do fio, porque os braços de cima das duas espiras se cruzam no centro.
+2. Corte a espira maior com **I** (= A − K) e a menor com **J** (= E − K), com sobra para ajuste.
 3. Dobre cada espira em retângulo, depois torça meia volta (180°) sobre o cilindro, com a altura final **B** (maior) e **F** (menor). **Sentido da torção:** o mesmo nas duas espiras; para RHCP, enrolamento à ESQUERDA (subindo pelo fio, ele gira no sentido horário visto de cima; visto de lado, o braço da frente sobe da direita para a esquerda); para LHCP, à DIREITA (anti-horário visto de cima; sobe da esquerda para a direita, como uma rosca comum).
 4. Fixe as duas espiras no cilindro cruzadas a 90°, uma sobre a outra, no mesmo eixo.
 5. Faça as ligações na caixa, conforme a seção 5.
