@@ -79,4 +79,4 @@ Depois de uma nova publicação, quem já instalou o app recebe a versão nova a
 
 ## Licença
 
-Ainda não definida. Sem uma licença, o código fica com todos os direitos reservados ao autor; escolha uma (por exemplo MIT ou GPL) antes de aceitar contribuições.
+[MIT](LICENSE) © 2026 Luiz F Sorato. Os livros consultados (pasta `docs/`, fora do repositório) não fazem parte do projeto e têm os direitos dos seus autores.

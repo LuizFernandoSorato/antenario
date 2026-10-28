@@ -2,6 +2,7 @@
   "name": "antenario",
   "private": true,
   "version": "0.1.0",
+  "license": "MIT",
   "type": "module",
   "description": "Ferramenta para projetar, calcular e construir antenas e sistemas de RF",
   "scripts": {
