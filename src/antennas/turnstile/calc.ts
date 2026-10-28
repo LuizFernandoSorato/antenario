@@ -9,7 +9,10 @@
  *    1988, pp. 726–729; Milligan, "Modern Antenna Design", 2ª ed., 2005, pp. 231–237; G. Brown, US 2.086.976.
  *    Os livros NÃO foram consultados diretamente.
  *  - Dipolo: comprimento K·λ/2, com K do diâmetro (`k-factor.ts`), e Z ≈ 73 Ω, como em antennas/dipole (Balanis, §4.6).
- *  - Fase por linha de 1/4 de onda: teoria de linhas de transmissão (Pozar, "Microwave Engineering", cap. 2).
+ *  - Fase por linha de 1/4 de onda: teoria de linhas de transmissão (Pozar, "Microwave Engineering", cap. 2). A mesma montagem
+ *    está em K. Rothammel, "Antene" (trad. sérvia da 9ª ed. alemã), §25.2.3, p. 370: laço de λ/4 com impedância igual à
+ *    resistência de cada dipolo (60 Ω para dipolos esticados, 240 Ω para dobrados), junção de ≈ 30 Ω (≈ 120 Ω com dobrados) e
+ *    banda estreita por causa da linha. O livro também dá o ganho de empilhar andares (2 andares a 0,5λ: ≈ 1,2 dB).
  *
  * Derivação da alimentação (sem coeficiente empírico): com o acoplamento mútuo desprezado (os dipolos são ortogonais),
  * o dipolo A liga direto no ponto de alimentação e o dipolo B por uma linha de 1/4 de onda de impedância Zq. Para uma
@@ -324,7 +327,7 @@ export function calc(params: TurnstileParams): CalcResult {
           `. A linha de 1/4 de onda de ${DIPOLE_RESISTANCE_OHMS} Ω inverte a impedância de um deles e a junção fica perto de ` +
           `${formatNumber(DIPOLE_RESISTANCE_OHMS / 2, 1)} Ω: ROE ≈ ${formatNumber(modelSwr50, 1)}:1 em 50 Ω.`,
         source:
-          'Momentos desta ferramenta (dipolo conferido com Cebik); linha de 1/4 de onda (Pozar)' +
+          'Momentos desta ferramenta (dipolo conferido com Cebik); linha de 1/4 de onda (Pozar; Rothammel, §25.2.3: ≈ 30 Ω com 60 Ω)' +
           (withReflector && !tubes ? '; plano por imagens (Balanis)' : ''),
       },
       gain,

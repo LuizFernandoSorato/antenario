@@ -96,6 +96,10 @@ A impedância na borda da hélice, ≈ 140·C/λ, é bem acima dos 50 Ω do coax
 ## 9. Referências
 
 - J. D. Kraus, R. J. Marhefka, *Antennas for All Applications*, 3ª ed., cap. 7 (antenas helicoidais, modo axial).
+- K. Rothammel, *Antene* (tradução sérvia da 9ª ed. alemã), §26.5.1, p. 401–404: as mesmas fórmulas de Kraus e a Tabela 26.5
+  (ganho e ângulo de 3 a 12 voltas, com diâmetro de 0,31λ e passo de 0,24λ), que esta ferramenta reproduz a 0,1 dB e 1° (o ângulo da tabela foi calculado com circunferência de 1λ).
+  Diferenças: impedância ≈ 136·C/λ (Kraus: 140), ROE ≤ 1,35 numa faixa de 1:1,6, refletor de pelo menos 0,5λ (usual 0,62λ;
+  aqui, 3/4λ, de Kraus), primeira volta a 0,13λ do refletor e transformador de 1/4 de onda de coaxial de ≈ 87 Ω para 60 Ω.
 - Anatel: regulamentação do Serviço de Radioamador (versão vigente).
 - LABRE: plano de bandas (versão vigente).
 - Padrão de irradiação: fator de arranjo de N voltas × cos θ com a fase de Hansen–Woodyard (Kraus, *Antennas*, 1988, via Stutzman e Thiele e teses de hélices axiais; os livros não foram consultados). A diretividade do modelo concorda com as fórmulas empíricas de Kraus a 0,3–1,7 dB.

@@ -20,7 +20,9 @@ function m(r: ReturnType<typeof calc>, label: string): number {
   return x.meters;
 }
 
-const ly3h = { ...defaultParams, frequencyMHz: 436.5, velocityFactor: 0.66, yagiImpedance: 100 };
+// Excitado partido ao meio (sem gamma), com a impedância de cada Yagi informada.
+const split = { ...defaultParams, gammaMatch: 0, drivenGap: 0.01, yagiImpedance: 100 };
+const ly3h = { ...defaultParams, frequencyMHz: 436.5, velocityFactor: 0.66, yagiImpedance: 100, gammaMatch: 0 };
 
 describe('cross Yagi: calc', { timeout: 60_000 }, () => {
   it('linha defasadora a 436,5 MHz bate com os 113 mm do LY3H (VF 0,66)', () => {
@@ -66,8 +68,8 @@ describe('cross Yagi: calc', { timeout: 60_000 }, () => {
 
   it('banda: a quadratura alarga a ROE em relação a um Yagi só, mas a razão axial < 3 dB é mais estreita que ela', () => {
     for (const yagiImpedance of [100, 50]) {
-      const b = calc({ ...defaultParams, yagiImpedance }).expected.bandwidth!;
-      const single = yagiCalc(defaultParams).expected.bandwidth!;
+      const b = calc({ ...split, yagiImpedance }).expected.bandwidth!;
+      const single = yagiCalc(split).expected.bandwidth!;
       expect(b.unit).toBe('MHz');
       expect(b.typical!).toBeGreaterThan(single.typical!);
       const [, lo, hi] = /razão axial < 3 dB\) só de ([\d,]+) a ([\d,]+) MHz/.exec(b.note)!;
@@ -83,7 +85,7 @@ describe('cross Yagi: calc', { timeout: 60_000 }, () => {
   });
 
   it('rejeita entradas inválidas', () => {
-    expect(() => calc({ ...defaultParams, yagiImpedance: 0 })).toThrow(RangeError);
+    expect(() => calc({ ...defaultParams, gammaMatch: 0, yagiImpedance: 0 })).toThrow(RangeError);
     expect(() => calc({ ...defaultParams, velocityFactor: 1.2 })).toThrow(RangeError);
     expect(() => calc({ ...defaultParams, frequencyMHz: -1 })).toThrow(RangeError);
   });
@@ -110,8 +112,8 @@ describe('cross Yagi: folha de corte', { timeout: 60_000 }, () => {
   });
 
   it('com o espaço central padrão (10 mm), os dois excitados viram 4 braços DB', () => {
-    const r = calc(defaultParams);
-    const arms = cutList(defaultParams).find((i) => i.label === 'DB')!;
+    const r = calc(split);
+    const arms = cutList(split).find((i) => i.label === 'DB')!;
     expect(arms.quantity).toBe(4);
     expect(arms.meters).toBeCloseTo((m(r, 'DE') - 0.01) / 2, 12);
   });
@@ -161,14 +163,44 @@ describe('cross Yagi: padrão por momentos', { timeout: 60_000 }, () => {
 
 describe('cross Yagi: espaço central do excitado', { timeout: 60_000 }, () => {
   it('passa para os dois Yagis: DB nas cotas e quatro braços na folha de corte', () => {
-    const base = calc(defaultParams);
-    const r = calc({ ...defaultParams, drivenGap: 0.008 });
+    const base = calc(split);
+    const r = calc({ ...split, drivenGap: 0.008 });
     expect(m(r, 'DE')).toBeCloseTo(m(base, 'DE'), 12);
     expect(m(r, 'DB')).toBeCloseTo((m(base, 'DE') - 0.008) / 2, 12);
     expect(m(r, 'DG')).toBeCloseTo(0.008, 12);
-    const arms = cutList({ ...defaultParams, drivenGap: 0.008 }).find((c) => c.label === 'DB')!;
+    const arms = cutList({ ...split, drivenGap: 0.008 }).find((c) => c.label === 'DB')!;
     expect(arms.quantity).toBe(4);
-    expect(() => calc({ ...defaultParams, drivenGap: -1 })).toThrow(RangeError);
+    expect(() => calc({ ...split, drivenGap: -1 })).toThrow(RangeError);
+  });
+});
+
+describe('cross Yagi com gamma match (padrão)', { timeout: 60_000 }, () => {
+  it('cada Yagi casado a 50 Ω pelo gamma: junção em 25 Ω e transformador T de 35,4 Ω; a impedância informada é ignorada', () => {
+    const r = calc(defaultParams);
+    expect(r.expected.impedance.typical).toBeCloseTo(25, 9);
+    expect(r.assumptions.find((a) => a.name.startsWith('Transformador'))!.value).toContain('35,4');
+    expect(calc({ ...defaultParams, yagiImpedance: 0 }).measurements).toEqual(r.measurements);
+  });
+
+  it('mesmas cotas de gamma do Yagi isolado e cada gamma com metade da potência (tensão / √2)', () => {
+    const r = calc(defaultParams);
+    const y = yagiCalc(defaultParams);
+    for (const label of ['DE', 'GL', 'GS', 'GD']) expect(m(r, label)).toBeCloseTo(m(y, label), 12);
+    const volts = (warnings: { message: string }[]) =>
+      Number(/≈ ([\d.]+) V eficazes/.exec(warnings.find((w) => w.message.startsWith('Capacitor do gamma'))!.message.replace(/\./g, ''))![1]);
+    expect(volts(r.warnings) / volts(y.warnings)).toBeCloseTo(Math.SQRT1_2, 1);
+  });
+
+  it('sugere dois coaxiais de 75 Ω em paralelo para o T e explica o braço vivo com o gamma', () => {
+    const r = calc(defaultParams);
+    expect(r.warnings.some((w) => w.message.includes('dois de 75 Ω em paralelo'))).toBe(true);
+    expect(r.assembly!.steps[0]).toMatch(/barra do gamma/);
+    expect(r.matching!.title).toMatch(/um em cada Yagi/);
+  });
+
+  it('folha de corte: duas barras de gamma', () => {
+    const bar = cutList(defaultParams).find((i) => i.label === 'GL')!;
+    expect(bar.quantity).toBe(2);
   });
 });
 

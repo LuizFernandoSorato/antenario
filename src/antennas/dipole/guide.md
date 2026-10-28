@@ -40,7 +40,8 @@ estanho, multímetro, e um **NanoVNA** ou um **medidor de ROE** para o ajuste.
    (condutor mais grosso, antena mais curta). O K calculado é o de um fio nu no espaço livre.
    Em HF ele dá um dipolo até uns 3 % mais comprido que a regra 468/f do ARRL (K ≈ 0,95),
    que já embute efeitos práticos como isoladores e isolamento do fio. Essa sobra é útil: o
-   ajuste é sempre encurtando.
+   ajuste é sempre encurtando. Em VHF/UHF, com tubos, o livro de K. Rothammel dá K de 1 a 3 %
+   **maior** que o calculado (que confere com o ARRL Antenna Book): mais um motivo para cortar com sobra.
 2. Corte os dois braços um pouco **mais compridos** que **B**, por exemplo 5 % a mais.
    Isso deixa margem para o ajuste. Em HF, deixe ainda uns centímetros para a volta no isolador.
 3. Prenda cada braço ao isolador central, respeitando a distância **C** entre eles.
@@ -96,12 +97,14 @@ isso é aceitável sem rede de casamento.
 
 ## 9. Referências
 
-- ARRL Antenna Book: capítulo sobre dipolos (regra 468/f pés e curva de K × diâmetro; a curva
-  não foi consultada no livro).
+- ARRL Antenna Book, 21ª ed. (2007), p. 2-5: Fig 8 (K × λ/2d, modelo NEC-4.1), usada para conferir
+  o K calculado (0,3 %), e Fig 7 (fio #14 ressoa em 0,488 λ). Regra 468/f pés.
 - L. B. Cebik, W4RNL, "80-Meter Dipoles and Inverted-Vs: A Graphical Scrapbook": modelo NEC-4
   usado para conferir o K calculado pelo diâmetro.
+- K. Rothammel, *Antene* (tradução sérvia da 9ª ed. alemã), §3.1.5, Fig. 3.7: fator de encurtamento
+  × λ/d, de 1 a 3 % acima do ARRL (divergência não resolvida).
 - Projeto webantenna (V. Kopitsa, github.com/vkopitsa/webantenna): ajuste K = 1 − 0,225/ln(λ/2d)
-  da curva do ARRL, usado como conferência secundária.
+  da curva do ARRL, que se afasta da própria figura em até 1,4 %.
 - C. A. Balanis, *Antenna Theory: Analysis and Design*, 4ª ed., §4.6 (dipolo de meia onda).
 - J. D. Kraus, *Antennas*.
 - Anatel: regulamentação do Serviço de Radioamador (versão vigente).

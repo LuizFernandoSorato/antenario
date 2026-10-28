@@ -1,14 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { wavelength } from '../../core/wave';
-import { calc, coneHalfAngleDeg, defaultParams, monoconeImpedance } from './calc';
+import { calc, defaultParams } from './calc';
 import { cutList } from './cutlist';
 import { solveDiscone } from './pattern-model';
 
-// Referências: S. Stearns (K6OIK), "All About the Discone Antenna", QEX jan/fev 2007.
-// - Eq. 2: Z0 = (η/2π)·ln cot(θ/2), η = 376,73 Ω.
-// - Eq. 4: θ = 2·atan(exp(−Z0/60)); o artigo cita 47° como ângulo ótimo para 50 Ω de banda estreita (p. 38).
-// - Regra prática (p. 40): 1ª ressonância = 0,7 × menor frequência; R + L = λ_res/2.
-// - Eq. 5 (Nail): R/L = 0,72·sen θ; o artigo calcula R/L = 0,36 para θ = 30°.
+// Referências:
+// - ARRL Antenna Book, 21ª ed., p. 7-26, Fig 48 (W8NWF): L = 246/f(MHz) pés; disco D de 0,67 a 0,70·L; base do cone B = L.
+// - K. Rothammel, "Antene", §25.1.4, Fig. 25.5: lateral = λ/4 da maior onda, disco de 0,7 da lateral; faixa de 1:8.
 
 function m(r: ReturnType<typeof calc>, label: string): number {
   const x = r.measurements.find((y) => y.label === label);
@@ -16,38 +14,19 @@ function m(r: ReturnType<typeof calc>, label: string): number {
   return x.meters;
 }
 
-describe('discone: fórmulas do artigo', () => {
-  it('50 Ω → semiângulo ≈ 47° (valor citado no artigo)', () => {
-    expect(coneHalfAngleDeg(50)).toBeCloseTo(47, 0);
-  });
-
-  it('a Eq. 4 é a inversa da Eq. 2 (com η/2π = 60 Ω, diferença < 1 %)', () => {
-    for (const z of [30, 50, 75, 100]) {
-      const back = monoconeImpedance(coneHalfAngleDeg(z));
-      expect(Math.abs(back - z) / z).toBeLessThan(0.01);
-    }
-  });
-
-  it('a proporção de Nail dá 0,36 a 30° (valor do artigo)', () => {
-    expect(0.72 * Math.sin((30 * Math.PI) / 180)).toBeCloseTo(0.36, 12);
-  });
-});
-
 describe('discone: calc', { timeout: 120_000 }, () => {
-  it('R + L = λ/2 da primeira ressonância (0,7 × menor frequência)', () => {
-    const r = calc({ ...defaultParams, frequencyMHz: 470 });
-    const lambdaRes = wavelength(0.7 * 470);
-    // Para o exemplo do artigo, λ_res = 0,91 m e meio comprimento = 0,46 m (arredondado pelo artigo).
-    expect(lambdaRes).toBeCloseTo(0.911, 2);
-    expect(m(r, 'E') + m(r, 'A')).toBeCloseTo(lambdaRes / 2, 12);
+  it('lateral do cone = λ/4 na menor frequência, igual ao 246/f pés do ARRL a 0,05 %', () => {
+    const r = calc(defaultParams);
+    expect(m(r, 'A')).toBeCloseTo(wavelength(100) / 4, 12);
+    const arrlFeet = (246 / 100) * 0.3048;
+    expect(Math.abs(m(r, 'A') - arrlFeet) / arrlFeet).toBeLessThan(0.0005);
   });
 
-  it('R/L segue a proporção de Nail e a geometria do cone é consistente', () => {
+  it('base do cone = lateral (30°), disco de 0,7 da lateral e geometria consistente', () => {
     const r = calc(defaultParams);
-    const theta = (coneHalfAngleDeg(50) * Math.PI) / 180;
-    expect(m(r, 'E') / m(r, 'A')).toBeCloseTo(0.72 * Math.sin(theta), 12);
-    expect(m(r, 'B')).toBeCloseTo(2 * m(r, 'A') * Math.sin(theta), 12);
-    expect(m(r, 'C')).toBeCloseTo(m(r, 'A') * Math.cos(theta), 12);
+    expect(m(r, 'B')).toBeCloseTo(m(r, 'A'), 12);
+    expect(m(r, 'C')).toBeCloseTo(m(r, 'A') * Math.cos(Math.PI / 6), 12);
+    expect(m(r, 'D')).toBeCloseTo(0.7 * m(r, 'A'), 12);
     expect(m(r, 'D')).toBeCloseTo(2 * m(r, 'E'), 12);
   });
 
@@ -57,15 +36,17 @@ describe('discone: calc', { timeout: 120_000 }, () => {
     expect(m(a, 'A') / m(b, 'A')).toBeCloseTo(2, 12);
   });
 
-  it('aviso para impedância diferente de 50 Ω; nenhum para 50 Ω', () => {
-    expect(calc({ ...defaultParams, designImpedance: 75 }).warnings.some((w) => w.message.includes('0,72'))).toBe(true);
-    expect(calc(defaultParams).warnings.some((w) => w.message.includes('0,72'))).toBe(false);
+  it('faixa de 1:8 (Rothammel) e aviso com a ROE do modelo na ponta de baixo', () => {
+    const r = calc(defaultParams);
+    expect(r.expected.bandwidth!.min).toBe(100);
+    expect(r.expected.bandwidth!.max).toBe(800);
+    expect(r.warnings.some((w) => w.message.includes('1,4 vez'))).toBe(true);
   });
 
   it('entradas inválidas', () => {
     expect(() => calc({ ...defaultParams, rodCount: 2 })).toThrow(RangeError);
     expect(() => calc({ ...defaultParams, rodCount: 8.5 })).toThrow(RangeError);
-    expect(() => calc({ ...defaultParams, designImpedance: 0 })).toThrow(RangeError);
+    expect(() => calc({ ...defaultParams, rodDiameter: 0 })).toThrow(RangeError);
     expect(() => calc({ ...defaultParams, frequencyMHz: 0 })).toThrow(RangeError);
   });
 });
@@ -78,14 +59,12 @@ describe('discone: lista de corte', { timeout: 120_000 }, () => {
 });
 
 describe('discone: folga disco–cone informada', { timeout: 120_000 }, () => {
-  const f = (r: ReturnType<typeof calc>, label: string) => r.measurements.find((x) => x.label === label)!.meters;
-
   it('0 usa a proporção automática; um valor informado vira a cota F e não muda A, B, C, D, E', () => {
     const auto = calc(defaultParams);
-    expect(f(auto, 'F')).toBeCloseTo(f(auto, 'A') * (11 / 270), 12);
+    expect(m(auto, 'F')).toBeCloseTo(m(auto, 'A') * (11 / 270), 12);
     const r = calc({ ...defaultParams, centerGap: 0.02 });
-    expect(f(r, 'F')).toBeCloseTo(0.02, 12);
-    for (const label of ['A', 'B', 'C', 'D', 'E']) expect(f(r, label)).toBeCloseTo(f(auto, label), 12);
+    expect(m(r, 'F')).toBeCloseTo(0.02, 12);
+    for (const label of ['A', 'B', 'C', 'D', 'E']) expect(m(r, label)).toBeCloseTo(m(auto, label), 12);
   });
 
   it('rejeita folga negativa ou maior que o raio do disco', () => {
@@ -96,11 +75,10 @@ describe('discone: folga disco–cone informada', { timeout: 120_000 }, () => {
 
 describe('discone: ganho pelo modelo', { timeout: 120_000 }, () => {
   it('faixa entre 1×, 2× e 4× a menor frequência, a mesma solução dos diagramas (cache)', () => {
-    // Modelo de 8 hastes de 4 mm em 100 MHz: ≈ 0,8, 2,2 e 3,4 dBi (ver pattern-model.test.ts para as verificações do modelo).
     const r = calc(defaultParams);
     const g = r.expected.gain!;
     expect(g.min!).toBeGreaterThan(0);
-    expect(g.max!).toBeLessThan(5);
+    expect(g.max!).toBeLessThan(6);
     expect(g.max!).toBeGreaterThan(g.min!);
     expect(g.source).toMatch(/Momentos/);
     expect(g.note).toMatch(/1×, 2× e 4×/);

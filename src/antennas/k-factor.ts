@@ -26,13 +26,18 @@ export interface ShorteningFactor {
 }
 
 export const K_SOURCE =
-  'Método dos momentos desta ferramenta (core/dipole-resonance.ts): dipolo reto no espaço livre, conferido com o NEC-4 de ' +
-  'L. B. Cebik, W4RNL, "80-Meter Dipoles and Inverted-Vs" (0,12 %)';
+  'Método dos momentos desta ferramenta (core/dipole-resonance.ts): dipolo reto no espaço livre, conferido com a Fig 8 do ' +
+  'ARRL Antenna Book, 21ª ed., p. 2-5 (0,3 %) e com o NEC-4 de L. B. Cebik, W4RNL (0,12 %)';
 
-/** Aviso comum: o K do modelo é de condutor nu no espaço livre. */
+/**
+ * Aviso comum: o K do modelo é de condutor nu no espaço livre. Cita a divergência com o Rothammel ("Antene", trad. sérvia da 9ª ed.
+ * alemã, Fig. 3.7, p. 39–40: V = 0,955 com λ/d = 80, 0,964 com λ/d = 200), de 1,3 a 2,8 % acima do modelo e do ARRL. Decisão do
+ * usuário (2026-10-28): manter o modelo e citar o Rothammel na nota.
+ */
 export const K_FIELD_NOTE =
-  'O fator K vem do diâmetro do condutor, para condutor nu no espaço livre. Isolamento plástico no fio, solo próximo e ' +
-  'isoladores nas pontas deixam a antena real um pouco mais curta: corte com sobra e encurte medindo a ROE.';
+  'O fator K vem do diâmetro do condutor, para condutor nu no espaço livre (confere com o ARRL Antenna Book). O Rothammel dá ' +
+  'K de 1 a 3 % maior; isolamento plástico, solo próximo e isoladores encurtam a antena real. Corte com sobra (≈ 3 %) e ' +
+  'encurte medindo a ROE.';
 
 export function shorteningFactorFor(diameterM: number, frequencyMHz: number): ShorteningFactor {
   const diameterLambda = diameterM / wavelength(frequencyMHz);

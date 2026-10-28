@@ -209,4 +209,5 @@ export function calc(params: MagneticLoopParams): CalcResult {
   };
 }
 
-// TODO(fonte) [guide.md]: fonte pendente: «Gamma match e acoplamento direto ainda não têm equações com fonte aqui (TODO).…»
+// TODO(fonte) [guide.md]: o gamma do W5QJR (ARRL Antenna Book, 21ª ed., p. 5-19) é só receita, sem equações; a regra de ≈ 1/5
+// do diâmetro para o loop de acoplamento não tem fonte.

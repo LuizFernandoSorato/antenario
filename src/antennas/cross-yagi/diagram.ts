@@ -9,7 +9,7 @@ import { type Diagram, circle, dimLabel, dimension, line, measure, rect, svgDoc,
 import type { CalcResult } from '../types';
 import { armPolarityDiagram, senseOf } from '../circular';
 import { boomPatternPlots } from '../mom-kit';
-import { topView as yagiTopView } from '../yagi/diagram';
+import { gammaDetail, topView as yagiTopView } from '../yagi/diagram';
 import { isolatedElements, solveYagi } from '../yagi/pattern-model';
 import type { CrossYagiParams } from './calc';
 
@@ -43,7 +43,8 @@ function frontView(result: CalcResult, params: CrossYagiParams): Diagram {
   parts.push(circle(cx, cy, 5, 'dg-connector'), rect(cx - 3, cy - 3, 6, 6, 'dg-mast', 1));
   parts.push(text(cx + hr + 8, cy + 4, 'Yagi A (direto)', 'dg-note'));
   parts.push(text(cx + 10, cy - hr - 6, 'Yagi B (pela linha F)', 'dg-note'));
-  parts.push(text(cx + 14, cy + 24, 'centro: isole um Yagi do outro', 'dg-note'));
+  const gammaFed = result.measurements.some((m) => m.label === 'GL');
+  parts.push(text(cx + 14, cy + 24, gammaFed ? 'centro: potencial zero (gamma), pode ir no boom' : 'centro: isole um Yagi do outro', 'dg-note'));
   parts.push(dimension(id, cx - hr, cy, cx + hr, cy, 44, dimLabel(result, 'R', res)));
   parts.push(dimension(id, cx - hd, cy + 6, cx + hd, cy + 6, -44, dimLabel(result, 'DE', res), { labelGap: 4 }));
 
@@ -112,7 +113,15 @@ export function diagrams(result: CalcResult, params: CrossYagiParams): Diagram[]
     directName: 'Yagi A (direto)',
     delayedName: 'Yagi B (linha F)',
   });
-  return [sideView(result, params), frontView(result, params), feed(result, params), polarity, ...patterns(params)];
+  const gamma = gammaDetail(result, params);
+  return [
+    sideView(result, params),
+    frontView(result, params),
+    feed(result, params),
+    ...(gamma ? [{ ...gamma, id: 'cy-gamma', title: 'Detalhe do gamma match (igual nos dois Yagis)', svg: gamma.svg.replaceAll('yg-gamma', 'cy-gamma') }] : []),
+    polarity,
+    ...patterns(params),
+  ];
 }
 
 /**

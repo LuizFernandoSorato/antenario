@@ -45,13 +45,33 @@ export const meta: AntennaMeta = {
       help: 'Se os elementos atravessam ou tocam um boom metálico, o relatório pede um acréscimo. Use 0 para boom isolante (PVC, madeira) com os elementos fixados fora dele.',
     },
     {
-      key: 'drivenGap',
-      label: 'Espaço central do excitado (isolador)',
+      key: 'gammaRodDiameter',
+      label: 'Diâmetro da barra do gamma',
       unit: 'mm',
-      defaultValue: 10,
+      defaultValue: 0,
       toSi: 0.001,
       min: 0,
-      help: 'Distância entre os dois braços do excitado no ponto de alimentação. Conta dentro do comprimento DE (ponta a ponta); só o excitado é partido ao meio.',
+      help:
+        'O excitado é sempre alimentado por gamma match: inteiro, com o coaxial de 50 Ω ligado direto. 0 = automático: 1/3 do elemento ' +
+        '(regra do ARRL) e, se o casamento não fechar, uma barra mais fina.',
+    },
+    {
+      key: 'gammaSpacing',
+      label: 'Espaçamento da barra (entre centros)',
+      unit: 'mm',
+      defaultValue: 0,
+      toSi: 0.001,
+      min: 0,
+      help: '0 = automático: 0,007λ (regra do ARRL) ou o mais próximo disso que deixa a barra entre 15° e 45° elétricos (Tolles).',
+    },
+    {
+      key: 'txPowerW',
+      label: 'Potência de transmissão (tensão no capacitor)',
+      unit: 'W',
+      defaultValue: 100,
+      toSi: 1,
+      min: 0,
+      help: 'Só para calcular a tensão de RF no capacitor do gamma, que define a tensão de trabalho dele.',
     },
   ],
 };

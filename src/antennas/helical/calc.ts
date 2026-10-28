@@ -7,6 +7,11 @@
  * Kraus & Marhefka, *Antennas for All Applications*, 3ª ed., cap. 7 (helical antennas),
  * válidas para o modo axial: 3/4 < C/λ < 4/3, ângulo de passo de 12° a 14° e N > 3.
  * Elas são aproximações de projeto, não resultados exatos.
+ *
+ * As mesmas fórmulas (ganho, ângulo de irradiação, razão axial) estão impressas em K. Rothammel, "Antene" (trad. sérvia da
+ * 9ª ed. alemã), §26.5.1, p. 401–404, com a Tabela 26.5 calculada por elas (teste; o ângulo da tabela usa C = λ, o ganho D = 0,31λ). Diferenças do Rothammel: impedância
+ * Z ≈ 136·C/λ (Kraus: 140), "para C entre 0,75 e 1,35λ"; com S = 0,24λ, ROE ≤ 1,35 numa faixa de 1:1,6; refletor ≥ 0,5λ
+ * (usual 0,62λ; Kraus: 3λ/4), primeira volta a 0,13λ do refletor e fio de ≈ 0,02λ.
  */
 
 import { assertFrequencyMHz, assertPositive, formatNumber, powerRatioToDb } from '../../core/units';
@@ -196,15 +201,17 @@ export function calc(params: HelicalParams): CalcResult {
         min: z * 0.8,
         max: z * 1.2,
         unit: 'Ω',
-        note: 'Resistiva, na alimentação pela borda da hélice (≈ 140·C/λ). A faixa de ±20 % é uma margem desta ferramenta. Meça.',
-        // TODO(fonte): tolerância medida na literatura.
-        source: 'Kraus & Marhefka, Antennas for All Applications, 3ª ed., cap. 7.',
+        note:
+          'Resistiva, na alimentação pela borda da hélice (≈ 140·C/λ; o Rothammel dá 136·C/λ). A faixa de ±20 % é uma margem ' +
+          'desta ferramenta. Meça.',
+        // TODO(fonte): tolerância medida na literatura (as duas fontes só dão o valor central).
+        source: 'Kraus & Marhefka, Antennas for All Applications, 3ª ed., cap. 7; Rothammel, "Antene", §26.5.1',
       },
       gain: {
         typical: gainDbi,
         unit: 'dBi',
         note: 'Fórmula empírica D = 15·N·(C/λ)²·(S/λ); o ganho real fica um pouco abaixo, por perdas e erros de construção.',
-        source: 'Kraus & Marhefka, Antennas for All Applications, 3ª ed., cap. 7',
+        source: 'Kraus & Marhefka, Antennas for All Applications, 3ª ed., cap. 7; Rothammel, "Antene", §26.5.1, Tabela 26.5',
       },
       bandwidth: {
         min: (AXIAL_MODE_C_MIN / c) * f,
@@ -215,7 +222,7 @@ export function calc(params: HelicalParams): CalcResult {
         note:
           'Faixa do modo axial (3/4 < C/λ < 4/3). Com R ≈ 140·C/λ, casada em f0, a ROE nas bordas fica ' +
           `≈ ${formatNumber(Math.max(AXIAL_MODE_C_MAX / c, c / AXIAL_MODE_C_MIN), 2)}:1: o limite é o diagrama, não a ROE.`,
-        source: 'Kraus & Marhefka, cap. 7 (banda de cerca de 1,78:1; R ≈ 140·C/λ)',
+        source: 'Kraus & Marhefka, cap. 7 (banda de cerca de 1,78:1; R ≈ 140·C/λ); Rothammel §26.5.1: ROE ≤ 1,35 em 1:1,6 com S = 0,24λ',
       },
     },
     warnings,

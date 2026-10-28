@@ -9,7 +9,7 @@ import { polarPlot } from '../pattern-kit';
 import { type Diagram, chokeBeads, circle, dimLabel, dimension, line, measure, path, rect, svgDoc, text } from '../diagram-kit';
 import type { CalcResult } from '../types';
 import type { DisconeParams } from './calc';
-import { coneHalfAngleDeg } from './calc';
+import { CONE_HALF_ANGLE_DEG } from './calc';
 import { MAX_MODEL_RODS, PATTERN_MULTIPLES, solveDiscone } from './pattern-model';
 
 function sideView(result: CalcResult, params: DisconeParams): Diagram {
@@ -55,7 +55,7 @@ function sideView(result: CalcResult, params: DisconeParams): Diagram {
     id,
     title: 'Vista lateral (em escala)',
     caption:
-      `Cone com semiângulo de ${formatNumber(coneHalfAngleDeg(params.designImpedance), 1)}° (medido do eixo). A: lateral do cone. ` +
+      `Cone com semiângulo de ${CONE_HALF_ANGLE_DEG}° (medido do eixo). A: lateral do cone. ` +
       'B: diâmetro da base. C: altura. D: diâmetro do disco. F: folga isolante entre o disco e o vértice do cone ' +
       '(exagerada no desenho se for menor que 8 px).',
     svg: svgDoc(

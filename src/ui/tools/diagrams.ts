@@ -212,6 +212,89 @@ export function coaxBalunDiagram(o: { loopLengthM: number; feederOhms: number; b
   };
 }
 
+/** Choke de coaxial: o próprio cabo enrolado em bobina logo abaixo do ponto de alimentação. */
+export function coaxChokeDiagram(o: { lengthM: number; turns: string; coilDiameterM: number; res: LengthResolution }): Diagram {
+  const id = 'coax-choke';
+  const cx = 310;
+  const top = 70;
+  const coilTop = 120;
+  const pitch = 18;
+  const n = 6;
+  const rx = 70;
+  const loops = Array.from({ length: n }, (_, i) => {
+    const y = coilTop + i * pitch;
+    const d = `M${cx - rx} ${y} a${rx} 12 0 1 0 ${2 * rx} 0 a${rx} 12 0 1 0 ${-2 * rx} 0`;
+    return path(d, 'dg-coax') + path(d, 'dg-center');
+  }).join('');
+  const coilBottom = coilTop + (n - 1) * pitch;
+  const parts = [
+    line(80, top, cx - 8, top, 'dg-conductor'),
+    line(cx + 8, top, 540, top, 'dg-conductor'),
+    circle(cx - 8, top, 5, 'dg-terminal'),
+    circle(cx + 8, top, 5, 'dg-terminal'),
+    text(80, top - 14, 'antena (ponto de alimentação)', 'dg-note'),
+    coax(cx, top, cx, coilTop - 12),
+    loops,
+    coax(cx, coilBottom + 12, cx, coilBottom + 70),
+    text(cx + 10, coilBottom + 66, 'ao rádio', 'dg-note'),
+    dimension(id, cx - rx, coilTop - 12, cx + rx, coilTop - 12, -16, `≈ ${formatLength(o.coilDiameterM, o.res)}`),
+    textLines(cx + rx + 24, coilTop + 30, [`${o.turns} espiras`, `${formatLength(o.lengthM, o.res)} de cabo`], 'dg-label'),
+  ].join('');
+  return {
+    id,
+    title: 'Esquema do choke de coaxial',
+    caption:
+      'O próprio cabo de alimentação é enrolado em bobina, espiras lado a lado como um rolo de corda, logo abaixo do ponto de ' +
+      'alimentação. O diâmetro é só o que resulta do comprimento e do número de espiras. Esquemático, fora de escala.',
+    svg: svgDoc(id, 620, 330, 'Choke de coaxial', 'Cabo coaxial enrolado em bobina perto da antena.', parts),
+  };
+}
+
+/** Manga de λ/4: tubo em volta do coaxial, aberto em cima (perto da antena) e fechado embaixo por um disco soldado na malha. */
+export function sleeveBalunDiagram(o: { lengthM: number; tubeMinM: number; tubeMaxM: number; res: LengthResolution }): Diagram {
+  const id = 'coax-sleeve';
+  const cx = 310;
+  const top = 60;
+  const sleeveTop = 84;
+  const sleeveBottom = 264;
+  const half = 34;
+  const parts = [
+    line(80, top, cx - 8, top, 'dg-conductor'),
+    line(cx + 8, top, 540, top, 'dg-conductor'),
+    circle(cx - 8, top, 5, 'dg-terminal'),
+    circle(cx + 8, top, 5, 'dg-terminal'),
+    text(80, top - 14, 'antena (ponto de alimentação)', 'dg-note'),
+    coax(cx, top, cx, sleeveBottom + 70),
+    // Paredes do tubo e disco do fundo, soldado na malha.
+    line(cx - half, sleeveTop, cx - half, sleeveBottom, 'dg-conductor'),
+    line(cx + half, sleeveTop, cx + half, sleeveBottom, 'dg-conductor'),
+    line(cx - half, sleeveBottom, cx + half, sleeveBottom, 'dg-conductor'),
+    text(cx - half - 12, sleeveTop + 6, 'borda aberta', 'dg-note', 'end'),
+    textLines(cx - half - 12, sleeveBottom - 2, ['fundo fechado:', 'disco soldado na malha'], 'dg-note', 'end'),
+    text(cx + 10, sleeveBottom + 66, 'ao rádio', 'dg-note'),
+    dimension(id, cx + half, sleeveTop, cx + half, sleeveBottom, -40, `A = ${formatLength(o.lengthM, o.res)}`, { anchor: 'start' }),
+    // Cota B embaixo do disco, com o texto à direita do cabo (no centro ele cairia sobre o coaxial).
+    dimension(
+      id,
+      cx - half,
+      sleeveBottom,
+      cx + half,
+      sleeveBottom,
+      26,
+      `B = ${formatLength(o.tubeMinM, 'mm')} a ${formatLength(o.tubeMaxM, 'mm')}`,
+      { anchor: 'start', labelDx: half + 10 },
+    ),
+  ].join('');
+  return {
+    id,
+    title: 'Esquema da manga de λ/4',
+    caption:
+      'A: comprimento interno, do disco do fundo à borda aberta. B: diâmetro interno do tubo. O coaxial passa pelo centro, ' +
+      'sem encostar no tubo; só a malha toca o disco do fundo. Esquemático, fora de escala.',
+    svg: svgDoc(id, 620, sleeveBottom + 90, 'Manga de λ/4', 'Tubo em volta do coaxial, logo abaixo do ponto de alimentação.', parts),
+  };
+}
+
 /** Hairpin: grampo de dois fios em curto ligado aos terminais do elemento excitado. */
 export function hairpinDiagram(o: { legLengthM: number; spacingMm: number; res: LengthResolution }): Diagram {
   const id = 'hairpin';

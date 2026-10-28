@@ -51,6 +51,10 @@ const ICONS: Readonly<Record<string, string>> = {
   'single-stub': '<path d="M4 36h40M28 36V10M22 10h12"/><circle cx="28" cy="36" r="2" fill="currentColor"/>',
   // Laço de cabo de meia onda entre dois terminais.
   'coax-balun': '<path d="M4 28h10M34 28h10M14 28a10 10 0 0 1 20 0"/><circle cx="14" cy="28" r="2.5"/><circle cx="34" cy="28" r="2.5"/><text x="24" y="43" font-size="10" text-anchor="middle" fill="currentColor" stroke="none" font-family="system-ui, sans-serif">4:1</text>',
+  // Cabo enrolado em bobina (espiras lado a lado).
+  'coax-choke': '<path d="M4 24h6M38 24h6"/><ellipse cx="15" cy="24" rx="5" ry="12"/><ellipse cx="24" cy="24" rx="5" ry="12"/><ellipse cx="33" cy="24" rx="5" ry="12"/>',
+  // Coaxial no centro de um tubo aberto em cima e fechado embaixo (manga de λ/4).
+  'coax-sleeve': '<path d="M4 8h16M28 8h16M24 8v36M15 14v24M33 14v24M15 38h18"/><circle cx="24" cy="8" r="2.5"/>',
   // Elemento excitado partido ao meio, grampo de dois fios e barra de curto.
   hairpin: '<path d="M4 12h14M30 12h14M18 12v26M30 12v26M15 38h18"/><circle cx="18" cy="12" r="2.5"/><circle cx="30" cy="12" r="2.5"/>',
   // Fonte irradiando para uma pessoa.

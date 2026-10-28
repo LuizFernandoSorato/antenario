@@ -21,6 +21,9 @@ import { isolatedElements, solveYagi } from './pattern-model';
 
 const TOL = 0.004;
 
+// Excitado partido ao meio (sem gamma): os testes do método, do espaço central e da banda com casamento ideal.
+const split = { ...defaultParams, gammaMatch: 0, drivenGap: 0.01 };
+
 function design(length: number) {
   return NBS_DESIGNS.find((d) => d.lengthLambda === length)!;
 }
@@ -149,21 +152,21 @@ describe('Yagi: calc', { timeout: 60_000 }, () => {
 
   it('banda de ROE < 2:1 pelo Q do modelo: estreita no Yagi curto, mais larga no longo; o boom não muda a banda', () => {
     // Valores do modelo (band-model.test.ts confere o Q contra a varredura): 5 elementos em 145 MHz ≈ 2,5 MHz (1,7 %).
-    const short = calc(defaultParams).expected.bandwidth!;
+    const short = calc(split).expected.bandwidth!;
     expect(short.unit).toBe('MHz');
     expect(short.typical!).toBeGreaterThan(2);
     expect(short.typical!).toBeLessThan(3);
     expect(short.note).toMatch(/casamento ideal/);
     expect(short.source).toMatch(/Yaghjian/);
-    const long = calc({ ...defaultParams, elementCount: 11 }).expected.bandwidth!;
+    const long = calc({ ...split, elementCount: 11 }).expected.bandwidth!;
     expect(long.typical!).toBeGreaterThan(short.typical!);
     expect(long.note).toMatch(/conservadora/);
-    expect(calc({ ...defaultParams, boomDiameter: 0 }).expected.bandwidth!.typical).toBeCloseTo(short.typical!, 9);
+    expect(calc({ ...split, boomDiameter: 0 }).expected.bandwidth!.typical).toBeCloseTo(short.typical!, 9);
   });
 
   it('impedância do excitado (dipolo simples) pelo modelo: bem abaixo de 50 Ω com os parasitas do NBS', () => {
     // O dipolo isolado tem ≈ 70 Ω no mesmo modelo (CLAUDE.md); os parasitas próximos do NBS a derrubam para ≈ 20 Ω (valor do modelo).
-    const z = calc(defaultParams).expected.impedance!;
+    const z = calc(split).expected.impedance!;
     expect(z.typical!).toBeGreaterThan(10);
     expect(z.typical!).toBeLessThan(35);
     expect(z.note).toMatch(/j\d/);
@@ -189,7 +192,7 @@ describe('Yagi: calc', { timeout: 60_000 }, () => {
 
 describe('Yagi: lista de corte', { timeout: 60_000 }, () => {
   it('refletor, diretores e excitado; só o excitado é ajustável', () => {
-    const items = cutList({ ...defaultParams, drivenGap: 0 });
+    const items = cutList({ ...split, drivenGap: 0 });
     expect(items.map((i) => i.label)).toEqual(['R', 'D1', 'D2', 'D3', 'DE']);
     expect(items.filter((i) => i.adjustable).map((i) => i.label)).toEqual(['DE']);
   });
@@ -197,7 +200,7 @@ describe('Yagi: lista de corte', { timeout: 60_000 }, () => {
 
 describe('Yagi: método DL6WU (qualquer número de elementos)', { timeout: 60_000 }, () => {
   const lambda = wavelength(432);
-  const base = { ...defaultParams, frequencyMHz: 432, method: 2, elementDiameter: 0.006, boomDiameter: 0 };
+  const base = { ...split, frequencyMHz: 432, method: 2, elementDiameter: 0.006, boomDiameter: 0 };
   const m = (r: ReturnType<typeof calc>, label: string) => r.measurements.find((x) => x.label === label)!.meters;
 
   it('aceita qualquer número de elementos de 3 a 40 (limite da ferramenta) e rejeita o resto', () => {
@@ -275,8 +278,8 @@ describe('Yagi: espaço central do excitado (dentro do comprimento DE)', { timeo
 
   for (const elementCount of [5, 7, 20]) {
     it(`${elementCount} elementos: DE não muda, DB = (DE − DG)/2 e só o excitado é afetado`, () => {
-      const base = calc({ ...defaultParams, elementCount, drivenGap: 0 });
-      const r = calc({ ...defaultParams, elementCount, drivenGap: 0.01 });
+      const base = calc({ ...split, elementCount, drivenGap: 0 });
+      const r = calc({ ...split, elementCount, drivenGap: 0.01 });
       expect(get(r, 'DE')).toBeCloseTo(get(base, 'DE')!, 12);
       expect(get(r, 'DG')).toBeCloseTo(0.01, 12);
       expect(get(r, 'DB')).toBeCloseTo((get(base, 'DE')! - 0.01) / 2, 12);
@@ -287,18 +290,17 @@ describe('Yagi: espaço central do excitado (dentro do comprimento DE)', { timeo
   }
 
   it('a folha de corte troca o excitado por dois braços DB', () => {
-    expect(defaultParams.drivenGap).toBe(0.01);
-    const sem = cutList({ ...defaultParams, drivenGap: 0 });
+    const sem = cutList({ ...split, drivenGap: 0 });
     expect(sem.find((c) => c.label === 'DE')).toBeDefined();
-    const com = cutList({ ...defaultParams, drivenGap: 0.01 });
+    const com = cutList({ ...split, drivenGap: 0.01 });
     expect(com.find((c) => c.label === 'DE')).toBeUndefined();
     const arm = com.find((c) => c.label === 'DB')!;
     expect(arm.quantity).toBe(2);
-    expect(arm.meters).toBeCloseTo((get(calc({ ...defaultParams, drivenGap: 0 }), 'DE')! - 0.01) / 2, 12);
+    expect(arm.meters).toBeCloseTo((get(calc({ ...split, drivenGap: 0 }), 'DE')! - 0.01) / 2, 12);
   });
 
   it('rejeita espaço negativo ou maior que o excitado', () => {
-    expect(() => calc({ ...defaultParams, drivenGap: -0.001 })).toThrow(RangeError);
-    expect(() => calc({ ...defaultParams, drivenGap: 5 })).toThrow(RangeError);
+    expect(() => calc({ ...split, drivenGap: -0.001 })).toThrow(RangeError);
+    expect(() => calc({ ...split, drivenGap: 5 })).toThrow(RangeError);
   });
 });

@@ -4,9 +4,10 @@ import { attenuationDbPer100m } from '../../lines/coax';
 import { type BazookaModelInput, bandWidthMHz, bazookaModel } from './feed-model';
 
 // Referências (todas sobre a double bazooka "comum", tocos em série):
-// - ARRL Antenna Book, 20ª ed. (2003), p. 9.6–9.7, citado por C. Turner, ZS6GM ("The Great Double Bazooka Antenna Debate"):
-//   faixa de ROE < 2:1 só 1,14 vez a de um dipolo simples com o mesmo cabo, e nenhuma melhora de ganho ou de padrão.
-//   O livro não foi lido: o caso (banda, cabo, altura) por trás do 1,14 não é conhecido. TODO(fonte).
+// - ARRL Antenna Book, 21ª ed. (2007), p. 9-6 e 9-7, Fig 11 (lido): antena ressonante em 3,75 MHz, tocos de 43,23 pés de RG-58A;
+//   faixa de ROE < 2:1 só 1,14 vez a de "a simple dipole with the same feeder", e "the bandwidth enhancement is partially due
+//   to the 'fat' antenna wires composed mostly of the coax shield"; nenhuma melhora de ganho ou de padrão. O livro não diz o
+//   diâmetro do dipolo comparado: o teste confere que 1,14 fica entre o dipolo do mesmo diâmetro do coaxial e o de fio fino.
 // - A. Ducros, F5AD (citado pelo mesmo artigo): ≈ 7,5 % a mais de banda de 2:1 e perda extra de 0,1 a 0,5 dB, quase toda nos tocos.
 // - W. Maxwell, W2DU (citado pelo mesmo artigo): o ganho de banda vem das perdas dos tocos. Cap. 18 de Reflections II, não lido.
 // O modelo desta ferramenta não é uma medida: os testes conferem que ele cai na faixa dessas fontes.
@@ -59,6 +60,16 @@ describe('double bazooka: modelo de alimentação', () => {
       expect(r).toBeGreaterThan(1);
       expect(r).toBeLessThan(1.15);
     }
+  });
+
+  it('caso do ARRL (3,75 MHz, RG-58A): 1,14 fica entre a razão contra o dipolo do mesmo diâmetro e contra fio #12', () => {
+    const fat = bazookaModel(input('belden-8259', 3.75));
+    expect(input('belden-8259', 3.75).cable.velocityFactor * (299.792458 / 3.75 / 4 / 0.3048)).toBeCloseTo(43.23, 0); // 43,23 pés
+    const thin = bazookaModel({ ...input('belden-8259', 3.75), radiusM: 0.0020525 / 2 });
+    const vsFat = ratio(fat);
+    const vsThin = bandWidthMHz(fat.band2.bazooka!) / bandWidthMHz(thin.band2.dipole!);
+    expect(vsFat).toBeLessThan(1.14);
+    expect(vsThin).toBeGreaterThan(1.14);
   });
 
   it('perda nos tocos com RG-58 em 80 e 40 m na faixa de 0,1 a 0,5 dB (F5AD)', () => {

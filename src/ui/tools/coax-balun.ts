@@ -49,9 +49,8 @@ export const coaxBalunTool: Tool = {
         {
           level: 'info',
           message:
-            'Chokes de ferrite e de espiras de coaxial (baluns de corrente 1:1) ainda não estão na ' +
-            // TODO(fonte): fonte pendente para o texto abaixo.
-            'ferramenta: o cálculo depende de dados de núcleo e de medições.',
+            'Para um balun de corrente 1:1 (choke), veja a ferramenta "Choke de coaxial": espiras do próprio cabo, da tabela ' +
+            'medida do ARRL Antenna Book, e receitas de ferrite.',
         },
       ],
     };

@@ -1,3 +1,4 @@
+import { formatNumber } from '../../core/units';
 import type { CutItem } from '../types';
 import { type CrossYagiParams, calc } from './calc';
 
@@ -42,6 +43,16 @@ export function cutList(params: CrossYagiParams): CutItem[] {
       note: 'Define a defasagem de 90°. Meça sem a capa nas pontas e confira o VF.',
     },
   ];
+  if (byLabel.has('GL')) {
+    items.splice(items.length - 1, 0, {
+      label: 'GL',
+      name: 'Barra do gamma',
+      quantity: 2, // uma em cada Yagi
+      meters: byLabel.get('GL')!,
+      adjustable: true,
+      note: `Uma por Yagi, diâmetro GD = ${formatNumber(byLabel.get('GD')! * 1000, 2)} mm. Corte mais comprida que GL: a ponte desliza no ajuste.`,
+    });
+  }
   if (byLabel.has('T')) {
     items.push({
       label: 'T',

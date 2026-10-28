@@ -3,3 +3,6 @@ dist/
 coverage/
 *.local
 .vite/
+
+# Livros em PDF (direitos autorais, ≈ 370 MB): só para consulta local
+docs/

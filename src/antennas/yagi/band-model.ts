@@ -18,6 +18,9 @@ export interface QModel {
   q: number;
   /** Diretividade (razão) na frente (+z) em f0, da mesma solução de z0. */
   directivity: number;
+  /** Impedância em f0·(1 − Q_DELTA) e f0·(1 + Q_DELTA), as mesmas soluções do Q (para o Q de uma rede de casamento real). */
+  zMinus: Complex;
+  zPlus: Complex;
 }
 
 const cache = new Map<string, QModel>();
@@ -35,10 +38,14 @@ export function yagiQ(elements: readonly YagiElement[], diameterM: number, f0MHz
   const center = solveElements(elements, diameterM, f0MHz);
   const zc = center.inputImpedance(0);
   const z0 = complex(zc.re, zc.im);
+  const zMinus = at(1 - Q_DELTA);
+  const zPlus = at(1 + Q_DELTA);
   const model = {
     z0,
-    q: impedanceQ(at(1 - Q_DELTA), z0, at(1 + Q_DELTA), f0MHz, f0MHz * Q_DELTA),
+    q: impedanceQ(zMinus, z0, zPlus, f0MHz, f0MHz * Q_DELTA),
     directivity: center.directivity([0, 0, 1]),
+    zMinus,
+    zPlus,
   };
   if (cache.size > 16) cache.clear();
   cache.set(key, model);

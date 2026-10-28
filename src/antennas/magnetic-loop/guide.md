@@ -51,7 +51,13 @@ alicate, NanoVNA ou medidor de ROE e um bom medidor de capacitância.
 O **loop de acoplamento** transforma a resistência minúscula da espira (alguns décimos de ohm) em 50 Ω:
 ele funciona como transformador. Ajuste o diâmetro **C** e a distância ao tubo da espira até a ROE no
 centro da banda ficar baixa. A regra de diâmetro ≈ 1/5 da espira principal é uma boa partida.
-Gamma match e acoplamento direto ainda não têm equações com fonte aqui.
+
+Outra opção, sem loop de acoplamento, é o **gamma do W5QJR** (descrito no ARRL Antenna Book, sem
+equações): um tubo de cobre flexível de 1/4" do comprimento de **um lado do octógono** (1/8 da
+circunferência), encapado com fita isolante e encostado no lado de dentro da espira, a partir do
+centro de um dos lados. Uma ponta é achatada e soldada na espira; a outra vai ao vivo do coaxial, e a
+malha vai ao centro do lado. Ele relata ROE abaixo de 1,7:1 numa faixa de 2:1 de frequência. Com metal
+perto da espira, o Q cai, e é preciso alongar o tubo e ligá-lo mais acima na espira.
 
 ## 6. Ajuste
 
@@ -90,6 +96,8 @@ Gamma match e acoplamento direto ainda não têm equações com fonte aqui.
 - S. Sussman-Fort (AB2EW), "My Loop Antenna", apresentação, 20 nov. 2013, slides 16 a 20 (equações do AA5TB).
 - Owen Duffy, calculadora de espira pequena de transmissão (definição de espira pequena, ganho de 1,76 dBi).
 - F. W. Grover, *Inductance Calculations* (indutância de um anel circular).
+- ARRL Antenna Book, 21ª ed., cap. 5, "Typical Loop Construction" (p. 5-18 e 5-19): gamma do W5QJR e loop de acoplamento de
+  coaxial (WA3ULH). A regra de ≈ 1/5 do diâmetro para o loop de acoplamento não aparece no livro.
 - Anatel: regulamentação do Serviço de Radioamador (versão vigente).
 - LABRE: plano de bandas (versão vigente).
 - Padrão de irradiação: loop pequena, campo ∝ sin θ, D = 1,5 (Balanis, *Antenna Theory*, §5.2). Vale para circunferência abaixo de ≈ λ/10.

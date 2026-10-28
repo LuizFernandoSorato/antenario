@@ -2,9 +2,9 @@
  * Fator de encurtamento K do dipolo de meia onda em função do diâmetro do condutor, pelo método dos momentos (core/mom.ts).
  *
  * K = comprimento ressonante (X = 0) / (λ/2), no espaço livre, fio reto, alimentação no centro. O resultado só depende de d/λ, então
- * o modelo roda em λ = 1 m. É o mesmo cálculo que dá a curva "K × razão λ/2d" do ARRL Antenna Book, mas aqui obtido do modelo, não
- * lido do livro (que não foi consultado). Validação (teste): L. B. Cebik, W4RNL (NEC-4, AWG #12 a 3,75 MHz: 127,7 pés) e os
- * pontos da curva do ARRL lidos pelo projeto webantenna (fonte secundária).
+ * o modelo roda em λ = 1 m. É o mesmo cálculo que dá a curva "K × razão λ/2d" do ARRL Antenna Book (21ª ed., p. 2-5, Fig 8,
+ * NEC-4.1). Validação (teste): essa figura (0,3 %), a Fig 7 do mesmo livro (#14, 0,488 λ) e L. B. Cebik, W4RNL (NEC-4, AWG #12 a
+ * 3,75 MHz: 127,7 pés). O Rothammel ("Antene", Fig. 3.7) dá K de 1,3 a 2,8 % maior; divergência registrada na nota de K.
  */
 
 import { type Vec3, solveWires } from './mom';

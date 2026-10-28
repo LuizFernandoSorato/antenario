@@ -10,8 +10,9 @@ dipolo de λ/2.
 - **Uso:** recepção e transmissão. Muito usada em VHF/UHF (repetidoras, escuta, APRS).
 - **Polarização:** vertical.
 - **Diagrama:** omnidirecional no plano horizontal (igual em todas as direções da bússola).
-- **Impedância:** com radiais horizontais fica bem abaixo de 50 Ω. Inclinar os radiais para
-  baixo eleva a impedância para perto de 50 Ω.
+- **Impedância:** com 4 radiais horizontais fica perto de 22 Ω, bem abaixo de 50 Ω (ARRL Antenna Book;
+  o Rothammel cita ≈ 36 Ω, que é o valor sobre um plano infinito). Inclinar os radiais para baixo eleva a
+  impedância: ≈ 50 Ω a 45°.
 - **Ganho:** o limite teórico sobre plano infinito é de 5,15 dBi. Com radiais elevados o ganho
   real é menor.
 
@@ -84,7 +85,8 @@ ficar alta mesmo na frequência certa, mude a inclinação dos radiais.
 
 ## 9. Referências
 
-- ARRL Antenna Book: verticais e ground planes (regra 234/f pés, efeito da inclinação dos radiais).
+- ARRL Antenna Book: verticais e ground planes (regra 234/f pés); 21ª ed., p. 6-19, Fig 35 (resistência × inclinação dos radiais).
+- K. Rothammel, *Antene* (tradução sérvia da 9ª ed. alemã), §19.4.1 (ground plane com radiais horizontais e inclinados).
 - C. A. Balanis, *Antenna Theory: Analysis and Design*, 4ª ed., §4.7 (monopolo e teoria das imagens).
 - Anatel: regulamentação do Serviço de Radioamador (versão vigente).
 - LABRE: plano de bandas (versão vigente).

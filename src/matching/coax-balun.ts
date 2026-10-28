@@ -9,10 +9,11 @@
  * É um dispositivo de banda estreita: o atraso só é de 180° perto da frequência
  * de projeto. O comprimento físico usa o fator de velocidade do cabo do laço.
  *
- * Fora deste módulo, por falta de modelo com fonte (TODO(fonte)):
- * - choke de ferrite (balun de corrente 1:1): depende do material e do núcleo
- *   (datasheets Fair-Rite/Amidon) e de medições de impedância de modo comum;
- * - choke de espiras de coaxial ("ugly balun") e balun de manga (bazooka).
+ * Fora deste módulo:
+ * - choke de espiras de coaxial ("ugly balun"): tabela medida do ARRL em `data/coax-chokes.ts` (ferramenta "Choke de coaxial");
+ * - choke de ferrite (balun de corrente 1:1): só receitas do ARRL, no mesmo arquivo. Um modelo de impedância de modo comum
+ *   depende do material e do núcleo (datasheets Fair-Rite/Amidon): TODO(fonte);
+ * - choke de manga de λ/4 (sleeve balun, VHF/UHF): `matching/sleeve-balun.ts` (ferramenta "Choke de manga").
  */
 
 import { assertPositive } from '../core/units';

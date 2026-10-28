@@ -24,16 +24,9 @@ export const meta: AntennaMeta = {
       defaultValue: 100,
       toSi: 1,
       min: 0,
-      help: 'A antena funciona bem acima dela. O projeto ajusta a primeira ressonância para 0,7 vezes este valor.',
-    },
-    {
-      key: 'designImpedance',
-      label: 'Impedância de projeto',
-      unit: 'Ω',
-      defaultValue: 50,
-      toSi: 1,
-      min: 20,
-      max: 150,
+      help:
+        'O cone mede λ/4 nesta frequência (regra do ARRL e do Rothammel), e a antena cobre daí para cima. No modelo desta ' +
+        'ferramenta, a ROE só fica abaixo de 2:1 a partir de ≈ 1,4 vez este valor.',
     },
     {
       key: 'rodCount',
@@ -54,7 +47,7 @@ export const meta: AntennaMeta = {
       min: 0,
       help:
         'Espaço isolante entre o disco e o vértice do cone, onde liga o coaxial. 0 usa a proporção do exemplo de Stearns (11 mm para um cone de 270 mm). ' +
-        'Aqui a folga NÃO entra dentro de A e E: R + L = λ/2 vale para as hastes, e a folga fica entre elas.',
+        'Aqui a folga NÃO entra dentro de A e E: as medidas são das hastes, e a folga fica entre elas.',
     },
   ],
 };

@@ -44,7 +44,8 @@ Trena, paquímetro, serra, ferro de solda, estilete, descascador de coaxial, Nan
 
 O dipolo 1 liga direto na junção; o dipolo 2, por um coaxial de 1/4 de onda. Se a impedância dessa linha for igual à resistência de cada
 dipolo (≈ 73 Ω), as correntes ficam **iguais em módulo e a 90°**, e a impedância na junção é a metade, ≈ 36,5 Ω (dois dipolos em paralelo),
-ou seja, ROE ≈ 1,4:1 em 50 Ω sem refletor. Com o refletor o valor muda: **meça**. 
+ou seja, ROE ≈ 1,4:1 em 50 Ω sem refletor. Com o refletor o valor muda: **meça**. O Rothammel descreve a mesma montagem
+com cabo de 60 Ω (junção de ≈ 30 Ω) e avisa que a banda é estreita por causa da linha de fase.
 
 **Sentido da polarização (RHCP ou LHCP).** O campo gira do dipolo adiantado (o direto) para o atrasado (o da linha de fase). Olhando de **baixo para cima**
 (na direção do feixe, com o eixo apontado para o céu), se o braço vivo (condutor central) do dipolo atrasado está 90° no sentido **horário** do braço vivo
@@ -85,5 +86,7 @@ para o sentido que você escolher. Esta regra é derivada do atraso de fase, nã
 - Wikipedia, "Turnstile antenna" (consultada em 2026-10-16), que cita Kraus, *Antennas*, 2ª ed., 1988, pp. 726–729; Milligan, *Modern Antenna Design*, 2ª ed., 2005, pp. 231–237; G. Brown, US 2.086.976. Os livros não foram consultados diretamente.
 - Balanis, *Antenna Theory*, §4.6 (resistência do dipolo de meia onda).
 - Pozar, *Microwave Engineering*, cap. 2 (linha de 1/4 de onda).
+- K. Rothammel, *Antene* (tradução sérvia da 9ª ed. alemã), §25.2.3, p. 370: dipolos cruzados com laço de λ/4 de impedância
+  igual à de cada dipolo (junção de ≈ 30 Ω com 60 Ω) e ganho de empilhar andares.
 - Anatel: regulamentação do Serviço de Radioamador (versão vigente).
 - LABRE: plano de bandas (versão vigente).

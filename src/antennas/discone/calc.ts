@@ -1,14 +1,16 @@
 /**
  * Discone: disco sobre cone, alimentados no vértice do cone.
  *
- * Método (S. Stearns, K6OIK, "All About the Discone Antenna", QEX, jan/fev 2007, pp. 37-43):
- * - a impedância do monocone de semiângulo θ é Z0 = (η/2π)·ln cot(θ/2), com η = 376,73 Ω (Eq. 2);
- *   daí o semiângulo para uma impedância de projeto: θ = 2·atan(exp(−Z0/60)) (Eq. 4, com η/2π ≈ 60);
- * - regra prática (p. 40): a primeira ressonância fica em 0,7 vez a menor frequência de operação, e o
- *   raio do disco somado ao comprimento (lateral) do cone vale meio comprimento de onda dessa ressonância;
- * - proporção do disco, atribuída a Nail (Eq. 5): R/L = 0,72·sen θ, para um projeto de 50 Ω.
- * O artigo trata o semiângulo θ medido a partir do eixo do cone. Estas regras são empíricas: é
- * um ponto de partida, e a ROE tem "vales e picos" ao longo da banda (ver `warnings`).
+ * Medidas pela regra do λ/4 (decisão do usuário em 2026-10-28):
+ * - ARRL Antenna Book, 21ª ed., p. 7-26, Fig 48 (D. Krupp, W8NWF): lateral do cone L = 246/f(MHz) pés (= λ/4 a 0,04 %)
+ *   na menor frequência, diâmetro do disco de 0,67 a 0,70·L, diâmetro da base do cone igual a L (semiângulo de 30°),
+ *   folga de 2 a 12 polegadas; "bom casamento com coaxial de 50 Ω" na faixa.
+ * - K. Rothammel, "Antene" (trad. sérvia da 9ª ed. alemã), §25.1.4, p. 364–365, Fig. 25.5: D = λ/4 da maior onda, disco de
+ *   0,7·D, faixa de 1:8 com ROE ≤ 1,5; o limite real fica ≈ 20 % abaixo da frequência de projeto. Exemplo com cabo de 60 Ω.
+ * Diferença do S. Stearns (K6OIK, "All About the Discone Antenna", QEX jan/fev 2007), a base anterior: primeira ressonância
+ * (R + L = λ/2) em 0,7 × a menor frequência, o que dá um cone ≈ 1,9 vez maior. O modelo por momentos desta ferramenta
+ * (pattern-model.test.ts) dá, para a forma dos livros, ROE ≈ 11:1 em 50 Ω na menor frequência e < 2:1 a partir de ≈ 1,4 vez
+ * ela: dito no aviso. Sem medida. Do Stearns ficaram a proporção da folga automática e a descrição da ROE com vales e picos.
  */
 
 import { assertFrequencyMHz, assertPositive, formatNumber } from '../../core/units';
@@ -20,8 +22,6 @@ import { PATTERN_MULTIPLES, solveDiscone } from './pattern-model';
 export interface DisconeParams {
   /** Menor frequência de operação, em MHz. */
   frequencyMHz: number;
-  /** Impedância de projeto, em ohms. */
-  designImpedance: number;
   /** Número de hastes do cone (e do disco), se feitos de hastes. */
   rodCount: number;
   /** Diâmetro das hastes, em metros. */
@@ -32,35 +32,26 @@ export interface DisconeParams {
 
 export const defaultParams: DisconeParams = {
   frequencyMHz: 100,
-  designImpedance: 50,
   rodCount: 8,
   rodDiameter: 0.004,
   centerGap: 0,
 };
 
-/** Primeira ressonância = 0,7 × a menor frequência de operação (Stearns, QEX 2007, p. 40). */
-export const FIRST_RESONANCE_RATIO = 0.7;
-/** Constante R/L = 0,72·sen θ, atribuída a Nail, para 50 Ω (Stearns, QEX 2007, Eq. 5). */
-export const NAIL_RATIO = 0.72;
-/** Folga entre o disco e o vértice do cone, como fração do comprimento do cone: ver `calc`. */
+/** Lateral do cone = λ/4 na menor frequência (ARRL 21ª ed., Fig 48: 246/f pés; Rothammel, §25.1.4). */
+export const SLANT_OVER_WAVELENGTH = 0.25;
+/** Diâmetro do disco ÷ lateral do cone (Rothammel, §25.1.4: 0,7; ARRL 21ª ed., Fig 48: 0,67 a 0,70). */
+export const DISC_OVER_SLANT = 0.7;
+/** Semiângulo do cone, medido do eixo: a base tem diâmetro igual à lateral (ARRL 21ª ed., Fig 48), sen θ = 1/2. */
+export const CONE_HALF_ANGLE_DEG = 30;
+/** Folga entre o disco e o vértice do cone, como fração da lateral: exemplo de Stearns (QEX 2007), 11 mm para 270 mm. */
 export const GAP_OVER_SLANT = 11 / 270;
-
-/** Semiângulo do cone (graus) para a impedância de projeto: θ = 2·atan(exp(−Z0/60)) (Stearns, Eq. 4). */
-export function coneHalfAngleDeg(z0: number): number {
-  return (2 * Math.atan(Math.exp(-z0 / 60)) * 180) / Math.PI;
-}
-
-/** Impedância do monocone de semiângulo θ (graus): Z0 = (376,73/2π)·ln cot(θ/2) (Stearns, Eq. 2). */
-export function monoconeImpedance(thetaDeg: number): number {
-  const theta = (thetaDeg * Math.PI) / 180;
-  return (376.73 / (2 * Math.PI)) * Math.log(1 / Math.tan(theta / 2));
-}
+/** Faixa citada pelo Rothammel (§25.1.4): 1:8 a partir da menor frequência. */
+export const ROTHAMMEL_RANGE_RATIO = 8;
 
 export function calc(params: DisconeParams): CalcResult {
-  const { frequencyMHz: fLow, designImpedance: z0, rodCount, rodDiameter } = params;
+  const { frequencyMHz: fLow, rodCount, rodDiameter } = params;
   const userGap = params.centerGap ?? 0;
   assertFrequencyMHz(fLow);
-  assertPositive(z0, 'A impedância de projeto');
   assertPositive(rodDiameter, 'O diâmetro das hastes');
   if (!Number.isFinite(userGap) || userGap < 0) {
     throw new RangeError(`A folga deve ser ≥ 0 (recebido: ${userGap}).`);
@@ -69,14 +60,10 @@ export function calc(params: DisconeParams): CalcResult {
     throw new RangeError(`O número de hastes deve ser um inteiro ≥ 3 (recebido: ${rodCount}).`);
   }
 
-  const fResonance = FIRST_RESONANCE_RATIO * fLow;
-  const lambdaRes = wavelength(fResonance);
-  const thetaDeg = coneHalfAngleDeg(z0);
-  const theta = (thetaDeg * Math.PI) / 180;
-  const ratio = NAIL_RATIO * Math.sin(theta); // R/L
-  // R + L = λ_res / 2 e R = ratio · L.
-  const slant = lambdaRes / 2 / (1 + ratio);
-  const discRadius = ratio * slant;
+  const lambda = wavelength(fLow);
+  const theta = (CONE_HALF_ANGLE_DEG * Math.PI) / 180;
+  const slant = SLANT_OVER_WAVELENGTH * lambda;
+  const discRadius = (DISC_OVER_SLANT * slant) / 2;
   const baseDiameter = 2 * slant * Math.sin(theta);
   const height = slant * Math.cos(theta);
   const gap = userGap > 0 ? userGap : GAP_OVER_SLANT * slant;
@@ -96,30 +83,33 @@ export function calc(params: DisconeParams): CalcResult {
   const warnings: CalcWarning[] = [];
   const outOfRange = rangeWarning(meta, fLow);
   if (outOfRange) warnings.push(outOfRange);
-  if (Math.abs(z0 - 50) > 1) {
-    warnings.push({
-      level: 'warning',
-      message:
-        'A proporção do disco R/L = 0,72·sen θ é dada pelo artigo para projetos de 50 Ω. Com outra impedância, ' +
-        'o artigo sugere varrer proporções num simulador (EZNEC) para achar a menor ROE de pico.',
-    });
-  }
   warnings.push(
     {
       level: 'warning',
       message:
-        'A ROE de um discone oscila ao longo da banda (vales e picos). Ela só cai bem abaixo do primeiro vale; ' +
-        'os valores de ROE dependem do projeto e precisam ser medidos. Projetos largos (5 oitavas) pedem ângulo menor: ' +
-        '≈ 39° em vez de ≈ 47° para 50 Ω (Stearns, QEX 2007).',
+        'A ROE de um discone oscila ao longo da banda (vales e picos), e os valores dependem da construção: meça. ' +
+        'Os livros dão a antena como boa a partir da menor frequência (o Rothammel, até ≈ 20 % abaixo dela). No modelo por ' +
+        'momentos desta ferramenta (8 hastes de 4 mm, sem medida), a ROE em 50 Ω é ≈ 11:1 na menor frequência e só fica ' +
+        `abaixo de 2:1 a partir de ≈ 1,4 vez ela (aqui, ≈ ${formatNumber(1.4 * fLow, 0)} MHz). Se a ponta de baixo importa ` +
+        'para transmitir, informe uma frequência menor que a desejada.',
     },
     {
       level: 'warning',
       message:
         (userGap > 0
           ? `A folga de ${formatNumber(gap * 1000, 1)} mm é a que você informou. `
-          : `A folga de ${formatNumber(gap * 1000, 1)} mm segue a proporção do exemplo do artigo (11 mm para um cone de 270 mm). `) +
-        // TODO(fonte): fonte pendente para o texto abaixo.
-        'O artigo não dá regra geral para ela, e A e E não a incluem (R + L = λ/2 vale para as hastes). Ajuste medindo a ROE.',
+          : `A folga de ${formatNumber(gap * 1000, 1)} mm segue a proporção do exemplo de Stearns (11 mm para um cone de 270 mm). `) +
+        // TODO(fonte): regra geral da folga. O ARRL (21ª ed., p. 7-26) só dá a faixa de 2 a 12 polegadas e o Rothammel
+        // (§25.1.4) um exemplo de 100 mm; a frase "A e E não a incluem" é a convenção desta ferramenta.
+        'Não há regra geral para ela (o ARRL fala em 5 a 30 cm, maior nas antenas maiores), e A e E não a incluem ' +
+        '(as medidas dos livros são das hastes). Ajuste medindo a ROE.',
+    },
+    {
+      level: 'info',
+      message:
+        `Medidas pela regra do λ/4 do ARRL Antenna Book e do Rothammel. O artigo de Stearns (QEX 2007) dimensiona um cone ` +
+        `≈ 1,9 vez maior, com a primeira ressonância em 0,7 × a menor frequência (aqui, lateral de ≈ ` +
+        `${formatNumber(stearnsSlant(fLow) * 100, 0)} cm).`,
     },
     {
       level: 'info',
@@ -143,23 +133,22 @@ export function calc(params: DisconeParams): CalcResult {
     measurements,
     assumptions: [
       { name: 'Menor frequência de operação', value: `${formatNumber(fLow, 2)} MHz` },
-      { name: 'Primeira ressonância', value: `${formatNumber(fResonance, 2)} MHz (0,7 × a menor)`, source: 'Stearns, QEX 2007, p. 40' },
-      { name: 'Semiângulo do cone (θ)', value: `${formatNumber(thetaDeg, 1)}° (ângulo total ${formatNumber(2 * thetaDeg, 1)}°)`, source: 'Stearns, Eq. 4: θ = 2·atan(exp(−Z0/60))' },
-      { name: 'Raio do disco ÷ lateral do cone (R/L)', value: formatNumber(ratio, 3), source: 'Nail, via Stearns, Eq. 5: 0,72·sen θ' },
-      { name: 'Disco + cone', value: `R + L = λ/2 da primeira ressonância = ${formatNumber(lambdaRes / 2, 3)} m`, source: 'Stearns, QEX 2007, p. 40' },
+      { name: 'Lateral do cone (L)', value: `λ/4 = ${formatNumber(slant, 3)} m`, source: 'ARRL Antenna Book 21ª ed., p. 7-26, Fig 48 (246/f pés); Rothammel, §25.1.4' },
+      { name: 'Semiângulo do cone (θ)', value: `${CONE_HALF_ANGLE_DEG}° (base com diâmetro igual a L)`, source: 'ARRL Antenna Book 21ª ed., Fig 48' },
+      { name: 'Diâmetro do disco', value: `${formatNumber(DISC_OVER_SLANT, 2)} × L`, source: 'Rothammel, §25.1.4 (0,7); ARRL, Fig 48 (0,67 a 0,70)' },
       { name: 'Hastes', value: `${rodCount} no cone e ${rodCount} no disco, de ${formatNumber(rodDiameter * 1000, 1)} mm (ou chapa)` },
     ],
     expected: {
       impedance: {
-        typical: z0,
+        typical: 50,
         unit: 'Ω',
         note:
-          'Impedância nominal de projeto do cone (Z0). A impedância real varia com a frequência e a ROE tem vales e picos; ' +
-          'o artigo mostra, por simulação, um projeto de 50 Ω com ROE mínima de ≈ 1,4 perto de 500 MHz. Meça.',
-        source: 'Stearns, QEX 2007, Eqs. 2 e 4 e Fig. 9',
+          'O ARRL diz que casa bem com coaxial de 50 Ω na faixa; o Rothammel usa cabo de 60 Ω com ROE ≤ 1,5. A impedância ' +
+          'varia com a frequência e a ROE tem vales e picos. Meça.',
+        source: 'ARRL Antenna Book 21ª ed., p. 7-26; Rothammel, §25.1.4',
       },
-      // Diretividade máxima do modelo por momentos (pattern-model.ts) nas frequências dos diagramas. TODO(fonte): sem medida nem
-      // comparação com o artigo do Stearns.
+      // Diretividade máxima do modelo por momentos (pattern-model.ts) nas frequências dos diagramas. TODO(fonte): sem medida.
+      // O Rothammel dá ≈ 3 dB abaixo do dipolo, sem dizer em que frequência nem em que ângulo.
       gain: {
         min: Math.min(...gains),
         max: Math.max(...gains),
@@ -171,11 +160,20 @@ export function calc(params: DisconeParams): CalcResult {
       },
       bandwidth: {
         min: fLow,
+        max: ROTHAMMEL_RANGE_RATIO * fLow,
         unit: 'MHz',
-        note: 'Funciona a partir da menor frequência de projeto, subindo por várias oitavas (o artigo trata projetos de 1 a 5 oitavas). O limite superior depende da ROE que você aceita; meça.',
-        source: 'Stearns, QEX 2007',
+        note:
+          'Faixa de 1:8 com ROE ≤ 1,5 pelo Rothammel. No modelo desta ferramenta, ROE < 2:1 só a partir de ≈ 1,4 vez a ' +
+          'menor frequência, com picos ao longo da banda. Meça.',
+        source: 'Rothammel, §25.1.4; momentos desta ferramenta (8 hastes)',
       },
     },
     warnings,
   };
+}
+
+/** Lateral do cone pelo Stearns (QEX 2007, p. 40 e Eqs. 4 e 5, projeto de 50 Ω), só para comparação no aviso. */
+function stearnsSlant(fLow: number): number {
+  const theta = 2 * Math.atan(Math.exp(-50 / 60));
+  return wavelength(0.7 * fLow) / 2 / (1 + 0.72 * Math.sin(theta));
 }

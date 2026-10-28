@@ -3,11 +3,11 @@
  * (posições e comprimentos proporcionais), cada um com a sua cota.
  */
 
-import { esc, type Diagram, dimension, line, measure, rect, svgDoc, text } from '../diagram-kit';
-import { formatLength, lengthResolutionForFrequency } from '../../core/units';
+import { esc, type Diagram, circle, dimLabel, dimension, line, measure, rect, svgDoc, text } from '../diagram-kit';
+import { formatLength, formatNumber, lengthResolutionForFrequency } from '../../core/units';
 import type { CalcResult } from '../types';
 import type { YagiParams } from './calc';
-import { elementPositionsLambda } from './calc';
+import { elementPositionsLambda, gammaFor } from './calc';
 import { wavelength } from '../../core/wave';
 import { boomPatternPlots } from '../mom-kit';
 import { isolatedElements, solveYagi } from './pattern-model';
@@ -112,6 +112,66 @@ export function topView(result: CalcResult, params: YagiParams): Diagram {
 }
 
 /**
+ * Detalhe do gamma match, visto de cima, FORA DE ESCALA (a barra é curta perto do elemento e o espaçamento some): excitado, barra,
+ * ponte de curto, capacitor e conector, com as cotas GL, GS e GD. Só existe com o gamma (cota GL) e com o casamento fechado.
+ */
+export function gammaDetail(result: CalcResult, params: YagiParams): Diagram | null {
+  const design = result.measurements.some((m) => m.label === 'GL') ? gammaFor(params).gamma.design : null;
+  if (!design?.ok) return null;
+  const id = 'yg-gamma';
+  const res = lengthResolutionForFrequency(params.frequencyMHz);
+  const cx = 190; // centro do excitado (eixo do boom)
+  const ey = 180; // eixo do excitado
+  const ry = 110; // eixo da barra
+  const capX = cx + 24; // início da barra, logo depois do boom; o capacitor fica no fio vertical acima dela
+  const strapX = cx + 310; // meio da ponte de curto
+  const conY = ry - 46; // conector, acima do capacitor
+  const dimOffset = 46; // cota GL, abaixo do excitado
+  const parts: string[] = [];
+  parts.push(
+    // Boom perpendicular ao excitado e o eixo do centro (origem da cota GL).
+    rect(cx - 8, 34, 16, ey + dimOffset - 26, 'dg-mast', 1),
+    text(cx, 26, 'boom', 'dg-note', 'middle'),
+    line(cx, 34, cx, ey + dimOffset + 6, 'dg-ext'),
+    line(30, ey, 620, ey, 'dg-conductor'),
+    // Barra, do capacitor até a ponte, e a ponte de curto (atravessa o elemento).
+    line(capX, ry, strapX, ry, 'dg-conductor'),
+    line(strapX, ry - 6, strapX, ey + 6, 'dg-conductor'),
+    // Conector e capacitor em série no vivo (duas placas na horizontal), descendo até a ponta da barra.
+    circle(capX, conY, 7, 'dg-connector'),
+    line(capX, conY + 7, capX, ry - 19, 'dg-ext'),
+    line(capX - 11, ry - 19, capX + 11, ry - 19, 'dg-conductor'),
+    line(capX - 11, ry - 13, capX + 11, ry - 13, 'dg-conductor'),
+    line(capX, ry - 13, capX, ry, 'dg-ext'),
+    // Malha ao centro do excitado (no boom).
+    line(capX - 6, conY + 4, cx + 2, ey - 4, 'dg-ext'),
+    text(capX + 16, conY + 4, 'coaxial: vivo → capacitor → barra', 'dg-note'),
+    text(capX + 18, ry - 12, `C ≈ ${formatNumber(design.capacitancePF, 1)} pF`, 'dg-label'),
+    text(cx - 14, ry + 40, 'malha → centro', 'dg-note', 'end'),
+    text((capX + strapX) / 2 + 40, ry - 10, `barra, ${dimLabel(result, 'GD', res)}`, 'dg-label', 'middle'),
+    text(strapX, ry - 34, 'ponte de curto', 'dg-note', 'middle'),
+    text(strapX, ry - 20, '(desliza no ajuste)', 'dg-note', 'middle'),
+    text(34, ey - 10, '← outra metade (sem barra)', 'dg-note'),
+    text(620, ey - 10, 'ponta →', 'dg-note', 'end'),
+    // GL: do eixo do centro até o meio da ponte; GS: do eixo do excitado ao eixo da barra, ao lado da ponte.
+    dimension(id, cx, ey, strapX, ey, dimOffset, dimLabel(result, 'GL', res)),
+    text((cx + strapX) / 2, ey + dimOffset + 30, 'do centro do excitado até o meio da ponte de curto', 'dg-note', 'middle'),
+    dimension(id, strapX + 8, ey, strapX + 8, ry, 28, dimLabel(result, 'GS', res), { anchor: 'start' }),
+    text(30, ey + dimOffset + 56, 'Fora de escala: as medidas estão nas cotas.', 'dg-note'),
+  );
+  return {
+    id,
+    title: 'Detalhe do gamma match (vista de cima, fora de escala)',
+    caption:
+      'Excitado inteiro, preso pelo centro (no boom). A barra corre ao lado de UMA das metades, a GS entre os centros, e a ponte de curto a ' +
+      'liga ao elemento. GL vai do centro do excitado (eixo do boom) até o meio da ponte; a barra começa junto do centro, então tem ' +
+      'praticamente o comprimento GL (corte com sobra, porque a ponte desliza). O vivo do coaxial vai à barra pelo capacitor; a malha, ao centro do excitado. ' +
+      'Ajuste: o capacitor para a menor ROE; se não chegar perto de 1:1, mude a ponte e repita.',
+    svg: svgDoc(id, 640, ey + dimOffset + 72, 'Yagi: detalhe do gamma match', 'Barra paralela ao excitado, ponte de curto, capacitor em série e conector.', parts.join('')),
+  };
+}
+
+/**
  * Padrões do Yagi por método dos momentos (ver `pattern-model.ts`). Validado contra o ganho medido dos seis projetos do NBS TN 688
  * (diferença de até 0,5 dB) e contra o estimador do DL6WU (até 0,6 dB). O cálculo da Yagi já limita o número de elementos ao do modelo.
  */
@@ -128,5 +188,6 @@ function patterns(_result: CalcResult, params: YagiParams): Diagram[] {
 }
 
 export function diagrams(result: CalcResult, params: YagiParams): Diagram[] {
-  return [topView(result, params), ...patterns(result, params)];
+  const gamma = gammaDetail(result, params);
+  return [topView(result, params), ...(gamma ? [gamma] : []), ...patterns(result, params)];
 }

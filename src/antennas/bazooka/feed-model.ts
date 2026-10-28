@@ -1,9 +1,9 @@
 /**
  * Modelo da impedância de entrada da double bazooka: dipolo em paralelo com dois tocos de coaxial em série.
  *
- * Circuito (ARRL Antenna Book, 20ª ed., 2003, p. 9.6–9.7, como descrito por C. Turner, ZS6GM, "The Great Double Bazooka
- * Antenna Debate", https://www.zs6stn.org.za/ResourceArticles/Download/17; a mesma análise de W. Maxwell, W2DU, Reflections II,
- * cap. 18, que NÃO foi lido: TODO(fonte)): a face EXTERNA da malha e os fios das pontas formam o dipolo; por DENTRO, cada
+ * Circuito (ARRL Antenna Book, 21ª ed., 2007, p. 9-6 e 9-7: dipolo com dois tocos de λ/4 de coaxial em série, ligados nos
+ * terminais; C. Turner, ZS6GM, "The Great Double Bazooka Antenna Debate", https://www.zs6stn.org.za/ResourceArticles/Download/17;
+ * W. Maxwell, W2DU, Reflections II, cap. 18, não lido): a face EXTERNA da malha e os fios das pontas formam o dipolo; por DENTRO, cada
  * metade do coaxial é um toco de λ/4 em curto na ponta. No centro, a malha é cortada e o vivo é contínuo, então os dois tocos
  * ficam em SÉRIE entre os terminais, em PARALELO com o dipolo:
  *

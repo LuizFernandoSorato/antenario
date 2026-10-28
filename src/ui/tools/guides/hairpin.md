@@ -26,3 +26,7 @@ Um grampo de dois fios paralelos, em curto na ponta, ligado aos terminais do ele
 ## Transmissão
 
 O grampo e a barra de curto conduzem **corrente alta**: use fio grosso e conexão firme. Nos primeiros testes com potência, observe se há aquecimento.
+
+## Referências
+
+- ARRL Antenna Book, 19ª ed., cap. 26, "The Hairpin and Beta Matches" (p. 26-10 e 26-11): rede L, exemplo de 20 Ω para 50 Ω em 14 MHz e fator de velocidade de 97,5 % da linha aberta. O ponto central do grampo é neutro e pode ser ligado ao boom; afastar os fios equivale a alongar o grampo.

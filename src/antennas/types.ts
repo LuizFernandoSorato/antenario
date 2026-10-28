@@ -105,6 +105,8 @@ export interface CalcResult {
   warnings: CalcWarning[];
   /** Método de montagem que depende da entrada (por exemplo, o sentido da polarização circular); a UI mostra como seção própria. */
   assembly?: AssemblyGuide;
+  /** Montagem e ajuste da rede de casamento calculada (por exemplo, o gamma match da Yagi); a UI mostra como seção própria. */
+  matching?: AssemblyGuide;
 }
 
 /** Passo a passo de montagem específico da configuração escolhida. */

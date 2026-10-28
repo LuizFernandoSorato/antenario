@@ -31,19 +31,15 @@ export const meta: AntennaMeta = {
     yagiParam('elementCount'),
     { ...yagiParam('elementDiameter'), defaultValue: 3.2, help: 'LY3H cita varetas de alumínio de 3,2 mm (comentário na página); o comprimento depende do diâmetro.' },
     yagiParam('boomDiameter'),
-    yagiParam('drivenGap'),
-    circularSenseParam(),
     {
-      key: 'yagiImpedance',
-      label: 'Impedância de cada Yagi no ponto de alimentação',
-      unit: 'Ω',
-      defaultValue: 100,
-      toSi: 1,
-      min: 0,
+      ...yagiParam('gammaRodDiameter'),
       help:
-        'Medida ou estimada. O LY3H mediu 100 Ω em cada Yagi (excitado dobrado). Com 100 Ω, os dois em paralelo dão 50 Ω e não precisa de ' +
-        'transformador. Um dipolo simples dentro de um Yagi costuma ficar bem abaixo de 50 Ω: meça no NanoVNA antes.',
+        'Cada Yagi tem o seu gamma match, que o casa a 50 Ω; os excitados ficam inteiros e podem ser presos no boom metálico. A junção dá 25 Ω e o ' +
+        'transformador T leva a 50 Ω. 0 = automático: 1/3 do elemento (ARRL) e, se o casamento não fechar, uma barra mais fina.',
     },
+    yagiParam('gammaSpacing'),
+    { ...yagiParam('txPowerW'), help: 'Potência total; cada gamma recebe a metade. Só para a tensão de RF no capacitor.' },
+    circularSenseParam(),
     {
       key: 'velocityFactor',
       label: 'Fator de velocidade do coaxial defasador (VF)',

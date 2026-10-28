@@ -10,9 +10,13 @@ cone e o **vivo** no centro do disco.
   scanner: aviação, rádio local, VHF e UHF, tudo numa antena só.
 - **Polarização:** vertical.
 - **Diagrama:** omnidirecional no plano horizontal.
-- **Banda:** a partir da menor frequência de projeto, por várias oitavas (o artigo-base trata de 1 a 5
-  oitavas). Ao contrário de um dipolo, não é "uma frequência só".
-- **ROE:** oscila ao longo da banda, com vales e picos. Só cai bem abaixo do primeiro vale.
+- **Medidas:** regra do ARRL Antenna Book e do Rothammel: a lateral do cone mede **λ/4 na menor frequência**,
+  a base do cone tem o mesmo diâmetro que a lateral (semiângulo de 30°) e o disco tem 0,7 da lateral.
+- **Banda:** a partir da menor frequência, por várias oitavas (o Rothammel cita 1:8 com ROE ≤ 1,5). Ao contrário
+  de um dipolo, não é "uma frequência só".
+- **ROE:** oscila ao longo da banda, com vales e picos. Na ponta de baixo, o modelo desta ferramenta é mais
+  pessimista que os livros: ROE ≈ 11:1 na menor frequência e abaixo de 2:1 só a partir de ≈ 1,4 vez ela (sem medida).
+  Se a ponta de baixo importar, informe uma frequência menor que a desejada.
 
 ## 2. Materiais
 
@@ -48,9 +52,9 @@ para o cone e NanoVNA ou analisador de antena.
 
 ## 5. Alimentação e casamento
 
-O cone foi dimensionado para uma impedância nominal de projeto (50 Ω). Não há casamento especial: o
-ângulo do cone **é** o casamento (Z0 = 60·ln cot(θ/2)). Use choke de corrente no coaxial. Se a folga entre
-o disco e o cone mudar, a ROE muda: ela é o ajuste fino.
+Não há casamento especial: o ARRL diz que a antena casa bem com coaxial de 50 Ω na faixa, e o Rothammel usa
+a mesma forma com cabo de 60 Ω. Use choke de corrente no coaxial. Se a folga entre o disco e o cone mudar, a ROE
+muda: ela é o ajuste fino.
 
 ## 6. Ajuste
 
@@ -62,11 +66,13 @@ o disco e o cone mudar, a ROE muda: ela é o ajuste fino.
 
 ## 7. Erros comuns
 
-- Disco grande demais e cone comprido demais: o desenho certo é o disco de raio R ≈ 0,72·sen θ × L.
+- Disco grande demais: o desenho certo é o disco com 0,7 da lateral do cone.
 - Ligar o vivo no cone e a malha no disco (invertido).
 - Esquecer o choke: o cabo vira parte da antena.
-- Primeira ressonância sobre a menor frequência de uso: a ROE dispara abaixo dela. O projeto deixa a
-  ressonância em 0,7 vez a menor frequência por esse motivo.
+- Esperar ROE baixa exatamente na menor frequência. O Rothammel diz que o limite real fica ≈ 20 % abaixo da
+  frequência de projeto; o modelo por momentos desta ferramenta diz o contrário (ROE < 2:1 só a partir de ≈ 1,4 vez).
+  Nenhum dos dois foi medido aqui: confira a ROE na ponta de baixo antes de transmitir nela. O artigo de Stearns
+  (QEX 2007) prefere um cone ≈ 1,9 vez maior, com a primeira ressonância em 0,7 vez a menor frequência.
 - Metal perto do disco (calha, grade, mastro grosso logo acima).
 
 ## 8. Notas de transmissão e segurança
@@ -83,8 +89,14 @@ o disco e o cone mudar, a ROE muda: ela é o ajuste fino.
 
 ## 9. Referências
 
+- ARRL Antenna Book, 21ª ed., p. 7-26, Fig 48 (D. Krupp, W8NWF): L = 246/f (pés), disco de 0,67 a 0,70·L, base do cone = L,
+  folga de 2 a 12 polegadas. Base das medidas.
+- K. Rothammel, *Antene* (tradução sérvia da 9ª ed. alemã), §25.1.4, p. 364–365: lado do cone de λ/4 na maior onda, disco de
+  0,7 do lado (Fig. 25.5), faixa de 1:8 com ROE ≤ 1,5, ganho ≈ 3 dB abaixo do dipolo, exemplo de 85 a 500 MHz com cabo de 60 Ω.
+  Base das medidas e da faixa.
 - S. Stearns (K6OIK), "All About the Discone Antenna: Antenna of Mysterious Origin and Superb Broadband
-  Performance", *QEX*, jan/fev 2007, pp. 37-43 (Eqs. 1 a 5; regra de 0,7 da menor frequência).
+  Performance", *QEX*, jan/fev 2007, pp. 37-43: proporção da folga automática, ROE com vales e picos e o projeto
+  maior citado acima (comparação).
 - Anatel: regulamentação do Serviço de Radioamador (versão vigente).
 - LABRE: plano de bandas (versão vigente).
-- Padrão de irradiação: método dos momentos (Harrington, 1968) sobre hastes de fio (cada par disco+cone é um fio com a fonte na folga), a λ/12 por trecho, no espaço livre e sem coaxial nem mastro. Verificado no limite de baixa frequência (dipolo curto, ≈ 1,6 dBi), na convergência com a discretização e na ROE mínima (≈ 1,5 contra ≈ 1,4 citada por Stearns). Não foi comparado com padrões medidos; nas frequências altas o modelo mostra lóbulos e ondulação em azimute que dependem do número de hastes.
+- Padrão de irradiação: método dos momentos (Harrington, 1968) sobre hastes de fio (cada par disco+cone é um fio com a fonte na folga), a λ/12 por trecho, no espaço livre e sem coaxial nem mastro. Verificado no limite de baixa frequência (dipolo curto, ≈ 1,6 dBi), na convergência com a discretização e na ROE mínima na faixa (< 1,5, como diz o Rothammel). Não foi comparado com padrões medidos; nas frequências altas o modelo mostra lóbulos e ondulação em azimute que dependem do número de hastes.

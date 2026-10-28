@@ -17,9 +17,10 @@ um pouco a do dipolo. Essa é a promessa de "banda larga".
 - **Ganho:** o de um dipolo (2,15 dBi no espaço livre), menos a pequena perda nos tocos.
 - **Impedância:** cerca de 70 Ω no espaço livre, como o dipolo. ROE ≈ 1,4:1 em cabo de 50 Ω.
 - **Banda:** só um pouco maior que a do dipolo. O ARRL Antenna Book cita 1,14 vez a banda de
-  ROE 2:1 de um dipolo simples. O modelo da ferramenta dá entre 1,04 e 1,10 vez, conforme o
-  cabo e a frequência. Parte desse ganho de banda vem da própria **perda** nos tocos
-  (análise de W2DU).
+  ROE 2:1 de um dipolo simples (em 3,75 MHz, tocos de RG-58A), e diz que parte disso vem da
+  malha do coaxial, mais grossa que um fio. A ferramenta compara com um dipolo do mesmo diâmetro
+  do coaxial e dá entre 1,04 e 1,10 vez, conforme o cabo e a frequência. Outra parte do ganho de
+  banda vem da própria **perda** nos tocos (análise de W2DU).
 
 **Para que serve, então?** É uma forma válida de fazer um dipolo para uma banda, com o
 comprimento quase todo em coaxial. Não espere milagres: um dipolo de fio com um bom choke
@@ -127,8 +128,9 @@ tocos com VF errado não ressoam junto com o dipolo.
 
 ## 9. Referências
 
-- ARRL Antenna Book, 20ª ed. (2003), p. 9.6–9.7: double bazooka e a variante com tocos
-  em paralelo (citado por ZS6GM; o livro não foi consultado diretamente).
+- ARRL Antenna Book, 21ª ed. (2007), p. 9-6 e 9-7: double bazooka (Fig 11, 1,14 vez a banda
+  de um dipolo simples) e a variante com tocos em paralelo (Fig 12, 1,55 vez, com eficiência de
+  ≈ 80 % nas bordas da faixa de 2:1).
 - C. Turner, ZS6GM, "The Great Double Bazooka Antenna Debate" (zs6stn.org.za).
 - W. Maxwell, W2DU, "The Broadband Double Bazooka Antenna: How Broad Is It?", cap. 18 de
   *Reflections II* (2001).

@@ -144,6 +144,7 @@ function renderResult(
 
     ${renderDiagrams(antenna.diagrams(params))}
     ${renderAssembly(result.assembly)}
+    ${renderAssembly(result.matching)}
     ${renderWarnings(result.warnings)}
 
     <h3>Medidas</h3>

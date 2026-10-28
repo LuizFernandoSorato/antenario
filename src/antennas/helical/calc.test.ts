@@ -23,7 +23,24 @@ function measure(result: ReturnType<typeof calc>, label: string): number {
   return m.meters;
 }
 
+// K. Rothammel, "Antene" (trad. sérvia da 9ª ed. alemã), §26.5.1, Tabela 26.5 (p. 403): ganho sobre o dipolo de meia onda (dB)
+// e ângulo de irradiação (°) por número de voltas, pelas fórmulas de Kraus com S = 0,24λ. O ganho confere com D = 0,31λ
+// (C = π·0,31λ ≈ 0,974λ, dBi − 2,15); o ângulo NÃO: confere com C = λ (com 0,974λ sairia 1,3 a 1,9° maior), e a tabela
+// parece truncar ao grau. Tolerâncias: 0,15 dB (desvio máximo 0,10 dB, com 4 voltas) e 1°.
+const ROTHAMMEL_26_5: readonly (readonly [turns: number, dBd: number, deg: number])[] = [
+  [3, 7.9, 61], [4, 9.1, 53], [5, 10.2, 47], [6, 11.0, 43], [7, 11.7, 40],
+  [8, 12.3, 37], [9, 12.8, 35], [10, 13.2, 33], [11, 13.6, 31.5], [12, 14.0, 30],
+];
+
 describe('helicoidal: fórmulas de Kraus', () => {
+  it('reproduz a Tabela 26.5 do Rothammel (S = 0,24λ; ganho em dBd com D = 0,31λ, ângulo com C = λ)', () => {
+    const c = Math.PI * 0.31;
+    for (const [n, dBd, deg] of ROTHAMMEL_26_5) {
+      expect(Math.abs(10 * Math.log10(directivity(n, c, 0.24)) - 2.15 - dBd)).toBeLessThan(0.15);
+      expect(Math.abs(halfPowerBeamwidthDeg(n, 1, 0.24) - deg)).toBeLessThan(1);
+    }
+  });
+
   it('diretividade N = 10, C = λ, S = λ/4', () => {
     expect(directivity(10, 1, 0.25)).toBeCloseTo(37.5, 12);
     expect(10 * Math.log10(directivity(10, 1, 0.25))).toBeCloseTo(15.74, 2);

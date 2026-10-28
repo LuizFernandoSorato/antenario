@@ -51,7 +51,7 @@ export const hairpinTool: Tool = {
         {
           title: 'Grampo',
           rows: [
-            { label: 'Comprimento do grampo (dos terminais à barra de curto)', value: formatLength(r.legLengthM, res), note: 'No ar. Corte comprido e encurte medindo.' },
+            { label: 'Comprimento do grampo (dos terminais à barra de curto)', value: formatLength(r.legLengthM, res), note: 'No ar, com VF 0,975. Corte comprido e encurte medindo.' },
             { label: 'Reatância indutiva necessária', value: `${formatNumber(r.hairpinReactance, 2)} Ω` },
             { label: 'Indutância equivalente', value: `${formatNumber(r.inductanceH * 1e9, 1)} nH` },
             { label: 'Impedância da linha de dois fios', value: `${formatNumber(r.lineImpedance, 0)} Ω` },
@@ -71,9 +71,14 @@ export const hairpinTool: Tool = {
         },
       ],
       assumptions: [
-        { name: 'Modelo', value: 'Indutor ideal em paralelo (linha de dois fios em curto, no ar)', source: 'Teoria de linhas; Z = 276·log10(2D/d) (ARRL/Kraus)' },
-        // TODO(fonte): fonte pendente para o texto abaixo.
-        { name: 'Ignorado', value: 'Efeito dos cantos, da barra de curto e da proximidade do boom', source: 'Sem fonte citada' },
+        {
+          name: 'Modelo',
+          value: 'Rede L: elemento curto (capacitor em série) e grampo (indutor em paralelo, linha de dois fios em curto)',
+          source: 'ARRL Antenna Book, 19ª ed., p. 26-10 e 26-11; Z = 276·log10(2D/d) (ARRL/Kraus)',
+        },
+        { name: 'Fator de velocidade do grampo', value: '0,975 (linha aberta no ar)', source: 'ARRL Antenna Book, 19ª ed., p. 26-11 (Fig 16)' },
+        // TODO(fonte): o ARRL também não trata desses efeitos.
+        { name: 'Ignorado', value: 'Efeito dos cantos, da barra de curto e da proximidade do boom', source: 'Não tratados no ARRL Antenna Book' },
       ],
       warnings: [
         {

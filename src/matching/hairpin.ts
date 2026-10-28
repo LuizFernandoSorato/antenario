@@ -8,12 +8,15 @@
  * Fórmulas (teoria de circuitos e de linhas, sem coeficiente empírico):
  *   Y = 1/(R + jX) = G + jB;  indutor em paralelo com susceptância −B:  X_L = 1/B  (exige B > 0, ou seja, X < 0);
  *   Rp = 1/G;
- *   linha em curto de impedância Zh e comprimento l:  X_L = Zh·tan(2π·l/λ_linha);
+ *   linha em curto de impedância Zh e comprimento l:  X_L = Zh·tan(2π·l/λ_linha), com λ_linha = VF·λ e VF = 0,975;
  *   linha de dois fios paralelos, espaçamento D (centro a centro) e diâmetro d:  Zh = 276·log10(2D/d)
  *   (aproximação válida para D ≫ d; ARRL Antenna Book, Kraus, "Antennas", linha de dois fios).
- * Referência da topologia: ARRL Antenna Book (capítulo de Yagi: "hairpin match"). O alcance prático (impedância do
- * elemento até cerca de 25 a 35 Ω) vem de relatos de radioamadores (WorldwideDX), não de fonte de engenharia.
- * TODO(fonte): capítulo de casamento do Antenna Book e o efeito dos cantos e da barra de curto (a calculadora os ignora).
+ * Fonte: ARRL Antenna Book, 19ª ed., cap. 26, p. 26-10 e 26-11, "The Hairpin and Beta Matches" (Figs 13 a 16): o hairpin é uma
+ * rede L (elemento encurtado = capacitor em série, grampo = indutor em paralelo), Xp = Zh·tan(θ), e "for open-wire line, a
+ * velocity factor of 97.5% should be taken into account". Exemplo do livro (teste): 20 Ω → 50 Ω pede 41 Ω; tubo de 1/4" a
+ * 1,5" dá 300 Ω; 7,8° elétricos; 17,8" em 14 MHz. O alcance prático (impedância do elemento até cerca de 25 a 35 Ω) vem de
+ * relatos de radioamadores (WorldwideDX), não de fonte de engenharia.
+ * TODO(fonte): o efeito dos cantos e da barra de curto (o livro também não trata; a calculadora os ignora).
  */
 
 import { type Complex, abs, complex, reciprocal } from '../core/complex';
@@ -42,13 +45,16 @@ export interface HairpinResult {
   inductanceH: number;
   /** Impedância característica da linha de dois fios (Ω). */
   lineImpedance: number;
-  /** Comprimento do grampo, dos terminais à barra de curto (m), no ar (fator de velocidade ≈ 1). */
+  /** Comprimento do grampo, dos terminais à barra de curto (m), com o fator de velocidade da linha aberta (`OPEN_WIRE_VF`). */
   legLengthM: number;
   /** Resistência paralela resultante (Ω). */
   parallelResistance: number;
   /** ROE resultante em relação a Z0. */
   swr: number;
 }
+
+/** Fator de velocidade da linha de dois fios no ar: ARRL Antenna Book, 19ª ed., p. 26-11 (legenda da Fig 16). */
+export const OPEN_WIRE_VF = 0.975;
 
 /** Impedância característica de linha de dois fios (aproximação para D ≫ d). */
 export function twoWireImpedance(spacingM: number, wireDiameterM: number): number {
@@ -73,8 +79,8 @@ export function designHairpin(input: HairpinInput): HairpinResult {
   const xl = 1 / y.im; // y.im > 0 quando X < 0
   const rp = 1 / y.re;
   const zh = twoWireImpedance(spacingM, wireDiameterM);
-  const lambda = wavelength(fMHz);
-  const legLengthM = (lambda / (2 * Math.PI)) * Math.atan(xl / zh);
+  const lambdaLine = wavelength(fMHz) * OPEN_WIRE_VF;
+  const legLengthM = (lambdaLine / (2 * Math.PI)) * Math.atan(xl / zh);
   const swr = swrFromGamma(abs(reflectionCoefficient(complex(rp, 0), z0)));
   const r = zElement.re;
   return {

@@ -5,8 +5,8 @@
  * perfeito se comporta como metade de um dipolo de λ/2: metade da resistência de
  * radiação (≈ 36,5 Ω) e o dobro da diretividade (≈ 5,15 dBi). Os radiais são uma
  * aproximação desse plano. Com poucos radiais elevados o resultado real se afasta
- * desses limites teóricos, por isso o ganho aparece só como referência. A impedância é
- * estimada por interpolação indicativa em função da inclinação (ver estimateImpedance).
+ * desses limites teóricos, por isso o ganho aparece só como referência. A impedância vem da
+ * curva do ARRL Antenna Book em função da inclinação (ver estimateImpedance).
  *
  * Comprimentos: pela mesma teoria das imagens, o radiador de λ/4 ressoa com metade do comprimento do dipolo do mesmo condutor,
  * então usa o K do dipolo (`k-factor.ts`). Os radiais usam o mesmo K (premissa: o método dos momentos desta ferramenta não tem
@@ -34,22 +34,37 @@ export interface GroundPlaneParams {
 }
 
 /**
- * Impedância de entrada estimada (Ω) em função da inclinação dos radiais.
- *
- * INTERPOLAÇÃO INDICATIVA, não é um modelo publicado. Passa por três pontos de referência:
- *  - 0° (radiais horizontais): 36,5 Ω, monopolo de λ/4 sobre plano perfeito (Balanis, Antenna Theory, §4.7);
- *  - 45°: ≈ 50 Ω, regra prática repetida em fontes de radioamador (ARRL; ex.: electronics-notes.com);
- *  - 90° (radiais alinhados ao radiador, vira um dipolo vertical): ≈ 73 Ω (Balanis, dipolo de λ/2).
- * Entre os pontos usa a parábola que passa pelos três (monótona crescente em [0°, 90°]).
- * A literatura não dá valores intermediários; o real depende de altura, diâmetro e arredores. Meça.
+ * Resistência de radiação (Ω) de um ground plane de 4 radiais a mais de 0,3λ do solo, em função da inclinação dos radiais.
+ * Fonte: ARRL Antenna Book, 21ª ed. (2007), p. 6-19, Fig 35 ("Radiation resistance and resonant length for a 4-radial
+ * ground-plane antenna > 0.3 λ above ground as a function of radial droop angle"). O texto da mesma página diz R = 50 Ω a 45°.
+ * Pontos lidos na figura a cada 5° (digitalizada a 300 dpi, leitura ±0,3 Ω); a curva termina em 80°.
+ * Divergência: o Rothammel ("Antene", trad. sérvia da 9ª ed. alemã, §19.4.1, p. 281) dá ≈ 36 Ω com radiais horizontais,
+ * que é o valor do monopolo sobre plano infinito (Balanis §4.7); com 4 radiais a figura do ARRL dá ≈ 22,5 Ω.
+ */
+export const ARRL_DROOP_CURVE: readonly (readonly [angleDeg: number, ohms: number])[] = [
+  [0, 22.5], [5, 25.8], [10, 29.0], [15, 32.1], [20, 35.1], [25, 38.5], [30, 41.8], [35, 44.8], [40, 47.6],
+  [45, 50.4], [50, 53.1], [55, 55.2], [60, 56.7], [65, 57.9], [70, 58.6], [75, 58.8], [80, 58.8],
+];
+
+/** Último ângulo da Fig 35 do ARRL (acima dele a curva não existe e o valor fica no do último ponto). */
+export const ARRL_DROOP_MAX_DEG = 80;
+
+/**
+ * Impedância de entrada estimada (Ω) em função da inclinação dos radiais: interpolação linear da curva do ARRL
+ * (`ARRL_DROOP_CURVE`), parte reativa desprezada (antena ressonante). Acima de 80° usa o valor de 80° (a calc avisa).
+ * Vale para 4 radiais longe do solo; o real depende de altura, diâmetro, número de radiais e arredores. Meça.
  */
 export function estimateImpedance(droopAngleDeg: number): number {
-  const z0 = 36.5;
-  const z45 = 50;
-  const z90 = 73;
-  const c = (z90 - 2 * z45 + z0) / (2 * 45 * 45);
-  const b = (z45 - z0) / 45 - c * 45;
-  return z0 + b * droopAngleDeg + c * droopAngleDeg * droopAngleDeg;
+  const curve = ARRL_DROOP_CURVE;
+  const a = Math.min(Math.max(droopAngleDeg, 0), ARRL_DROOP_MAX_DEG);
+  for (let i = 1; i < curve.length; i++) {
+    const [a1, z1] = curve[i]!;
+    if (a <= a1) {
+      const [a0, z0] = curve[i - 1]!;
+      return z0 + ((z1 - z0) * (a - a0)) / (a1 - a0);
+    }
+  }
+  return curve[curve.length - 1]![1];
 }
 
 /** Impedância do cabo de alimentação usada como referência da ROE (rádio de 50 Ω). */
@@ -96,8 +111,8 @@ export function calc(params: GroundPlaneParams): CalcResult {
   }
 
   // Banda INDICATIVA: impedância do dipolo ressonante do mesmo condutor, escalada para a resistência estimada acima. Mantém o Q
-  // do dipolo, o que é exato nos dois extremos (0°: monopolo sobre plano infinito = meio dipolo pela teoria das imagens, Balanis
-  // §4.7; 90°: o próprio dipolo vertical). Entre eles, e com poucos radiais em vez de plano: TODO(fonte).
+  // do dipolo, o que só é exato para o monopolo sobre plano infinito (meio dipolo pela teoria das imagens, Balanis §4.7).
+  // Com 4 radiais o Q real é outro: TODO(fonte).
   const z = estimateImpedance(angle);
   const band = dipoleBandModel(f, d);
   const ratio = z / band.impedanceAt(f).re;
@@ -118,12 +133,9 @@ export function calc(params: GroundPlaneParams): CalcResult {
     {
       level: 'warning',
       message:
-        'A impedância depende da inclinação e do número de radiais. Radiais horizontais dão ' +
-        'impedância bem abaixo de 50 Ω; inclinando-os para baixo ela sobe e chega perto de ' +
-        '50 Ω a ≈ 45°. O valor mostrado é uma interpolação indicativa entre pontos de referência ' +
-        // TODO(fonte): não há tabela publicada com valores.
-        '(36,5 Ω a 0°, 50 Ω a 45°, 73 Ω a 90°). ' +
-        'Ajuste a inclinação medindo a ROE.',
+        'A impedância depende da inclinação e do número de radiais. Com 4 radiais horizontais ela fica perto de ' +
+        '22 Ω (ROE ≈ 2,2:1 em 50 Ω); inclinando-os para baixo ela sobe e chega a 50 Ω a ≈ 45° (curva do ARRL ' +
+        'Antenna Book para 4 radiais longe do solo). Ajuste a inclinação medindo a ROE.',
     },
     { level: 'warning', message: K_FIELD_NOTE },
     {
@@ -139,6 +151,12 @@ export function calc(params: GroundPlaneParams): CalcResult {
         'do alcance de pessoas.',
     },
   ];
+  if (angle > ARRL_DROOP_MAX_DEG) {
+    warnings.unshift({
+      level: 'warning',
+      message: `A curva do ARRL vai só até ${ARRL_DROOP_MAX_DEG}°: a impedância mostrada é a de ${ARRL_DROOP_MAX_DEG}°.`,
+    });
+  }
   const clampWarning = kWarning(sf);
   if (clampWarning) warnings.unshift(clampWarning);
   const outOfRange = rangeWarning(meta, f);
@@ -163,9 +181,9 @@ export function calc(params: GroundPlaneParams): CalcResult {
         typical: z,
         unit: 'Ω',
         note:
-          'Estimativa por interpolação entre 36,5 Ω (0°, plano perfeito), ≈ 50 Ω (45°) e ≈ 73 Ω (90°). ' +
-          'Não é um modelo publicado; o valor real depende de altura, diâmetro e arredores. Meça.',
-        source: 'Balanis, Antenna Theory, 4ª ed., §4.7 (0° e 90°); regra prática de ≈ 45° → 50 Ω (ARRL, fonte secundária)',
+          'Curva do ARRL para 4 radiais a mais de 0,3λ do solo: ≈ 22,5 Ω a 0°, 50 Ω a 45°, ≈ 59 Ω a 80°. ' +
+          'O Rothammel dá ≈ 36 Ω a 0° (valor do plano infinito). Altura, diâmetro e arredores mudam o valor. Meça.',
+        source: 'ARRL Antenna Book, 21ª ed., p. 6-19, Fig 35; Rothammel, "Antene" (9ª ed. alemã), §19.4.1',
       },
       gain: {
         max: 5.15,

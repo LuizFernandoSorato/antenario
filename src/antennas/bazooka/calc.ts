@@ -1,8 +1,9 @@
 /**
  * Double bazooka ("bazuca"): dipolo de meia onda cuja parte central é uma meia onda ELÉTRICA de coaxial.
  *
- * Geometria (C. Turner, ZS6GM, "The Great Double Bazooka Antenna Debate", https://www.zs6stn.org.za/ResourceArticles/Download/17,
- * descrevendo o ARRL Antenna Book, 20ª ed., 2003, p. 9.6–9.7, que não foi lido: TODO(fonte)):
+ * Geometria (C. Turner, ZS6GM, "The Great Double Bazooka Antenna Debate", https://www.zs6stn.org.za/ResourceArticles/Download/17;
+ * ARRL Antenna Book, 21ª ed., 2007, p. 9-6 e 9-7, Fig 11: "a dipole with two quarter-wave coaxial resonator stubs connected in
+ * series", ligados nos terminais da antena):
  * - a malha é cortada no centro e o cabo de alimentação liga às duas metades da malha; o vivo segue inteiro;
  * - em cada ponta da seção, o vivo é soldado à malha: cada metade vira um toco de λ/4 em curto, por dentro do cabo,
  *   com comprimento físico λ/4 × VF (mesma regra em Ham Radio Base: (246/f) × VF pés);
@@ -115,7 +116,7 @@ export function calc(params: BazookaParams): CalcResult {
 
   const modelSource =
     'Modelo desta ferramenta: método dos momentos (dipolo no espaço livre) em paralelo com os dois tocos com a perda do datasheet ' +
-    '(Pozar §2.7). Comparação: ARRL Antenna Book, 20ª ed. (2003), p. 9.6–9.7, e F5AD, citados por ZS6GM.';
+    '(Pozar §2.7). Comparação: ARRL Antenna Book, 21ª ed. (2007), p. 9-6 e 9-7, e F5AD (citado por ZS6GM).';
 
   const bandwidth: Estimate | null = b2
     ? {
@@ -126,7 +127,7 @@ export function calc(params: BazookaParams): CalcResult {
           `ROE < 2:1 em 50 Ω ${rangeText(b2, BAND_SPAN_PERCENT)}; < 1,5:1 em ${widthText(model.band15.bazooka)}. ` +
           (ratio ? `${formatNumber(ratio, 2)}× a banda do dipolo de mesmo diâmetro. ` : '') +
           'Ajustada para ressoar, no espaço livre.',
-        source: 'Momentos (dipolo) em paralelo com os tocos com a perda do datasheet (Pozar §2.7); compare: ARRL (2003) e F5AD, via ZS6GM',
+        source: 'Momentos (dipolo) em paralelo com os tocos com a perda do datasheet (Pozar §2.7); compare: ARRL 21ª ed., p. 9-6, e F5AD',
       }
     : null;
 
@@ -174,8 +175,9 @@ export function calc(params: BazookaParams): CalcResult {
     {
       level: 'info',
       message:
-        'Comparada a um dipolo de fio, a bazooka não ganha nada em ganho ou padrão (ARRL Antenna Book) e alarga pouco a banda; ' +
-        'parte do alargamento vem da própria perda nos tocos (W2DU). É mais pesada e tem mais emendas para vedar.',
+        'Comparada a um dipolo de fio, a bazooka não ganha nada em ganho ou padrão e alarga pouco a banda: 1,14 vez, com ' +
+        'tocos de RG-58A em 3,75 MHz (ARRL Antenna Book, 21ª ed., p. 9-6), em parte pela malha grossa do coaxial e em parte pela ' +
+        'perda nos tocos (W2DU). É mais pesada e tem mais emendas para vedar.',
     },
     {
       level: 'danger',
@@ -198,7 +200,7 @@ export function calc(params: BazookaParams): CalcResult {
         value: formatNumber(vf, 3),
         source: vfInput > 0 ? 'Medido pelo usuário' : `Datasheet do ${cable.name}`,
       },
-      { name: 'Toco', value: 'λ/4 × VF, em curto na ponta (vivo soldado na malha)', source: 'ZS6GM (ARRL Antenna Book); Ham Radio Base' },
+      { name: 'Toco', value: 'λ/4 × VF, em curto na ponta (vivo soldado na malha)', source: 'ARRL Antenna Book, 21ª ed., p. 9-6, Fig 11; ZS6GM; Ham Radio Base' },
       {
         name: 'Atenuação do cabo na frequência',
         value: att === null ? 'fora da tabela (toco sem perdas no modelo)' : `${formatNumber(att, 2)} dB/100 m`,
@@ -227,7 +229,7 @@ export function calc(params: BazookaParams): CalcResult {
         note:
           `Ganho do dipolo de meia onda (2,15 dBi) menos a perda nos tocos (${formatNumber(model.stubLossDb, 2)} dB na frequência ` +
           `de projeto, até ${formatNumber(model.stubLossMaxDb, 2)} dB na borda da faixa de 2:1). No espaço livre; perdas no fio desprezadas.`,
-        source: 'Balanis §4.6; ARRL Antenna Book (2003), citado por ZS6GM: sem ganho sobre o dipolo de fio; ' + modelSource,
+        source: 'Balanis §4.6; ARRL Antenna Book, 21ª ed., p. 9-7: sem ganho sobre o dipolo de fio; ' + modelSource,
       },
       bandwidth,
     },

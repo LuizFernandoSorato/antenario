@@ -5,9 +5,9 @@ import { MAX_MODEL_RODS, solveDiscone } from './pattern-model';
 // Sem medida com fonte para o padrão do discone. Os testes conferem o que o modelo precisa cumprir por física:
 // - o limite de baixa frequência (estrutura muito menor que λ ≈ dipolo curto: D = 1,5, ou 1,76 dBi; Balanis §4.2);
 // - convergência com a discretização;
-// - ROE mínima de um projeto de 50 Ω perto da citada por Stearns (QEX 2007; ≈ 1,4, ver calc.ts).
+// - ROE em 50 Ω: o mínimo na faixa contra o ROE ≤ 1,5 do Rothammel e a ponta de baixo citada no aviso do calc.ts.
 
-const result = calc(defaultParams); // 100 MHz, 50 Ω, 8 hastes de 4 mm
+const result = calc(defaultParams); // 100 MHz, regra do λ/4, 8 hastes de 4 mm
 const db = (x: number) => 10 * Math.log10(x);
 const dir = (thetaDeg: number, phiDeg: number): [number, number, number] => {
   const t = (thetaDeg * Math.PI) / 180;
@@ -41,12 +41,21 @@ describe('discone: padrão por momentos', () => {
     }
   }, 30000);
 
-  it('a ROE mínima de um projeto de 50 Ω entre f e 5f fica entre 1,2 e 2 (Stearns cita ≈ 1,4)', () => {
+  it('a ROE mínima em 50 Ω entre 1,4f e 5f fica abaixo de 1,5 (Rothammel: ROE ≤ 1,5 na faixa)', () => {
     let best = Infinity;
-    for (const f of [150, 200, 250, 300, 350, 450]) best = Math.min(best, swr(solveDiscone(result, 8, 0.004, f).inputImpedance));
-    expect(best).toBeGreaterThan(1.2);
-    expect(best).toBeLessThan(2);
-  }, 30000);
+    for (const f of [140, 160, 300, 500]) best = Math.min(best, swr(solveDiscone(result, 8, 0.004, f).inputImpedance));
+    expect(best).toBeGreaterThan(1);
+    expect(best).toBeLessThan(1.5);
+  }, 60000);
+
+  // Regra do λ/4 (ARRL Antenna Book, 21ª ed., Fig 48; Rothammel, §25.1.4), que os livros dão como boa já na menor frequência.
+  // Os números conferidos aqui são os citados no aviso do calc.ts (≈ 11:1 em f e < 2:1 a partir de ≈ 1,4f); não há medida.
+  it('ROE alta na menor frequência e abaixo de 2:1 a partir de ≈ 1,4 vez ela', () => {
+    expect(swr(solveDiscone(result, 8, 0.004, 100).inputImpedance)).toBeGreaterThan(8);
+    expect(swr(solveDiscone(result, 8, 0.004, 120).inputImpedance)).toBeGreaterThan(2);
+    expect(swr(solveDiscone(result, 8, 0.004, 130).inputImpedance)).toBeGreaterThan(2);
+    expect(swr(solveDiscone(result, 8, 0.004, 140).inputImpedance)).toBeLessThan(2);
+  }, 60000);
 
   it('mais hastes reduzem a ondulação em azimute em alta frequência', () => {
     const ripple = (rods: number) => {

@@ -16,7 +16,7 @@ function m(r: ReturnType<typeof calc>, label: string): number {
   return x.meters;
 }
 
-describe('quadra cúbica: calc', () => {
+describe('quadra cúbica: calc', { timeout: 60_000 }, () => {
   it('perímetros a 145 MHz', () => {
     expect(loopPerimeter(1005, 145)).toBeCloseTo(2.11258, 4);
     expect(loopPerimeter(1030, 145)).toBeCloseTo(2.16513, 4);

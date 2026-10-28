@@ -68,6 +68,8 @@ export function swrBandwidthEstimate(s: SwrSweep, options: SwrEstimateOptions): 
 }
 
 export interface QEstimateOptions {
+  /** Como a antena é casada em f0, no início do texto; padrão: "Com casamento ideal". */
+  match?: string;
   /** Premissa principal, em uma frase curta. */
   note: string;
   source: string;
@@ -84,7 +86,7 @@ export function qBandwidthEstimate(f0MHz: number, q: number, options: QEstimateO
     typical: b2 * k,
     unit,
     note:
-      `Com casamento ideal, ROE < 2:1 de ≈ ${formatNumber(f0MHz - b2 / 2, 3)} a ${formatNumber(f0MHz + b2 / 2, 3)} MHz; ` +
+      `${options.match ?? 'Com casamento ideal'}, ROE < 2:1 de ≈ ${formatNumber(f0MHz - b2 / 2, 3)} a ${formatNumber(f0MHz + b2 / 2, 3)} MHz; ` +
       `< 1,5:1 em ≈ ${formatNumber(b15 * k, d)} ${unit}. ${options.note}`,
     source: options.source,
   };

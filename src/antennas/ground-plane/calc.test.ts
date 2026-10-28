@@ -57,23 +57,29 @@ describe('ground plane 1/4 de onda: calc', () => {
     }
   });
 
-  it('impedância estimada passa pelos pontos de referência (0°, 45°, 90°)', () => {
-    expect(estimateImpedance(0)).toBeCloseTo(36.5, 9);
-    expect(estimateImpedance(45)).toBeCloseTo(50, 9);
-    expect(estimateImpedance(90)).toBeCloseTo(73, 9);
+  // ARRL Antenna Book, 21ª ed., p. 6-19: Fig 35 (lida a ±0,3 Ω) e o texto "R_R = 50 Ω when the radials are sloped downward
+  // at an angle of 45°". Tolerância de 0,5 Ω, a da leitura da figura.
+  it('impedância segue a Fig 35 do ARRL (≈ 22,5 Ω a 0°, 50 Ω a 45°, ≈ 59 Ω a 80°)', () => {
+    expect(estimateImpedance(0)).toBeCloseTo(22.5, 9);
+    expect(Math.abs(estimateImpedance(45) - 50)).toBeLessThan(0.5);
+    expect(estimateImpedance(80)).toBeCloseTo(58.8, 9);
+    expect(estimateImpedance(42.5)).toBeCloseTo((47.6 + 50.4) / 2, 9);
   });
 
-  it('impedância estimada cresce com a inclinação e acompanha o parâmetro', () => {
+  it('impedância não decresce com a inclinação, fica no valor de 80° acima disso e acompanha o parâmetro', () => {
     let prev = -Infinity;
-    for (let a = 0; a <= 90; a += 5) {
+    for (let a = 0; a <= 89; a += 1) {
       const z = estimateImpedance(a);
-      expect(z).toBeGreaterThan(prev);
+      expect(z).toBeGreaterThanOrEqual(prev);
       prev = z;
     }
+    expect(estimateImpedance(85)).toBe(estimateImpedance(80));
     const lo = calc({ ...defaultParams, droopAngleDeg: 0 }).expected.impedance.typical!;
     const hi = calc({ ...defaultParams, droopAngleDeg: 60 }).expected.impedance.typical!;
-    expect(lo).toBeCloseTo(36.5, 9);
+    expect(lo).toBeCloseTo(22.5, 9);
     expect(hi).toBeGreaterThan(lo);
+    expect(calc({ ...defaultParams, droopAngleDeg: 85 }).warnings.some((w) => /só até 80°/.test(w.message))).toBe(true);
+    expect(calc({ ...defaultParams, droopAngleDeg: 80 }).warnings.some((w) => /só até 80°/.test(w.message))).toBe(false);
   });
 
   it('valores esperados: 5,15 dBi só como limite teórico (plano infinito)', () => {
@@ -90,13 +96,16 @@ describe('ground plane 1/4 de onda: calc', () => {
     expect(b.note).toMatch(/indicativa/i);
   });
 
-  it('banda indicativa: radiais horizontais (≈ 36,5 Ω) ainda passam de 2:1, mas a faixa de 1,5:1 encolhe', () => {
-    // A ROE mínima vira 50/36,5 ≈ 1,37: a faixa de 2:1 até alarga (um pouco de descasamento alarga a de 2:1), a de 1,5:1 não.
+  it('banda indicativa: radiais horizontais (≈ 22,5 Ω) não chegam a 2:1 em 50 Ω; a 20° (≈ 35 Ω) a faixa de 1,5:1 encolhe', () => {
+    // 50/22,5 ≈ 2,2: sem faixa de 2:1. A 20° a ROE mínima é 50/35,1 ≈ 1,42: ainda há faixa de 1,5:1, mais estreita que a 45°.
+    const horizontal = calc({ ...defaultParams, droopAngleDeg: 0 }).expected.bandwidth!;
+    expect(horizontal.typical).toBeUndefined();
+    expect(horizontal.note).toMatch(/Não chega a ROE 2:1/);
     const width15 = (angle: number) => {
       const note = calc({ ...defaultParams, droopAngleDeg: angle }).expected.bandwidth!.note;
       return Number(/< 1,5:1 em ([\d,]+) MHz/.exec(note)![1]!.replace(',', '.'));
     };
-    expect(width15(0)).toBeLessThan(width15(45));
+    expect(width15(20)).toBeLessThan(width15(45));
   });
 
   it('rejeita entradas inválidas', () => {

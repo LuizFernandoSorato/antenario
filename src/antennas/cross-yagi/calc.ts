@@ -27,14 +27,23 @@ import { quadratureSweep } from '../quadrature-feed';
 import { type AssemblyGuide, type CalcResult, type CalcWarning, type Measurement, rangeWarning } from '../types';
 import { quadratureFeed } from '../turnstile/calc';
 import { yagiQ } from '../yagi/band-model';
-import { DL6WU_MIN_ELEMENTS, type YagiParams, designCalc, modelGainEstimate, defaultParams as yagiDefaults } from '../yagi/calc';
+import {
+  DL6WU_MIN_ELEMENTS,
+  GAMMA_LINE_OHMS,
+  type YagiParams,
+  designCalc,
+  gammaFor,
+  modelGainEstimate,
+  usesGamma,
+  defaultParams as yagiDefaults,
+} from '../yagi/calc';
 import { yagiElements } from '../yagi/elements';
 import { RHCP, SENSE_NAME, type Sense, senseOf } from '../circular';
 import { meta } from './meta';
 
 export interface CrossYagiParams extends YagiParams {
-  /** Impedância de cada Yagi no ponto de alimentação (Ω). */
-  yagiImpedance: number;
+  /** Só com `gammaMatch: 0` (código): impedância de cada Yagi no ponto de alimentação (Ω). Com o gamma, cada Yagi fica em 50 Ω. */
+  yagiImpedance?: number;
   /** Fator de velocidade do coaxial defasador, em (0, 1]. */
   velocityFactor: number;
   /** Sentido da polarização circular: RHCP ou LHCP (ver `circular.ts`). */
@@ -45,7 +54,6 @@ export const defaultParams: CrossYagiParams = {
   ...yagiDefaults,
   frequencyMHz: 436.5,
   elementDiameter: 0.0032,
-  yagiImpedance: 100,
   velocityFactor: 0.66,
   circularSense: RHCP,
 };
@@ -59,7 +67,7 @@ const BAND_SWEEP = { span: 0.2, coarseSteps: 60, fineSteps: 1200 } as const;
 /** Dentro desta tolerância relativa a junção já está em 50 Ω e o transformador não vale a pena. */
 const NO_TRANSFORMER_TOLERANCE = 0.02;
 
-/** Parâmetros do Yagi isolado, extraídos dos da cross Yagi. */
+/** Parâmetros do Yagi isolado, extraídos dos da cross Yagi. Cada gamma recebe metade da potência (a junção a divide meio a meio). */
 function yagiParamsOf(p: CrossYagiParams): YagiParams {
   return {
     frequencyMHz: p.frequencyMHz,
@@ -68,18 +76,27 @@ function yagiParamsOf(p: CrossYagiParams): YagiParams {
     boomDiameter: p.boomDiameter,
     ...(p.drivenGap !== undefined ? { drivenGap: p.drivenGap } : {}),
     ...(p.method !== undefined ? { method: p.method } : {}),
+    ...(p.gammaMatch !== undefined ? { gammaMatch: p.gammaMatch } : {}),
+    ...(p.gammaRodDiameter !== undefined ? { gammaRodDiameter: p.gammaRodDiameter } : {}),
+    ...(p.gammaSpacing !== undefined ? { gammaSpacing: p.gammaSpacing } : {}),
+    ...(p.txPowerW !== undefined ? { txPowerW: p.txPowerW / 2 } : {}),
   };
 }
 
 export function calc(params: CrossYagiParams): CalcResult {
-  const { frequencyMHz: f, velocityFactor: vf, yagiImpedance: zy } = params;
+  const { frequencyMHz: f, velocityFactor: vf } = params;
   const sense = senseOf(params.circularSense);
+  const gamma = usesGamma(params);
   assertFrequencyMHz(f);
   assertFactor(vf, 'O fator de velocidade');
-  assertPositive(zy, 'A impedância do Yagi');
+  if (params.txPowerW !== undefined) assertPositive(params.txPowerW, 'A potência de transmissão');
+  // Com o gamma, cada Yagi é casado a 50 Ω e a impedância informada não é usada.
+  const zy = gamma ? GAMMA_LINE_OHMS : (params.yagiImpedance ?? Number.NaN);
+  if (!gamma) assertPositive(zy, 'A impedância do Yagi');
 
   const yagiParams = yagiParamsOf(params);
   const yagi = designCalc(yagiParams);
+  const fit = gamma ? gammaFor(yagiParams) : null;
   const quarter = physicalLength(0.25, f, vf);
 
   const feed = quadratureFeed(zy, zy);
@@ -88,11 +105,14 @@ export function calc(params: CrossYagiParams): CalcResult {
   const zTransformer = Math.sqrt(SYSTEM_IMPEDANCE_OHMS * zJunction);
   const swrJunction = swrFromGamma(abs(reflectionCoefficient(complex(zJunction, 0), SYSTEM_IMPEDANCE_OHMS)));
 
-  // Banda: cada Yagi como um circuito ressonante série de R = zy (o casamento que o usuário escolheu) e o Q do modelo por momentos da
-  // Yagi (yagi/band-model.ts), a junção pela linha de 1/4 de onda (quadrature-feed.ts) e, se houver, o transformador T sem perdas.
+  // Banda: cada Yagi como um circuito ressonante série de R = zy (o casamento que o usuário escolheu, ou o gamma) e o Q do modelo por
+  // momentos da Yagi (yagi/band-model.ts; com o gamma, o Q na entrada dele, yagi/gamma-feed.ts), a junção pela linha de 1/4 de onda
+  // (quadrature-feed.ts) e, se houver, o transformador T sem perdas.
   const isolated = params.boomDiameter === 0 ? yagi : designCalc({ ...yagiParams, boomDiameter: 0 });
   const elements = yagiElements(isolated);
-  const { q, directivity } = yagiQ(elements, params.elementDiameter, f);
+  const model = yagiQ(elements, params.elementDiameter, f);
+  const { directivity } = model;
+  const q = fit?.matchedQ ?? model.q;
   const transformerLine = { z0: zTransformer, lengthM: wavelength(f) / 4, velocityFactor: 1 };
   const quad = quadratureSweep({
     centerMHz: f,
@@ -132,6 +152,9 @@ export function calc(params: CrossYagiParams): CalcResult {
       description: `Coaxial de ${formatNumber(zTransformer, 1)} Ω entre a junção (${formatNumber(zJunction, 1)} Ω) e o cabo de ${SYSTEM_IMPEDANCE_OHMS} Ω do rádio.`,
     });
   }
+  // Não há coaxial comum de ≈ 35 Ω: dois de 75 Ω em paralelo (37,5 Ω) dão quase o mesmo; ROE pela fórmula do transformador, Z = Zt²/Zj.
+  const paralleled75 = 75 / 2;
+  const swrParalleled = swrFromGamma(abs(reflectionCoefficient(complex(paralleled75 ** 2 / zJunction, 0), SYSTEM_IMPEDANCE_OHMS)));
 
   const warnings: CalcWarning[] = yagi.warnings.filter((w) => !w.message.includes('fora da faixa de uso prático'));
   const outOfRange = rangeWarning(meta, f);
@@ -158,7 +181,12 @@ export function calc(params: CrossYagiParams): CalcResult {
         (needsTransformer
           ? `Para ${SYSTEM_IMPEDANCE_OHMS} Ω é preciso o transformador T de ${formatNumber(zTransformer, 1)} Ω; ROE sem ele ≈ ${formatNumber(swrJunction, 2)}:1. `
           : 'Já casa com o cabo de 50 Ω, sem transformador. ') +
-        'A impedância de cada Yagi é dado de entrada: o NBS e o DL6WU não a fornecem para o dipolo simples. Meça o seu Yagi isolado.',
+        (needsTransformer && Math.abs(zTransformer - paralleled75) / paralleled75 < 0.1
+          ? `Não há coaxial comum de ${formatNumber(zTransformer, 0)} Ω: dois de 75 Ω em paralelo (37,5 Ω), do mesmo comprimento T, dão ROE ≈ ${formatNumber(swrParalleled, 2)}:1. `
+          : '') +
+        (gamma
+          ? 'Cada Yagi é casado a 50 Ω pelo seu gamma: ajuste os dois separadamente, cada um com o outro no lugar, antes de ligar a junção.'
+          : 'A impedância de cada Yagi é dado de entrada: o NBS e o DL6WU não a fornecem para o dipolo simples. Meça o seu Yagi isolado.'),
     },
     {
       level: 'warning',
@@ -168,10 +196,23 @@ export function calc(params: CrossYagiParams): CalcResult {
     },
     {
       level: 'warning',
-      message:
-        'Os elementos de um Yagi cruzam os do outro no centro do boom: isole um do outro (os elementos excitados não podem se tocar). ' +
-        'Afaste poucos milímetros, o suficiente para isolar; um deslocamento grande tira os elementos do mesmo plano e desfaz a defasagem calculada.',
+      message: gamma
+        ? 'Os elementos de um Yagi cruzam os do outro no centro do boom. Com o gamma os excitados são inteiros e o centro deles fica em potencial ' +
+          'zero, como o dos parasitas: podem ir presos no boom metálico. Afaste só o necessário para cruzar; um deslocamento grande tira os ' +
+          'elementos do mesmo plano e desfaz a defasagem calculada. As barras dos dois gammas não podem se tocar.'
+        : 'Os elementos de um Yagi cruzam os do outro no centro do boom: isole um do outro (os elementos excitados não podem se tocar). ' +
+          'Afaste poucos milímetros, o suficiente para isolar; um deslocamento grande tira os elementos do mesmo plano e desfaz a defasagem calculada.',
     },
+    ...(gamma
+      ? [
+          {
+            level: 'info' as const,
+            message:
+              'Cada gamma recebe metade da potência: a tensão no capacitor mostrada já está calculada assim. Os dois gammas devem ser iguais ' +
+              '(mesma barra, ponte e capacitor), senão as correntes dos dois Yagis ficam desiguais e a polarização deixa de ser circular.',
+          },
+        ]
+      : []),
     {
       level: 'info',
       message:
@@ -201,7 +242,9 @@ export function calc(params: CrossYagiParams): CalcResult {
       ...yagi.assumptions,
       { name: 'Montagem', value: 'Dois Yagis idênticos girados 90°, elementos cruzados nas mesmas posições (mesmo plano)', source: 'LY3H; pedido do projeto' },
       { name: 'Sentido da polarização', value: SENSE_NAME[sense], source: 'Dado do usuário; convenção IEEE Std 145 (ver core/polarization.ts)' },
-      { name: 'Impedância de cada Yagi', value: `${formatNumber(zy, 1)} Ω`, source: 'Dado do usuário (LY3H mediu 100 Ω); meça' },
+      gamma
+        ? { name: 'Impedância de cada Yagi', value: `${formatNumber(zy, 1)} Ω, pelo gamma de cada um`, source: 'Projeto do gamma (Tolles); meça e ajuste' }
+        : { name: 'Impedância de cada Yagi', value: `${formatNumber(zy, 1)} Ω`, source: 'Dado do usuário (LY3H mediu 100 Ω); meça' },
       { name: 'Impedância da linha defasadora', value: `${formatNumber(zy, 1)} Ω (igual à do Yagi)`, source: 'Derivação por linha de 1/4 de onda (Pozar)' },
       { name: 'Fator de velocidade do coaxial (VF)', value: formatNumber(vf, 3), source: 'Dado do usuário; datasheet do cabo' },
       { name: 'Defasagem', value: '90° (linha de 1/4 de onda)', source: 'Derivação (Pozar); LY3H' },
@@ -216,10 +259,10 @@ export function calc(params: CrossYagiParams): CalcResult {
         typical: zJunction,
         unit: 'Ω',
         note:
-          `Dois Yagis de ${formatNumber(zy, 0)} Ω em paralelo, um deles por linha de 1/4 de onda de ${formatNumber(zy, 0)} Ω` +
+          `Dois Yagis de ${formatNumber(zy, 0)} Ω${gamma ? ' (cada um pelo seu gamma)' : ''} em paralelo, um deles por linha de 1/4 de onda de ${formatNumber(zy, 0)} Ω` +
           (needsTransformer ? `; depois do transformador T, ${SYSTEM_IMPEDANCE_OHMS} Ω` : '') +
           '. O LY3H mediu ROE ≈ 1,1 em 436,5 MHz com 100 Ω por Yagi.',
-        source: 'Derivação de linhas (Pozar); LY3H (ROE medida)',
+        source: gamma ? 'Derivação de linhas (Pozar); gamma pelo Tolles (Ham Radio, 1973)' : 'Derivação de linhas (Pozar); LY3H (ROE medida)',
       },
       gain: {
         ...(yagiGain.typical !== undefined ? { typical: yagiGain.typical } : {}),
@@ -231,22 +274,37 @@ export function calc(params: CrossYagiParams): CalcResult {
       bandwidth,
     },
     warnings,
-    assembly: assemblyFor(sense),
+    assembly: assemblyFor(sense, gamma),
+    ...(yagi.matching
+      ? {
+          matching: {
+            title: 'Gamma match (um em cada Yagi): montagem e ajuste',
+            steps: [
+              'Os dois Yagis levam gammas IGUAIS (mesma barra, espaçamento, ponte e capacitor); as medidas abaixo valem para cada um.',
+              ...yagi.matching.steps,
+            ],
+          },
+        }
+      : {}),
   };
 }
 
 /** Método de montagem para o sentido pedido: posição do braço vivo do excitado do Yagi B em relação ao do Yagi A, vista de trás. */
-function assemblyFor(sense: Sense): AssemblyGuide {
+function assemblyFor(sense: Sense, gamma: boolean): AssemblyGuide {
   const right = sense === 'rhcp';
   return {
     title: `Montagem para ${SENSE_NAME[sense]}`,
     steps: [
-      'Marque em cada elemento excitado qual braço vai ao condutor central do coaxial (braço vivo) e qual vai à malha. Os dois Yagis são idênticos.',
+      gamma
+        ? 'Com o gamma, o "braço vivo" de cada excitado é a metade ao lado da qual corre a barra do gamma (ela leva o vivo do coaxial). Os dois Yagis são idênticos.'
+        : 'Marque em cada elemento excitado qual braço vai ao condutor central do coaxial (braço vivo) e qual vai à malha. Os dois Yagis são idênticos.',
       'Yagi A (direto): excitado ligado direto na junção. Yagi B (atrasado): excitado ligado à junção pela linha F, de 1/4 de onda.',
       'Posicione o Yagi A com os elementos na horizontal e o braço vivo do excitado para CIMA.',
       `Olhando de TRÁS da antena (do lado dos refletores) para a FRENTE, na direção do feixe, gire o Yagi B 90° em torno do boom até que o braço vivo do excitado dele fique ${right ? 'à DIREITA (3 horas), no sentido HORÁRIO' : 'à ESQUERDA (9 horas), no sentido ANTI-HORÁRIO'} do braço vivo do A.`,
       `Por quê: o campo gira do Yagi adiantado (A) para o atrasado (B); girando no sentido ${right ? 'horário' : 'anti-horário'} visto na direção do feixe, a onda é ${right ? 'RHCP' : 'LHCP'} (IEEE Std 145).`,
-      `Para trocar para ${right ? 'LHCP' : 'RHCP'} sem refazer a montagem: inverta vivo e malha do excitado do Yagi B (ou troque qual Yagi recebe a linha F).`,
+      gamma
+        ? `Para trocar para ${right ? 'LHCP' : 'RHCP'} sem refazer a montagem: passe o gamma do Yagi B para a outra metade do excitado (ou troque qual Yagi recebe a linha F).`
+        : `Para trocar para ${right ? 'LHCP' : 'RHCP'} sem refazer a montagem: inverta vivo e malha do excitado do Yagi B (ou troque qual Yagi recebe a linha F).`,
       // TODO(fonte): fonte pendente para o texto abaixo.
       'Confirme com um passe real: o sentido contrário perde muito sinal. Esta derivação não foi conferida com medida.',
     ],

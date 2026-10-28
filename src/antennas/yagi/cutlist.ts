@@ -1,3 +1,4 @@
+import { formatNumber } from '../../core/units';
 import type { CutItem } from '../types';
 import { type YagiParams, calc } from './calc';
 
@@ -6,6 +7,20 @@ export function cutList(params: YagiParams): CutItem[] {
   const byLabel = new Map(result.measurements.map((m) => [m.label, m.meters]));
   const parasitic = result.measurements.filter((m) => m.label === 'R' || /^D\d+$/.test(m.label));
   const arm = byLabel.get('DB');
+  const gammaRod = byLabel.get('GL');
+  const gammaItems: CutItem[] =
+    gammaRod === undefined
+      ? []
+      : [
+          {
+            label: 'GL',
+            name: 'Barra do gamma',
+            quantity: 1,
+            meters: gammaRod,
+            adjustable: true,
+            note: `Diâmetro GD = ${formatNumber(byLabel.get('GD')! * 1000, 2)} mm. Corte mais comprida que GL: a ponte de curto desliza no ajuste.`,
+          },
+        ];
   return [
     ...parasitic.map((m) => ({
       label: m.label,
@@ -33,5 +48,6 @@ export function cutList(params: YagiParams): CutItem[] {
           adjustable: true,
           note: 'Dois braços iguais, com o espaço central entre eles. Corte comprido e ajuste medindo a ROE, os dois por igual.',
         },
+    ...gammaItems,
   ];
 }

@@ -13,7 +13,7 @@ módulo, formam uma onda **circular**.
 - **Ganho:** igual ao do Yagi isolado, mas em dBic: a potência se divide entre as duas polarizações e os campos se somam
   em potência (derivação, com quadratura perfeita). O valor vem do método escolhido (NBS ou DL6WU).
 - **Medidas:** os elementos (**R**, **DE**, **D1**, **D2**, **D3**… e as posições **E**, **S** ou **P1**, **P2**…, além do boom **L**) vêm do cálculo
-  da Yagi, para qualquer frequência. A linha defasadora é **F**; **T** aparece só se os Yagis não forem de 100 Ω (transformador).
+  da Yagi, para qualquer frequência. A linha defasadora é **F**, o transformador da junção é **T** e as cotas de cada gamma são **GL**, **GS** e **GD**.
 - **Fonte da montagem:** o projeto de LY3H em 436,5 MHz (ver as referências). A página não traz as medidas dos elementos, só a
   alimentação; por isso os comprimentos aqui são os da Yagi (NBS/DL6WU), não os dele.
 
@@ -24,8 +24,10 @@ módulo, formam uma onda **circular**.
 | Elementos | Vareta de alumínio de 3 a 6 mm | Vareta de solda de latão |
 | Boom | Tubo quadrado de alumínio ou de PVC | Cabo de vassoura tratado |
 | Suporte do cruzamento | Bloco de nylon ou PVC com furos ou ranhuras perpendiculares | Caixa plástica estanque |
-| Elemento excitado | Dipolo dobrado (≈ 100 Ω) ou simples (impedância baixa: meça) | Fio de cobre rígido |
-| Linha defasadora | Coaxial de impedância **igual à do Yagi** (para 100 Ω, RG-62 de ≈ 93 Ω é o mais comum) | Dois coaxiais de 50 Ω em paralelo (≈ 25 Ω) se os Yagis forem de 25 Ω |
+| Elemento excitado | Inteiro (tubo ou vareta, como os parasitas), com gamma match | — |
+| Gamma match (×2) | Barra de alumínio ou latão, braçadeira deslizante, capacitor variável (trimmer) | Fio de cobre rígido como barra |
+| Linha defasadora | Coaxial de 50 Ω (igual à impedância de cada Yagi depois do gamma) | — |
+| Transformador T | Coaxial de ≈ 35 Ω | Dois coaxiais de 75 Ω em paralelo (37,5 Ω) |
 | Cabo até o rádio | Coaxial de 50 Ω | RG-58 curto |
 | Mastro | PVC ou fibra perto da antena | Cano de PVC |
 
@@ -38,25 +40,29 @@ fica difícil conferir a defasagem e a impedância dos Yagis).
 
 1. Calcule as medidas com o diâmetro de elemento e de boom que você realmente vai usar. **R** é o refletor, **DE** o excitado,
    **D1**, **D2**, **D3**… os diretores; **E** a distância refletor→excitado, **S** o espaçamento dos diretores (ou as posições **P1**, **P2**…
-   no DL6WU) e **L** o comprimento do boom entre centros. Com **espaço central do excitado** informado, **DE** segue de ponta a ponta
-   (incluindo o espaço) e aparecem **DB** (cada braço, `(DE − DG)/2`) e **DG**.
+   no DL6WU) e **L** o comprimento do boom entre centros. Cada Yagi é alimentado por **gamma match**: o excitado **DE** é inteiro e as
+   cotas do gamma de cada Yagi são **GL** (do centro até a ponte de curto), **GS** (espaçamento entre centros) e **GD** (diâmetro da barra).
 2. Corte **dois** de cada elemento (um para cada Yagi), com tolerância de 0,003λ. Veja a folha de corte.
 3. Marque no boom as posições, medidas a partir do refletor, como na Yagi comum.
-4. Em cada posição, monte um elemento horizontal e um vertical **cruzados no centro**, no mesmo plano. Os dois ficam isolados um do
-   outro; afaste um do outro só o suficiente para isolar (poucos milímetros).
-5. Monte os dois elementos excitados com o ponto de alimentação isolado do boom. Eles não podem se tocar no centro.
+4. Em cada posição, monte um elemento horizontal e um vertical **cruzados no centro**, no mesmo plano. Afaste um do outro só o
+   necessário para cruzar (poucos milímetros).
+5. Monte os dois elementos excitados. Eles são inteiros e o centro fica em potencial zero: podem ser presos no boom metálico, como os
+   parasitas, e montados com os **dois gammas iguais**. A barra de cada gamma corre ao lado da metade que faz o papel de "braço vivo"
+   (ver a seção 5); as barras dos dois Yagis não podem se tocar.
 6. Corte a linha defasadora **F**, medindo o cabo **sem a capa** nas pontas, e confira o VF do seu cabo (ver a seção 6).
 7. Ligue o Yagi A direto na junção e o Yagi B pela linha **F** (esquema do diagrama).
-8. Se a junção não ficou em 50 Ω, corte o transformador **T** e ligue entre a junção e o cabo.
+8. Corte o transformador **T** (a junção fica em 25 Ω) e ligue entre a junção e o cabo.
 9. Instale um choke de corrente no cabo, logo depois da junção.
 10. Monte no mastro com a frente (diretores) apontada para o alvo.
 
 ## 5. Alimentação e casamento
 
 - Com a linha **F** de impedância igual à de cada Yagi, as duas correntes têm o **mesmo módulo e 90° de defasagem**, e a impedância na junção é a metade da de
-  cada Yagi. Com Yagis de 100 Ω (excitado dobrado) a junção cai em **50 Ω**, direto no cabo. Foi o que o LY3H mediu: ROE ≈ 1,1 em 436,5 MHz.
-- Com Yagis de outra impedância (por exemplo um dipolo simples), a junção fica em Z/2 e é preciso um transformador de 1/4 de onda **T** de √(50·Z/2) Ω.
-  A impedância de cada Yagi não vem do NBS nem do DL6WU: **meça o seu Yagi isolado** no NanoVNA e informe na ferramenta.
+  cada Yagi. (O LY3H usou Yagis de 100 Ω, com excitado dobrado: a junção cai em 50 Ω, direto no cabo, e ele mediu ROE ≈ 1,1 em 436,5 MHz.)
+- **Gamma match:** cada Yagi tem o seu gamma, calculado como no guia do Yagi, que o casa a **50 Ω**. A linha **F** é de
+  coaxial de 50 Ω, a junção fica em 25 Ω e o transformador de 1/4 de onda **T** é de √(50·25) ≈ 35 Ω. Não há coaxial comum de 35 Ω: dois de 75 Ω em paralelo
+  (37,5 Ω), do mesmo comprimento **T**, dão ROE ≈ 1,1 (a ferramenta mostra o valor). Cada gamma recebe metade da potência.
+  O "braço vivo" de cada excitado é a metade ao lado da qual corre a barra do gamma (ela leva o vivo do coaxial).
 - **Sentido da polarização (RHCP ou LHCP):** o campo gira do Yagi adiantado (A, direto) para o atrasado (B, pela linha **F**). Olhando de trás da antena (do lado dos
   refletores) para a frente, na direção do feixe, se o braço vivo (condutor central) do excitado do Yagi B está 90° no sentido **horário** do braço vivo do excitado do A, a
   polarização é circular à **direita** (RHCP, convenção IEEE); no sentido **anti-horário**, circular à **esquerda** (LHCP). Para trocar, inverta vivo e malha do excitado do B
@@ -64,8 +70,8 @@ fica difícil conferir a defasagem e a impedância dos Yagis).
 
 ## 6. Ajuste
 
-1. **Cada Yagi sozinho:** com o outro desconectado, meça o Yagi A e depois o B. Eles devem ter a mesma ROE mínima e a mesma frequência. Corte o excitado comprido e encurte
-   os dois por igual, aos poucos.
+1. **Cada Yagi sozinho:** com o outro desconectado, meça o Yagi A e depois o B. Eles devem ter a mesma ROE mínima e a mesma frequência. O excitado fica na medida
+   calculada: ajuste o capacitor e a ponte (**GL**) de cada gamma em 50 Ω, como no guia do Yagi, e deixe os dois gammas iguais.
 2. **Linha defasadora:** deixe a ponta do Yagi B aberta e meça no NanoVNA o cabo **F** sozinho: a impedância de entrada é um curto (perto de 0 Ω na Carta de Smith) na frequência
    em que o cabo tem **1/4 de onda elétrico**. Se não está na frequência do projeto, o VF do seu cabo não é o que você supôs: corte para acertar. Um erro de 10 % no VF é um erro de 9° na defasagem.
 3. **Conjunto:** ligue tudo e meça a ROE na entrada do cabo. Mexa no cabo: se a ROE mudar, o choke é insuficiente.
@@ -75,7 +81,7 @@ fica difícil conferir a defasagem e a impedância dos Yagis).
 
 - Linha defasadora com o VF errado: a defasagem sai diferente de 90° e a polarização fica elíptica.
 - Coaxial de impedância diferente da dos Yagis: as correntes ficam desiguais.
-- Os elementos excitados se tocando no centro, ou um Yagi deslocado muito à frente do outro (fora do mesmo plano).
+- Um Yagi deslocado muito à frente do outro (fora do mesmo plano), ou as barras dos dois gammas se tocando.
 - Um Yagi com ROE ou frequência diferente do outro.
 - Trocar o sentido da polarização sem querer (qual Yagi recebe a linha).
 - Boom metálico sem informar o diâmetro, ou mastro metálico perto dos elementos.
@@ -85,6 +91,8 @@ fica difícil conferir a defasagem e a impedância dos Yagis).
 - **Tensão alta nas pontas dos elementos** em transmissão: mantenha pessoas e fios longe.
 - **Potência concentrada na frente:** o ganho é o do Yagi. Estime a distância segura na ferramenta "Exposição a RF".
 - **Potência:** confira a potência máxima do coaxial da linha defasadora (que costuma ser fino) e do cabo ao rádio.
+- **Capacitores dos gammas:** cada um recebe metade da potência; a tela mostra a tensão de RF. Escolha a tensão de trabalho bem acima do
+  pico e proteja-os da chuva.
 - **Legislação:** transmitir exige licença de radioamador da **Anatel**. Confira o plano de bandas e os limites de potência vigentes (Anatel e LABRE).
 - **Segurança física da instalação:**
   - Mantenha o mastro longe da rede elétrica. Na queda, ele não pode alcançar fios.
@@ -100,6 +108,8 @@ fica difícil conferir a defasagem e a impedância dos Yagis).
 - P. P. Viezbicke, *Yagi Antenna Design*, NBS Technical Note 688, 1976, https://doi.org/10.6028/NBS.TN.688 (elementos, método 1).
 - G. Hoch, DL6WU, e o programa DL6WU.BAS (G3SEK, 2006): http://www.ifwtech.co.uk/g3sek/diy-yagi/dl6wu-2006.bas (elementos, método 2).
 - Pozar, *Microwave Engineering*, cap. 2 (linha de 1/4 de onda).
+- H. F. Tolles, W7ITB, "How to Design Gamma-Matching Networks", *Ham Radio*, maio de 1973, pp. 46–55, e ARRL Antenna Book, 19ª ed.,
+  p. 26-9 (gamma match: equações e regras práticas; ver o guia do Yagi).
 - Anatel: regulamentação do Serviço de Radioamador (versão vigente).
 - LABRE: plano de bandas (versão vigente).
 - Padrão de irradiação: soma dos campos de dois Yagis iguais, o segundo girado 90° e defasado de −90°, cada um calculado por método dos momentos (ver o guia do Yagi), sem acoplamento entre eles.
